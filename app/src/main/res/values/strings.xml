@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Example app name -->
+    <string name="app_name">TrainMe</string>
+
+    <!-- Common phrases -->
+    <string name="toast_route_saved">Route saved</string>
+    <string name="toast_select_stations_first">Please select both stations first</string>
+    <string name="toast_pick_date">Please pick a date</string>
+    <string name="toast_no_routes_found">No routes found</string>
+    <string name="toast_settings_applied">Settings applied</string>
+    <string name="toast_test_push_scheduled">Test push scheduled in %1$d sec</string>
+    <string name="toast_no_coords">No coordinates for %1$s</string>
+    <string name="toast_no_departure_time">No departure time found</string>
+    <string name="toast_cant_parse_departure">Can\'t parse departure time</string>
+    <string name="toast_no_reminder_set">No reminder set</string>
+    <string name="toast_reminder_set">
+        Reminder set for train %1$s (%2$d min before)
+    </string>
+
+    <string name="toast_failed_load_stops">Failed to load stops: %1$s</string>
+    <string name="toast_failed_load_routes">Failed to load routes: %1$s</string>
+    <string name="toast_no_results">No routes found</string>
+
+    <!-- Dialog: choose reminder -->
+    <string name="dialog_reminder_title">Select reminder type</string>
+    <string name="dialog_reminder_ok">OK</string>
+    <string name="dialog_reminder_cancel">Cancel</string>
+    <string name="radio_push">Push only</string>
+    <string name="radio_calendar">Calendar only</string>
+    <string name="radio_both">Push + Calendar</string>
+    <string name="radio_none">No reminder</string>
+    <string name="hint_reminder_minutes">Minutes before departure</string>
+    <string name="checkbox_remember_choice">Remember my choice</string>
+
+    <!-- Date picker -->
+    <string name="select_date_title">Select date</string>
+
+    <!-- Labels for "connected routes" -->
+    <string name="connected_routes_label">Connected routes:</string>
+
+    <!-- Full route dialog -->
+    <string name="full_route_title">Full route of train %1$s</string>
+
+    <!-- "time to departure", etc. -->
+    <string name="train_label">Train %1$s (%2$s - %3$s)</string>
+    <string name="price_format">%.2f €</string>
+    <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
+
+    <!-- Notification (Receiver) -->
+    <string name="reminder_notification_title">Train %1$s reminder</string>
+    <string name="reminder_notification_message">
+        Time to leave so you can get to station: %1$s (in %2$d min).
+    </string>
+
+    <string name="label_default_reminder">Default reminder action:</string>
+    <string name="label_minutes_before">Minutes before departure (default):</string>
+    <string name="label_auto_refresh">Auto-refresh \'time to departure\'</string>
+    <string name="btn_test_push_now">Test push now</string>
+    <string name="btn_test_push_later">Test push in 1 minute</string>
+    <string name="btn_apply">Apply</string>
+
+    <!-- Buttons -->
+    <string name="btn_settings">Settings</string>
+    <string name="btn_search">Search</string>
+    <string name="btn_save_route">Save route</string>
+
+    <!-- Station hints (editable fields) -->
+    <string name="hint_from_station">From station</string>
+    <string name="hint_to_station">To station</string>
+
+    <!-- Accessibility contentDescriptions -->
+    <string name="cdesc_select_departure_station">Select departure station</string>
+    <string name="cdesc_select_arrival_station">Select arrival station</string>
+    <string name="cdesc_clear_date">Clear date</string>
+    <string name="cdesc_pick_date">Pick date</string>
+
+    <!-- Label for date -->
+    <string name="label_date">Date:</string>
+    <string name="cdesc_select_train">notification</string>
+
+    <!-- Disclaimer -->
+    <string name="disclaimer_text">
+        This application is not official or endorsed by any organization.
+        It was created voluntarily, free of charge, out of personal enthusiasm.
+    </string>
+
+
+    <!-- Language for stations -->
+    <string name="label_select_language_for_stations">Select station language</string>
+    <string name="hint_language_for_stations">
+        This option is used only to fetch station names in the chosen language
+    </string>
+    <string name="btn_back">back</string>
+    <string name="direct_routes_label">Direct routes:</string>
+    <string name="unknown_label">Unknown</string>
+    <string name="train_departed">Train has departed</string>
+    <string name="label_travel_time">Travel time: %1$s</string>
+    <string name="time_in_h_and_m">in %1$d h %2$d m</string>
+    <string name="time_in_m">in %1$d m</string>
+    <string name="label_reminder">Reminder</string>
+    <string name="two_class_prices_format">Class1: %1$s / Class2: %2$s</string>
+    <string name="one_class_price_format">Price: %1$s</string>
+    <string name="two_class_only_price_format">Class2: %1$s</string>
+    <string name="stop_arr_dep_with_dwell">Arr: %1$s, dwell %2$d min, dep: %3$s</string>
+    <string name="stop_arr_dep">Arr: %1$s, dep: %2$s</string>
+    <string name="unknown_station">Unknown station</string>
+    <string name="open_in_maps">Open in Maps</string>
+
+    <string name="label_does_not_stop">Does not stop</string>
+    <string name="label_crossing_no_passengers">No passenger stop</string>
+    <string name="toast_no_map_app">No maps application installed</string>
+    <string name="label_support_dev_on_ko_fi">Support Dev on Ko-fi</string>
+
+</resources>

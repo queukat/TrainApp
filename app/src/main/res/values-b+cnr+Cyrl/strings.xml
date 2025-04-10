@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Example app name -->
+    <string name="app_name">TrainMe</string>
+
+    <!-- Common phrases -->
+    <string name="toast_route_saved">Рута сачувана</string>
+    <string name="toast_select_stations_first">Молимо вас, најприје изаберите обје станице</string>
+    <string name="toast_pick_date">Молимо вас, одаберите датум</string>
+    <string name="toast_no_routes_found">Ниједна рута није пронађена</string>
+    <string name="toast_settings_applied">Поставке примијењене</string>
+    <string name="toast_test_push_scheduled">Тест обавјештење заказано за %1$d сек</string>
+    <string name="toast_no_coords">Нема координата за %1$s</string>
+    <string name="toast_no_departure_time">Није пронађено вријеме поласка</string>
+    <string name="toast_cant_parse_departure">Не могу да протумачим вријеме поласка</string>
+    <string name="toast_no_reminder_set">Подсјетник није постављен</string>
+    <string name="toast_reminder_set">
+        Подсјетник постављен за воз %1$s (%2$d мин прије)
+    </string>
+
+    <!-- Dialog: choose reminder -->
+    <string name="dialog_reminder_title">Изаберите тип подсјетника</string>
+    <string name="dialog_reminder_ok">У реду</string>
+    <string name="dialog_reminder_cancel">Откажи</string>
+    <string name="radio_push">Само обавјештење (Push)</string>
+    <string name="radio_calendar">Само календар</string>
+    <string name="radio_both">Обавјештење + Kалендар</string>
+    <string name="radio_none">Без подсјетника</string>
+    <string name="hint_reminder_minutes">Минута прије поласка</string>
+    <string name="checkbox_remember_choice">Запамти мој избор</string>
+
+    <!-- Date picker -->
+    <string name="select_date_title">Одаберите датум</string>
+
+    <!-- Labels for "connected routes" -->
+    <string name="connected_routes_label">Повезане руте:</string>
+
+    <!-- Full route dialog -->
+    <string name="full_route_title">Цјеловита рута воза %1$s</string>
+
+    <!-- "time to departure", etc. -->
+    <string name="train_label">Воз %1$s (%2$s - %3$s)</string>
+    <string name="price_format">%.2f €</string>
+    <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
+
+    <!-- Notification (Receiver) -->
+    <string name="reminder_notification_title">Подсјетник за воз %1$s</string>
+    <string name="reminder_notification_message">
+        Вријеме је да кренете до станице: %1$s (за %2$d мин).
+    </string>
+
+    <string name="label_default_reminder">Подразумијевана радња подсјетника:</string>
+    <string name="label_minutes_before">Минута прије поласка (подразумијевано):</string>
+    <string name="label_auto_refresh">Аутоматско освјежавање \'вријеме до поласка\'</string>
+    <string name="btn_test_push_now">Тест обавјештења сада</string>
+    <string name="btn_test_push_later">Тест обавјештења за 1 минут</string>
+    <string name="btn_apply">Примијени</string>
+
+    <!-- Buttons -->
+    <string name="btn_settings">Поставке</string>
+    <string name="btn_search">Претрага</string>
+    <string name="btn_save_route">Сачувај руту</string>
+
+    <!-- Station hints (editable fields) -->
+    <string name="hint_from_station">Полазна станица</string>
+    <string name="hint_to_station">Долазна станица</string>
+
+    <!-- Accessibility contentDescriptions -->
+    <string name="cdesc_select_departure_station">Изабери полазну станицу</string>
+    <string name="cdesc_select_arrival_station">Изабери долазну станицу</string>
+    <string name="cdesc_clear_date">Обриши датум</string>
+    <string name="cdesc_pick_date">Одабери датум</string>
+
+    <!-- Label for date -->
+    <string name="label_date">Датум:</string>
+    <string name="cdesc_select_train">обавјештење</string>
+
+    <!-- Disclaimer -->
+    <string name="disclaimer_text">
+        Ова апликација није званична нити подржана од било које организације.
+        Направљена је добровољно, бесплатно, из личног ентузијазма.
+    </string>
+
+    <!-- Language for stations -->
+    <string name="label_select_language_for_stations">Изаберите језик станица</string>
+    <string name="hint_language_for_stations">
+        Ова опција се користи само за преузимање назива станица на изабраном језику
+    </string>
+    <string name="btn_back">Назад</string>
+    <string name="direct_routes_label">Директне руте:</string>
+    <string name="unknown_label">Непознато</string>
+    <string name="train_departed">Воз је кренуо</string>
+    <string name="label_travel_time">Вријеме путовања: %1$s</string>
+    <string name="time_in_h_and_m">за %1$d ч %2$d мин</string>
+    <string name="time_in_m">за %1$d мин</string>
+    <string name="label_reminder">Подсјетник</string>
+    <string name="two_class_prices_format">Класа1: %1$s / Класа2: %2$s</string>
+    <string name="one_class_price_format">Цијена: %1$s</string>
+    <string name="two_class_only_price_format">Класа2: %1$s</string>
+    <string name="stop_arr_dep_with_dwell">Дол.: %1$s, задржавање %2$d мин, пол.: %3$s</string>
+    <string name="stop_arr_dep">Дол.: %1$s, пол.: %2$s</string>
+    <string name="unknown_station">Непозната станица</string>
+    <string name="open_in_maps">Отвори у мапи</string>
+
+
+    <string name="toast_failed_load_stops">Неуспјешно учитавање станица: %1$s</string>
+    <string name="toast_failed_load_routes">Неуспјешно учитавање рута: %1$s</string>
+    <string name="toast_no_results">Ниједна рута није пронађена</string>
+
+    <string name="label_does_not_stop">Не зауставља се</string>
+    <string name="label_crossing_no_passengers">Нема путничког стајалишта</string>
+    <string name="toast_no_map_app">Нема инсталиране апликације за мапе</string>
+    <string name="label_support_dev_on_ko_fi">Подржи девелопера на Ko-fi</string>
+
+</resources>
