@@ -3,19 +3,19 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Интернет -->
+    <!--  -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Разрешение на отправку уведомлений (Android 13+) -->
+    <!--     (Android 13+) -->
     <uses-permission
         android:name="android.permission.POST_NOTIFICATIONS"
         android:required="false" />
 
-    <!-- Разрешение на точные будильники (Android 12+) -->
+    <!--     (Android 12+) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <queries>
-        <!-- Разрешаем проверку любых приложений, которые обрабатывают geo:-ссылки -->
+        <!--    ,   geo:- -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="geo" />

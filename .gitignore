@@ -13,3 +13,57 @@
 .externalNativeBuild
 .cxx
 local.properties
+# --- 1) Общие файлы сборки и артефакты ---
+
+*.apk
+*.ap_
+*.aab
+*.aar
+
+/build/
+/captures/
+/outputs/
+/.cxx/
+/.externalNativeBuild/
+
+# --- 2) Gradle ---
+
+/.gradle
+/local.properties
+gradle-app.setting
+gradle.properties
+gradlew
+gradlew.bat
+
+# Автоматически сгенерированные папки Gradle
+**/build/
+/gradle/
+/out/
+# файлы кэша
+.gradle/
+
+# --- 3) Android Studio / IntelliJ IDEA ---
+
+# Корневая папка с конфигом проекта
+.idea/
+*.iml
+*.ipr
+*.iws
+*.idea/misc.xml
+*.idea/modules.xml
+*.idea/workspace.xml
+*.idea/modules/
+
+# Файлы автогенерации, индексы IDE
+*.name
+*.swp
+*~
+*.swo
+*.orig
+*.bak
+*.tmp
+
+# --- 4) Системные файлы ОС ---
+
+.DS_Store
+Thumbs.db
