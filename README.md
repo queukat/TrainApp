@@ -7,19 +7,21 @@
 
 ## 📖 Table of Contents
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Project Structure](#project-structure)
-- [Architecture & Libraries](#architecture--libraries)
-- [Screens & Workflows](#screens--workflows)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Reminders & Permissions](#reminders--permissions)
-- [Settings & Customization](#settings--customization)
-- [Contributions](#contributions)
-- [License](#license)
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Project Structure](#-project-structure)
+- [Architecture & Libraries](#️-architecture--libraries)
+- [Screens & Workflows](#-screens--workflows)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Reminders & Permissions](#-reminders--permissions)
+- [Settings & Customization](#️-settings--customization)
+- [Contributions](#-contributions)
+- [License](#-license)
 
 ---
+
+
 
 ## 🚀 Overview
 
