@@ -22,7 +22,8 @@ jobs:
         run: chmod +x gradlew
 
       - name: Decode keystore from base64
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
+        run: |
+          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/keystore.jks
 
       - name: Build with Gradle
         run: ./gradlew assembleRelease
