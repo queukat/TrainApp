@@ -1,6 +1,7 @@
 name: Update MAU Badge
 on:
-  schedule: [ '0 3 * * *' ]  # раз в сутки
+  schedule:
+    - cron: '0 3 * * *'
 jobs:
   calc-mau:
     runs-on: ubuntu-latest
