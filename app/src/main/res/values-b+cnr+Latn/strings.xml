@@ -111,4 +111,14 @@
     <string name="toast_no_map_app">Nema instalirane aplikacije za mape</string>
     <string name="label_support_dev_on_ko_fi">Podrži developera na Ko-fi</string>
 
+    <string name="train_reminder_channel_name">Podsjetnici za vozove</string>
+    <string name="train_reminder_channel_description">Podsjetnici za predstojeće polaske vozova</string>
+
+    <string name="update_channel_name">Ažuriranja</string>
+    <string name="update_channel_description">Nove verzije TrainMe</string>
+
+    <string name="update_notification_title">Dostupno ažuriranje: v%1$s</string>
+    <string name="update_notification_message">Dodirnite da preuzmete novu verziju</string>
+    <string name="update_notification_bigtext">%1$s</string>
+
 </resources>

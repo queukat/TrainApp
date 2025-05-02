@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.monitor)
     implementation(libs.androidx.junit.ktx)
+    implementation(libs.google.firebase.installations.ktx)
     debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.room.compiler)
     implementation(libs.accompanist.swiperefresh)
@@ -94,6 +95,10 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     testImplementation(kotlin("test"))
     testImplementation(libs.junit4)
+    implementation (platform(libs.firebase.bom))
+    implementation (libs.firebase.installations.ktx)
+    implementation (libs.kotlinx.coroutines.play.services)
+
 }
 
 

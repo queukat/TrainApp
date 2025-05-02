@@ -112,4 +112,16 @@
     <string name="toast_no_map_app">No maps application installed</string>
     <string name="label_support_dev_on_ko_fi">Support Dev on Ko-fi</string>
 
+
+    <string name="train_reminder_channel_name">Train Reminders</string>
+    <string name="train_reminder_channel_description">Reminders for upcoming train departures</string>
+
+    <string name="update_channel_name">Updates</string>
+    <string name="update_channel_description">New versions of TrainMe</string>
+
+    <string name="update_notification_title">Update available: v%1$s</string>
+    <string name="update_notification_message">Tap to download the new version</string>
+    <string name="update_notification_bigtext">%1$s</string>
+
+
 </resources>

@@ -2,7 +2,10 @@ package com.queukat.train.util
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -10,7 +13,9 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.tasks.await
 
 /**
  * DTO результата проверки обновлений.
@@ -42,6 +47,7 @@ object UpdateCheck {
     private const val PING_URL =
         "https://jellyfin-stats.queukat.workers.dev"
 
+    private const val SALT = "queukat‑v1‑hard‑to‑guess‑string"
 
     // --- OkHttp -----------------------------------------------------------
 
@@ -52,6 +58,20 @@ object UpdateCheck {
             .build()
     }
 
+
+    private suspend fun hashedInstallId(): String = withContext(Dispatchers.IO) {
+        // теперь await() возвращает String, а не Task<String>
+        val rawId: String = FirebaseInstallations
+            .getInstance()
+            .id
+            .await()
+
+        val md   = MessageDigest.getInstance("SHA-256")
+        val hash = md.digest((rawId + SALT).encodeToByteArray())
+        hash.joinToString("") { "%02x".format(it) }
+    }
+
+
     // --- API --------------------------------------------------------------
 
     /**
@@ -59,6 +79,7 @@ object UpdateCheck {
      *
      * @param context нужен только для получения текущей versionName
      */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun checkForUpdates(context: Context): UpdateResult =
         withContext(Dispatchers.IO) {
             val currentVersion = context.versionName()
@@ -89,6 +110,7 @@ object UpdateCheck {
 
     // --- Internal helpers -------------------------------------------------
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun Context.versionName(): String =
         packageManager.getPackageInfo(
             packageName,
@@ -119,14 +141,14 @@ object UpdateCheck {
     }
 
     /** HEAD-ping; ошибки глотаем, чтобы не ломать UX. */
-    private fun sendPing(currentVersion: String) {
-        runCatching {
-            val request = Request.Builder()
-                .url("$PING_URL?v=$currentVersion")
-                .head()
-                .build()
-            httpClient.newCall(request).execute().close()
-        }
+    private suspend fun sendPing(currentVersion: String) {
+        val installHash = hashedInstallId()                  // ← новый шаг
+        val request = Request.Builder()
+            .url("$PING_URL?v=$currentVersion")
+            .head()
+            .header("X-Install-Hash", installHash)           // <—
+            .build()
+        runCatching { httpClient.newCall(request).execute().close() }
     }
 
     /** Выполняет GET с User-Agent и возвращает тело ответа. */

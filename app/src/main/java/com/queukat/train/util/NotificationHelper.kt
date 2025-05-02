@@ -21,18 +21,23 @@ object NotificationHelper {
 
     /* ---------- Reminder channel ---------- */
     private const val REMINDER_CHANNEL_ID = "TRAIN_REMINDER_CHANNEL"
-    private const val REMINDER_CHANNEL_NAME = "Train Reminders"
+    private const val UPDATE_CHANNEL_ID   = "UPDATE_CHANNEL"
+    private const val UPDATE_NOTIFICATION_ID = 1003
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+            // Вытягиваем из ресурсов имя и описание
+            val reminderName = context.getString(R.string.train_reminder_channel_name)
+            val reminderDesc = context.getString(R.string.train_reminder_channel_description)
+            val reminderChannel = NotificationChannel(
                 REMINDER_CHANNEL_ID,
-                REMINDER_CHANNEL_NAME,
+                reminderName,
                 NotificationManager.IMPORTANCE_DEFAULT
-            ).apply { description = "Reminders for upcoming trains" }
-
+            ).apply {
+                description = reminderDesc
+            }
             context.getSystemService(NotificationManager::class.java)
-                .createNotificationChannel(channel)
+                .createNotificationChannel(reminderChannel)
         }
     }
 
@@ -43,13 +48,11 @@ object NotificationHelper {
         message: String,
         notificationId: Int = System.currentTimeMillis().toInt()
     ) {
-        // Не показываем без разрешения
         if (!canPostNotifications(context)) return
 
-        val manager = context.getSystemService(NotificationManager::class.java)
-
         val pendingIntent = PendingIntent.getActivity(
-            context, 0, Intent(context, MainActivity::class.java),
+            context, 0,
+            Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -70,10 +73,6 @@ object NotificationHelper {
             .notify(notificationId, builder.build())
     }
 
-    /* ---------- Update channel ---------- */
-    private const val UPDATE_CHANNEL_ID = "UPDATE_CHANNEL"
-    private const val UPDATE_NOTIFICATION_ID = 1003
-
     fun canPostNotifications(context: Context): Boolean =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
@@ -89,34 +88,48 @@ object NotificationHelper {
         latestVersion: String,
         releaseNotes: String?
     ) {
-        // Не показываем без разрешения
         if (!canPostNotifications(context)) return
 
+        // Создаём канал (если нужно)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+            val updateName = context.getString(R.string.update_channel_name)
+            val updateDesc = context.getString(R.string.update_channel_description)
+            val updateChannel = NotificationChannel(
                 UPDATE_CHANNEL_ID,
-                "Updates",
+                updateName,
                 NotificationManager.IMPORTANCE_HIGH
-            ).apply { description = "New versions of TrainApp" }
-
+            ).apply {
+                description = updateDesc
+            }
             NotificationManagerCompat.from(context)
-                .createNotificationChannel(channel)
+                .createNotificationChannel(updateChannel)
         }
 
+        // Интент на страницу релизов
         val pendingIntent = PendingIntent.getActivity(
             context, 0,
-            Intent(Intent.ACTION_VIEW, "https://github.com/queukat/TrainApp/releases/latest".toUri()),
+            Intent(
+                Intent.ACTION_VIEW,
+                "https://github.com/queukat/TrainApp/releases/latest".toUri()
+            ),
             PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Берём строки из ресурсов
+        val title = context.getString(
+            R.string.update_notification_title,
+            latestVersion
+        )
+        val text  = context.getString(R.string.update_notification_message)
+        val bigText = releaseNotes
+            ?: context.getString(R.string.update_notification_bigtext)
+
         val builder = NotificationCompat.Builder(context, UPDATE_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle("Доступно обновление: v$latestVersion")
-            .setContentText("Нажмите, чтобы скачать новую версию")
+            .setContentTitle(title)
+            .setContentText(text)
             .setStyle(
-                NotificationCompat.BigTextStyle().bigText(
-                    releaseNotes ?: "Откройте страницу релиза, чтобы узнать подробности."
-                )
+                NotificationCompat.BigTextStyle().bigText(bigText)
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
