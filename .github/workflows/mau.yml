@@ -1,15 +1,19 @@
 name: Update MAU Badge
+
 on:
   schedule:
     - cron: '0 3 * * *'
-
   workflow_dispatch:
+
 jobs:
   calc-mau:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Prepare badges directory
+        run: mkdir -p badges
 
       - name: Get MAU
         id: stats
