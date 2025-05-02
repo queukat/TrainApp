@@ -1,0 +1,24 @@
+name: Update MAU Badge
+on:
+  schedule: [ '0 3 * * *' ]  # раз в сутки
+jobs:
+  calc-mau:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get MAU
+        id: stats
+        run: |
+          COUNT=$(curl -s https://jellyfin-stats.queukat.workers.dev)
+          echo "mau=$COUNT" >> $GITHUB_OUTPUT
+      - name: Update badge
+        uses: emibcn/badge-action@v2
+        with:
+          label: active users
+          status: ${{ steps.stats.outputs.mau }}
+          color: blue
+          path: badges/mau.svg
+      - name: Commit badge
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'badges/mau.svg'
+          message: 'chore: update MAU badge'
