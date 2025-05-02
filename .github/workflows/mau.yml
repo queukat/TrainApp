@@ -1,46 +1,28 @@
-name: Update MAU Badge
-
-
-permissions:
-  contents: write
+name: Update MAU & TOTAL badges
+permissions: { contents: write }
 
 on:
-  schedule:
-    - cron: '0 3 * * *'
+  schedule:  [cron: '0 3 * * *']
   workflow_dispatch:
 
 jobs:
-  calc-mau:
+  calc-stats:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code (with write perms)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - run: mkdir -p badges
+
+      - id: mau
+        run: echo "value=$(curl -s https://jellyfin-stats.queukat.workers.dev/mau)" >> $GITHUB_OUTPUT
+      - id: total
+        run: echo "value=$(curl -s https://jellyfin-stats.queukat.workers.dev/total)" >> $GITHUB_OUTPUT
+
+      - uses: emibcn/badge-action@v2
+        with: { label: active users, status: ${{ steps.mau.outputs.value }}, color: blue, path: badges/mau.svg }
+      - uses: emibcn/badge-action@v2
+        with: { label: total users,  status: ${{ steps.total.outputs.value }}, color: 9cf,  path: badges/total.svg }
+
+      - uses: EndBug/add-and-commit@v9
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true
-
-      - name: Prepare badges directory
-        run: mkdir -p badges
-
-      - name: Get MAU
-        id: stats
-        run: |
-          COUNT=$(curl -s https://jellyfin-stats.queukat.workers.dev/mau)
-          echo "mau=$COUNT" >> $GITHUB_OUTPUT
-
-
-      - name: Update badge
-        uses: emibcn/badge-action@v2
-        with:
-          label: active users
-          status: ${{ steps.stats.outputs.mau }}
-          color: blue
-          path: badges/mau.svg
-
-
-      - name: Commit badge
-        uses: EndBug/add-and-commit@v9
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          add: 'badges/mau.svg'
-          message: 'chore: update MAU badge'
+          add: 'badges/*.svg'
+          message: 'chore: update MAU & TOTAL badges'
