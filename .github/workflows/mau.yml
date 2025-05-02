@@ -1,5 +1,9 @@
 name: Update MAU Badge
 
+
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: '0 3 * * *'
@@ -9,8 +13,11 @@ jobs:
   calc-mau:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout code (with write perms)
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Prepare badges directory
         run: mkdir -p badges
@@ -29,8 +36,10 @@ jobs:
           color: blue
           path: badges/mau.svg
 
+
       - name: Commit badge
         uses: EndBug/add-and-commit@v9
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           add: 'badges/mau.svg'
           message: 'chore: update MAU badge'
