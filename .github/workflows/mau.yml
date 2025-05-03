@@ -19,9 +19,19 @@ jobs:
         run: echo "value=$(curl -s https://jellyfin-stats.queukat.workers.dev/total)" >> $GITHUB_OUTPUT
 
       - uses: emibcn/badge-action@v2
-        with: { label: active users, status: ${{ steps.mau.outputs.value }}, color: blue, path: badges/mau.svg }
+        with:
+          label: active users
+          status: ${{ steps.mau.outputs.value }}
+          color: blue
+          path: badges/mau.svg
+
       - uses: emibcn/badge-action@v2
-        with: { label: total users,  status: ${{ steps.total.outputs.value }}, color: 9cf,  path: badges/total.svg }
+        with:
+          label: total users
+          status: ${{ steps.total.outputs.value }}
+          color: 9cf
+          path: badges/total.svg
+
 
       - uses: EndBug/add-and-commit@v9
         with:
