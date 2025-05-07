@@ -40,20 +40,24 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
-      - name: Create GitHub Release
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create or update GitHub Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: peter-evans/create-or-update-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           release_name: ${{ github.ref_name }}
-          body: "Автоматическая сборка релиза"
+          body: auto
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download artifact
+      - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
           name: release-apk
