@@ -204,7 +204,7 @@ fun MainScreen(
                                         cal.get(Calendar.DAY_OF_MONTH)
                                     )
                                 }
-
+                                mainViewModel.setSelectedDate(finalDate)
                                 mainViewModel.loadRoutes(fromStation, toStation, finalDate)
                             }
                         )
