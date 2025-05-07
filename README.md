@@ -6,6 +6,12 @@
 ![Active users](badges/mau.svg)
 ![Total users](badges/total.svg)
 
+## Disclaimer
+
+This application is **not** the official timetable or service app of **ŽPCG AD Podgorica** (Željeznički prevoz Crne Gore).  
+For official train schedules, ticketing, and company information, please refer to the official ŽPCG website:
+
+👉 [https://www.zpcg.me](https://www.zpcg.me)
 
 
 ---
