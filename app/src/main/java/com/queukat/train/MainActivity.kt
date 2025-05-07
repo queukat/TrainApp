@@ -14,6 +14,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.firebase.FirebaseApp
 import com.queukat.train.data.db.AppDatabase
 import com.queukat.train.data.repository.TrainRepository
 import com.queukat.train.ui.MainScreen
@@ -35,9 +36,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var notifPermissionLauncher: ActivityResultLauncher<String>
     private var pendingUpdate: UpdateResult? = null
 
+
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        FirebaseApp.initializeApp(this)
 
         /* 0) канал REMINDER */
         NotificationHelper.createNotificationChannel(this)

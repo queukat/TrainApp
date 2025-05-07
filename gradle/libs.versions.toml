@@ -29,6 +29,7 @@ ui-tooling = "1.8.0"
 monitor = "1.7.2"
 junit-ktx = "1.2.1"
 firebase-installations-ktx = "18.0.0"
+google_services = "4.4.2"
 
 
 [libraries]
@@ -87,3 +88,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google_services" }

@@ -15,10 +15,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.*
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +38,7 @@ import com.queukat.train.data.model.TimetableItem
 import com.queukat.train.util.ReminderUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -49,7 +52,7 @@ fun RouteCard(
 ) {
     val context = LocalContext.current
 
-    // Fallback ( route.startStation / endStation  )
+    // Fallback names
     val fallbackFirst = route.timetable_items
         ?.firstOrNull()
         ?.routestop
@@ -68,45 +71,43 @@ fun RouteCard(
     val endName   = route.endStation   ?: fallbackLast
     val trainNum  = route.TrainNumber ?: stringResource(R.string.unknown_label)
 
-    // 1) ё    / 
-    val departureTimeString = route.timetable_items?.firstOrNull()?.DepartureTime ?: ""
-    val lastArrivalTimeString = route.timetable_items?.lastOrNull()?.ArrivalTime ?: ""
+    // Raw time strings
+    val departureRaw = route.timetable_items
+        ?.firstOrNull()
+        ?.DepartureTime
+        .orEmpty()
+    val arrivalRaw = route.timetable_items
+        ?.lastOrNull()
+        ?.ArrivalTime
+        ?.takeIf { it.isNotBlank() }
+        ?: route.timetable_items
+            ?.lastOrNull()
+            ?.DepartureTime
+            .orEmpty()
 
-    // 2)  datetime ( selectedDate)
+    // Parse into Date objects
     val departureDateTime = if (selectedDate.isNotBlank()) {
-        DateTimeUtils.parseDateTime("$selectedDate $departureTimeString")
+        DateTimeUtils.parseDateTime("$selectedDate $departureRaw")
     } else null
 
-    // 2)  
     var arrivalDateTime = if (selectedDate.isNotBlank()) {
-        DateTimeUtils.parseDateTime("$selectedDate $lastArrivalTimeString")
+        DateTimeUtils.parseDateTime("$selectedDate $arrivalRaw")
     } else null
 
-    // 3)   <  =>  
+    // Handle overnight
     if (departureDateTime != null && arrivalDateTime != null) {
         if (arrivalDateTime.before(departureDateTime)) {
-            val cal = Calendar.getInstance()
-            cal.time = arrivalDateTime
-            cal.add(Calendar.DATE, 1) // +1 
+            val cal = Calendar.getInstance().apply { time = arrivalDateTime }
+            cal.add(Calendar.DATE, 1)
             arrivalDateTime = cal.time
         }
     }
 
-    // 4)   
     val departureMs = departureDateTime?.time
     val arrivalMs = arrivalDateTime?.time
+    val isPast = departureMs != null && departureMs < System.currentTimeMillis()
 
-    // , «ё  »
-    val isPast = (departureMs != null && departureMs < System.currentTimeMillis())
-
-    //  :   ё — variant,  surface
-    val cardBackgroundColor = if (isPast) {
-        MaterialTheme.colorScheme.surfaceVariant
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
-
-    //  :    ё — primary,  
+    val cardBackgroundColor = if (isPast) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
     val borderColor = if (isPast) Color.Transparent else MaterialTheme.colorScheme.primary
 
     var expanded by remember { mutableStateOf(false) }
@@ -128,7 +129,6 @@ fun RouteCard(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                //   (Train..., " X "  " ...")
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -141,7 +141,21 @@ fun RouteCard(
                         fontWeight = FontWeight.SemiBold
                     )
 
-                    // " X "  " ё"
+                    // Time range display
+                    val timeRange = if (departureMs != null && arrivalMs != null) {
+                        val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
+                        "${fmt.format(Date(departureMs))} - ${fmt.format(Date(arrivalMs))}"
+                    } else ""
+
+                    if (timeRange.isNotEmpty()) {
+                        Text(
+                            text = timeRange,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    }
+
+                    // "Через ..." or "В пути ..."
                     if (!isPast && departureMs != null) {
                         val timeString = DateTimeUtils.getTimeUntilDepartureString(
                             departureTimeMs = departureMs,
@@ -164,7 +178,7 @@ fun RouteCard(
                         )
                     }
 
-                    // " : X  Y "
+                    // Travel duration
                     if (!isPast && departureMs != null && arrivalMs != null) {
                         val diffMin = (arrivalMs - departureMs) / 60000
                         if (diffMin > 0) {
@@ -184,7 +198,7 @@ fun RouteCard(
                     }
                 }
 
-                //   -    
+                // Reminder icon and price info column
                 Column(horizontalAlignment = Alignment.End) {
                     IconButton(onClick = { onReminderClick(route) }) {
                         Icon(
@@ -194,8 +208,6 @@ fun RouteCard(
                         )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
-
-                    //  ,  
                     priceInfo?.let { pi ->
                         val c1 = pi.Class1Price
                         val c2 = pi.Class2Price
@@ -429,77 +441,6 @@ fun PreviewRouteCardLight() {
 @Preview(name = "RouteCard Dark Theme", showBackground = true)
 fun PreviewRouteCardDark() {
     TrainAppTheme(darkTheme = true) {
-        val sampleRoute = DirectRoute(
-            TimetableID = 1,
-            RouteID = 101,
-            TrainNumber = "Local 745",
-            TrainTypeID = 0,
-            International = 0,
-            timetable_items = listOf(
-                TimetableItem(
-                    TimetableItemID = 1,
-                    TimetableID = 1,
-                    RouteStopID = 100,
-                    ArrivalTime = "20:10:00",
-                    DepartureTime = "20:15:00",
-                    routestop = RouteStop(
-                        RouteStopID = 777,
-                        Order = 1,
-                        StopID = 777,
-                        stop = StopDto(
-                            StopID = 777,
-                            Name_me = "Bar",
-                            Name_en = "Bar",
-                            Name_me_cyr = "",
-                            StopTypeID = 4,
-                            Latitude = 42.0876,
-                            Longitude = 19.1052,
-                            local = 1,
-                            stop_type = null
-                        )
-                    )
-                ),
-                TimetableItem(
-                    TimetableItemID = 2,
-                    TimetableID = 1,
-                    RouteStopID = 101,
-                    ArrivalTime = "07:05:00", //  
-                    DepartureTime = "07:10:00",
-                    routestop = RouteStop(
-                        RouteStopID = 888,
-                        Order = 2,
-                        StopID = 888,
-                        stop = StopDto(
-                            StopID = 888,
-                            Name_me = "Beograd Centar",
-                            Name_en = "Belgrade Center",
-                            Name_me_cyr = " ",
-                            StopTypeID = 4,
-                            Latitude = 44.820599,
-                            Longitude = 20.4622,
-                            local = 0,
-                            stop_type = null
-                        )
-                    )
-                )
-            )
-        )
-
-        val samplePrice = PriceInfo(
-            PricelistID = 99,
-            StopFromID = 1,
-            StopToID = 2,
-            Class1Price = 5.50,
-            Class2Price = 4.20
-        )
-
-        RouteCard(
-            route = sampleRoute,
-            selectedDate = "2025-04-06",
-            priceInfo = samplePrice,
-            onTrainSelected = {},
-            onFullRouteNeeded = {},
-            onReminderClick = {}
-        )
+        PreviewRouteCardLight()
     }
 }
