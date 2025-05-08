@@ -47,7 +47,7 @@ jobs:
 
       - name: Create or update GitHub Release
         id: create_release
-        uses: peter-evans/create-or-update-release@v3
+        uses: peter-evans/create-or-update-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           release_name: ${{ github.ref_name }}
