@@ -91,8 +91,8 @@
     <string name="unknown_label">Неизвестно</string>
     <string name="train_departed">Поезд уже отправился</string>
     <string name="label_travel_time">Время в пути: %1$s</string>
-    <string name="time_in_h_and_m">через %1$d ч %2$d мин</string>
-    <string name="time_in_m">через %1$d мин</string>
+    <string name="time_in_h_and_m"> %1$d ч %2$d мин</string>
+    <string name="time_in_m"> %1$d мин</string>
     <string name="label_reminder">Напоминание</string>
     <string name="two_class_prices_format">1 класс: %1$s / 2 класс: %2$s</string>
     <string name="one_class_price_format">Цена: %1$s</string>

@@ -91,8 +91,8 @@
     <string name="unknown_label">Непознато</string>
     <string name="train_departed">Воз је кренуо</string>
     <string name="label_travel_time">Вријеме путовања: %1$s</string>
-    <string name="time_in_h_and_m">за %1$d ч %2$d мин</string>
-    <string name="time_in_m">за %1$d мин</string>
+    <string name="time_in_h_and_m"> %1$d ч %2$d мин</string>
+    <string name="time_in_m"> %1$d мин</string>
     <string name="label_reminder">Подсјетник</string>
     <string name="two_class_prices_format">Класа1: %1$s / Класа2: %2$s</string>
     <string name="one_class_price_format">Цијена: %1$s</string>
