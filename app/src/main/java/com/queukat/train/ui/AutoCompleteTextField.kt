@@ -1,14 +1,14 @@
 package com.queukat.train.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
@@ -24,53 +24,63 @@ import com.queukat.train.data.db.getNameForLanguage
  */
 @Composable
 fun AutoCompleteTextField(
-    text: String,
-    onTextChange: (String) -> Unit,
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
     stops: List<StopEntity>,
     modifier: Modifier = Modifier,
     label: String = "Station",
     language: String = "en"
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded   by remember { mutableStateOf(false) }
+    val focusState = remember { mutableStateOf(false) }
+    val keyboard   = LocalSoftwareKeyboardController.current
 
-    val filteredStops = remember(text, stops) {
-        if (text.isBlank()) emptyList()
+    val filteredStops = remember(value.text, stops) {
+        if (value.text.isBlank()) emptyList()
         else stops.filter {
-            val stationName = it.getNameForLanguage(language)
-            stationName.contains(text, ignoreCase = true)
+            it.getNameForLanguage(language)
+                .contains(value.text, ignoreCase = true)
         }
     }
 
-    Box(modifier = modifier) {
+    Box(modifier) {
         OutlinedTextField(
-            value = text,
-            onValueChange = {
-                onTextChange(it)
-                expanded = true  //     
+            value = value,
+            onValueChange = { newVal ->
+                onValueChange(newVal)
+                expanded = focusState.value && newVal.text.isNotBlank()
             },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(label) },
-            singleLine = true
+            label      = { Text(label) },
+            singleLine = true,
+            modifier   = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { fs ->
+                    focusState.value = fs.isFocused
+                    expanded = fs.isFocused && value.text.isNotBlank()
+                }
         )
 
-        //    5    
-        val visibleStops = filteredStops
-
         DropdownMenu(
-            expanded = expanded && visibleStops.isNotEmpty(),
-            onDismissRequest = { expanded = false },
+            expanded          = expanded && filteredStops.isNotEmpty(),
+            onDismissRequest  = { expanded = false },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 200.dp),
-            properties = PopupProperties(focusable = false)
+            properties = PopupProperties(focusable = false)  // ← вот тут
         ) {
-            visibleStops.forEach { stop ->
+            filteredStops.forEach { stop ->
                 val stationName = stop.getNameForLanguage(language)
                 DropdownMenuItem(
                     text = { Text(stationName) },
                     onClick = {
-                        onTextChange(stationName)
+                        onValueChange(
+                            TextFieldValue(
+                                text      = stationName,
+                                selection = TextRange(stationName.length)
+                            )
+                        )
                         expanded = false
+                        keyboard?.hide()  // клаву убираем только после выбора
                     }
                 )
             }
@@ -79,84 +89,23 @@ fun AutoCompleteTextField(
 }
 
 
-/**
- *   AutoCompleteTextField.
- */
+
 @Preview(showBackground = true)
 @Composable
 fun AutoCompleteTextFieldPreview() {
-    //   
     val sampleStops = listOf(
-        StopEntity(
-            stopId = 1,
-            nameEn = "Podgorica",
-            nameMe = "Podgorica",
-            nameMeCyr = "",
-            stopTypeId = 1,
-            latitude = 42.4417,
-            longitude = 19.2636,
-            local = 1
-        ),
-        StopEntity(
-            stopId = 2,
-            nameEn = "Bar",
-            nameMe = "Bar",
-            nameMeCyr = "",
-            stopTypeId = 1,
-            latitude = 42.0930,
-            longitude = 19.1002,
-            local = 1
-        ),
-        StopEntity(
-            stopId = 3,
-            nameEn = "Sutomore",
-            nameMe = "Sutomore",
-            nameMeCyr = "",
-            stopTypeId = 1,
-            latitude = 42.1423,
-            longitude = 19.0462,
-            local = 1
-        ),
-        StopEntity(
-            stopId = 4,
-            nameEn = "Kolašin",
-            nameMe = "Kolašin",
-            nameMeCyr = "",
-            stopTypeId = 1,
-            latitude = 42.8238,
-            longitude = 19.5169,
-            local = 1
-        ),
-        StopEntity(
-            stopId = 5,
-            nameEn = "Nikšić",
-            nameMe = "Nikšić",
-            nameMeCyr = "ћ",
-            stopTypeId = 1,
-            latitude = 42.7769,
-            longitude = 18.9461,
-            local = 1
-        ),
-        StopEntity(
-            stopId = 6,
-            nameEn = "Bijelo Polje",
-            nameMe = "Bijelo Polje",
-            nameMeCyr = "ј љ",
-            stopTypeId = 1,
-            latitude = 43.0393,
-            longitude = 19.7452,
-            local = 1
-        )
+        StopEntity(1, "Podgorica", "Podgorica", "", 1, 0.0, 0.0, 1),
+        StopEntity(2, "Bar",        "Bar",        "", 1, 0.0, 0.0, 1),
+        StopEntity(3, "Sutomore",   "Sutomore",   "", 1, 0.0, 0.0, 1),
     )
-
-    //   –  ,    ё 
-    var inputText by remember { mutableStateOf("") }
+    var tfState by remember { mutableStateOf(TextFieldValue()) }
 
     AutoCompleteTextField(
-        text = inputText,
-        onTextChange = { inputText = it },
+        value = tfState,
+        onValueChange = { tfState = it },
         stops = sampleStops,
-        label = "Station (Preview)",
-        language = "en"
+        label = "Station",
+        language = "en",
+        modifier = Modifier.fillMaxWidth()
     )
 }
