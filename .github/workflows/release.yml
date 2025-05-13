@@ -63,10 +63,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-apk
-          path: .                 # скачает в ./release-apk/...
+          path: release-apk                   # ← та же папка
 
+      # Берём первый найденный .apk и переименовываем
       - name: Rename APK for release
-        run: mv release-apk/app-release.apk "TrainME_${{ github.ref_name }}.apk"
+        run: |
+          APK_FILE=$(find release-apk -maxdepth 1 -name '*.apk' -print -quit)
+          mv "$APK_FILE" "TrainME_${{ github.ref_name }}.apk"
 
       - name: Create GitHub Release and upload APK
         uses: softprops/action-gh-release@v1
