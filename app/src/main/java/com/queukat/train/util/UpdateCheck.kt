@@ -44,8 +44,10 @@ object UpdateCheck {
         "https://api.github.com/repos/queukat/TrainApp/releases/latest"
 
 
+    // Cloudflare Worker counting app installs. Should match the endpoint used
+    // by the GitHub workflow that updates the badges.
     private const val PING_URL =
-        "https://jellyfin-stats.queukat.workers.dev"
+        "https://train-stats.queukat.workers.dev"
 
     private const val SALT = "queukat‑v1‑hard‑to‑guess‑string"
 
