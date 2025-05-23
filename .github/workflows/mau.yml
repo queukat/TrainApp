@@ -14,9 +14,9 @@ jobs:
       - run: mkdir -p badges
 
       - id: mau
-        run: echo "value=$(curl -s https://jellyfin-stats.queukat.workers.dev/mau)" >> $GITHUB_OUTPUT
+        run: echo "value=$(curl -s https://train-stats.queukat.workers.dev/mau)" >> $GITHUB_OUTPUT
       - id: total
-        run: echo "value=$(curl -s https://jellyfin-stats.queukat.workers.dev/total)" >> $GITHUB_OUTPUT
+        run: echo "value=$(curl -s https://train-stats.queukat.workers.dev/total)" >> $GITHUB_OUTPUT
 
       - uses: emibcn/badge-action@v2
         with:
