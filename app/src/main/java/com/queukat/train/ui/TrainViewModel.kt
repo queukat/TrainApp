@@ -150,9 +150,13 @@ open class TrainViewModel(
                 withTimeout(10_000) {
                     val r = repo.getRoutes(fromForApi, toForApi, date)
                     _routes.value = r
-                    _errorMessage.value = null //   ,  
-                    if (r == null) {
-                        _errorMessage.value = getApplication<Application>().getString(R.string.toast_no_results)
+                    _errorMessage.value = null // reset previous errors
+                    if (r == null || (r.direct.isNullOrEmpty() && r.connected.isNullOrEmpty())) {
+                        _errorMessage.value =
+                            getApplication<Application>().getString(R.string.toast_no_results)
+                        if (r == null) {
+                            _routes.value = null
+                        }
                     }
                 }
             } catch (e: Exception) {

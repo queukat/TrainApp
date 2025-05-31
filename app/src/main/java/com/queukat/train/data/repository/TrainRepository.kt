@@ -293,6 +293,31 @@ open class TrainRepository(
         }
     }
 
+    // Fallback: read start/end stations from local DB if still null
+    private suspend fun fillStartEndStationFromDb(routesResponse: RoutesResponse) {
+        val dao = db.routeInfoDao()
+
+        routesResponse.direct?.forEach { dr ->
+            val rid = dr.RouteID ?: return@forEach
+            if (dr.startStation != null && dr.endStation != null) return@forEach
+            val entity = dao.findByRouteId(rid) ?: return@forEach
+            if (dr.startStation == null) dr.startStation = entity.startNameEn
+            if (dr.endStation == null) dr.endStation = entity.endNameEn
+            if (dr.validFrom == null) dr.validFrom = entity.validFrom
+            if (dr.validTo == null) dr.validTo = entity.validTo
+        }
+
+        routesResponse.connected?.forEach { dr ->
+            val rid = dr.RouteID ?: return@forEach
+            if (dr.startStation != null && dr.endStation != null) return@forEach
+            val entity = dao.findByRouteId(rid) ?: return@forEach
+            if (dr.startStation == null) dr.startStation = entity.startNameEn
+            if (dr.endStation == null) dr.endStation = entity.endNameEn
+            if (dr.validFrom == null) dr.validFrom = entity.validFrom
+            if (dr.validTo == null) dr.validTo = entity.validTo
+        }
+    }
+
     private fun fillStartEndStation(
         dr: DirectRoute,
         full: DirectRoute? = null

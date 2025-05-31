@@ -7,6 +7,9 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,7 +18,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.tasks.await
 
 /**
  * DTO результата проверки обновлений.
@@ -28,11 +30,11 @@ data class UpdateResult(
 )
 
 /**
- * Production-ready проверка обновлений + анонимный ping для статистики.
+ * Production‑ready проверка обновлений + анонимный ping для статистики.
  *
- * • Запрашивает `/releases/latest` GitHub-API с корректным User-Agent.
- * • Отправляет HEAD-ping на Cloudflare Workers-endpoint для подсчёта MAU.
- * • Работает в IO-корутине, имеет таймауты и единый OkHttp-клиент.
+ * • Запрашивает `/releases/latest` GitHub‑API с корректным User‑Agent.
+ * • Отправляет **асинхронный** HEAD‑ping на Cloudflare Workers‑endpoint для подсчёта MAU.
+ * • Работает в IO‑корутине, имеет таймауты и единый OkHttp‑клиент.
  */
 object UpdateCheck {
 
@@ -43,11 +45,9 @@ object UpdateCheck {
     private const val LATEST_RELEASE_URL =
         "https://api.github.com/repos/queukat/TrainApp/releases/latest"
 
-
-    // Cloudflare Worker counting app installs. Should match the endpoint used
-    // by the GitHub workflow that updates the badges.
-    private const val PING_URL =
-        "https://train-stats.queukat.workers.dev"
+    // Cloudflare Worker counting app installs. Должен совпадать с GitHub‑workflow, который
+    // обновляет бейджики.
+    private const val PING_URL = "https://train-stats.queukat.workers.dev"
 
     private const val SALT = "queukat‑v1‑hard‑to‑guess‑string"
 
@@ -60,19 +60,19 @@ object UpdateCheck {
             .build()
     }
 
+    // Memoized install hash — вычисляется один раз за сессию
+    @Volatile
+    private var cachedInstallHash: String? = null
 
-    private suspend fun hashedInstallId(): String = withContext(Dispatchers.IO) {
-        // теперь await() возвращает String, а не Task<String>
-        val rawId: String = FirebaseInstallations
-            .getInstance()
-            .id
-            .await()
-
-        val md   = MessageDigest.getInstance("SHA-256")
-        val hash = md.digest((rawId + SALT).encodeToByteArray())
-        hash.joinToString("") { "%02x".format(it) }
-    }
-
+    private suspend fun hashedInstallId(): String = cachedInstallHash
+        ?: withContext(Dispatchers.IO) {
+            val rawId = FirebaseInstallations.getInstance().id.await()
+            val md    = MessageDigest.getInstance("SHA-256")
+            val hash  = md.digest((rawId + SALT).encodeToByteArray())
+            val result = hash.joinToString("") { "%02x".format(it) }
+            cachedInstallHash = result
+            result
+        }
 
     // --- API --------------------------------------------------------------
 
@@ -82,33 +82,35 @@ object UpdateCheck {
      * @param context нужен только для получения текущей versionName
      */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    suspend fun checkForUpdates(context: Context): UpdateResult =
-        withContext(Dispatchers.IO) {
-            val currentVersion = context.versionName()
-            try {
-                // 1) Ping — не блокирует основную логику
-                sendPing(currentVersion)
+    suspend fun checkForUpdates(context: Context): UpdateResult = coroutineScope {
+        val currentVersion = context.versionName()
 
-                // 2) GitHub Latest Release
-                val latestJson = httpGet(LATEST_RELEASE_URL)
-                val root = JSONObject(latestJson)
-
-                val latestTag = root.optString("tag_name", "0.0.0")
-                val releaseNotes = root.optString("body").takeIf { it.isNotBlank() }
-
-                val updateAvailable = isRemoteNewer(currentVersion, latestTag)
-
-                UpdateResult(updateAvailable, latestTag, releaseNotes)
-            } catch (ex: Exception) {
-                Log.e(TAG, "Update check failed: ${ex.message}")
-                UpdateResult(
-                    isUpdateAvailable = false,
-                    latestVersion = currentVersion,
-                    releaseNotes = null,
-                    error = ex.message
-                )
-            }
+        // 1) Ping — делаем в фоне, чтобы не тормозить основную логику
+        launch(Dispatchers.IO) {
+            runCatching { sendPing(currentVersion) }
         }
+
+        // 2) GitHub Latest Release
+        try {
+            val latestJson = httpGet(LATEST_RELEASE_URL)
+            val root = JSONObject(latestJson)
+
+            val latestTag    = root.optString("tag_name", "0.0.0")
+            val releaseNotes = root.optString("body").takeIf { it.isNotBlank() }
+
+            val updateAvailable = isRemoteNewer(currentVersion, latestTag)
+
+            UpdateResult(updateAvailable, latestTag, releaseNotes)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Update check failed: ${ex.message}")
+            UpdateResult(
+                isUpdateAvailable = false,
+                latestVersion = currentVersion,
+                releaseNotes = null,
+                error = ex.message
+            )
+        }
+    }
 
     // --- Internal helpers -------------------------------------------------
 
@@ -124,7 +126,7 @@ object UpdateCheck {
             .trim()
             .removePrefix("v")
             .removePrefix("V")
-            .substringBefore('-') // обрезаем prerelease
+            .substringBefore('-') // убираем prerelease‑хвост
         val parts = cleaned.split(".")
         val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
         val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
@@ -142,24 +144,29 @@ object UpdateCheck {
         }
     }
 
-    /** HEAD-ping; ошибки глотаем, чтобы не ломать UX. */
-    private suspend fun sendPing(currentVersion: String) {
-        val installHash = hashedInstallId()                  // ← новый шаг
+    /** HEAD‑ping; ошибки глотаем, чтобы не ломать UX. */
+    private suspend fun sendPing(currentVersion: String) = withContext(Dispatchers.IO) {
+        val installHash = hashedInstallId()
         val request = Request.Builder()
             .url("$PING_URL?v=$currentVersion")
             .head()
-            .header("X-Install-Hash", installHash)           // <—
+            .header("X-Install-Hash", installHash)
             .build()
-        runCatching { httpClient.newCall(request).execute().close() }
+
+        httpClient.newCall(request).execute().close()
     }
 
-    /** Выполняет GET с User-Agent и возвращает тело ответа. */
+    /** Выполняет GET с User‑Agent и возвращает тело ответа. */
     @Throws(IOException::class)
     private fun httpGet(url: String): String {
         val request = Request.Builder()
             .url(url)
-            .header("User-Agent", "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)")
+            .header(
+                "User-Agent",
+                "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)"
+            )
             .build()
+
         httpClient.newCall(request).execute().use { response: Response ->
             if (!response.isSuccessful) {
                 throw IOException("Unexpected code ${response.code}")
