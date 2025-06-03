@@ -21,7 +21,7 @@ import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
 /**
- * DTO результата проверки обновлений.
+ * DTO   .
  */
 data class UpdateResult(
     val isUpdateAvailable: Boolean,
@@ -31,24 +31,24 @@ data class UpdateResult(
 )
 
 /**
- * Production-ready проверка обновлений + анонимный ping для статистики.
+ * Production-ready   +  ping  .
  *
- * • Запрашивает `/releases/latest` GitHub-API с корректным User-Agent.
- * • Отправляет **асинхронный** HEAD-ping на Cloudflare Workers-endpoint для подсчёта MAU.
- * • Использует стабильный `ANDROID_ID` как базу хэша: переживает переустановку
- *   приложения, но не раскрывает личных данных.
+ * •  `/releases/latest` GitHub-API   User-Agent.
+ * •  **** HEAD-ping  Cloudflare Workers-endpoint  ё MAU.
+ * •   `ANDROID_ID`   :  
+ *   ,     .
  */
 object UpdateCheck {
 
-    // --- Константы --------------------------------------------------------
+    // ---  --------------------------------------------------------
 
     private const val TAG = "UpdateCheck"
 
     private const val LATEST_RELEASE_URL =
         "https://api.github.com/repos/queukat/TrainApp/releases/latest"
 
-    // Cloudflare Worker counting app installs. Должен совпадать с GitHub-workflow, который
-    // обновляет бейджики.
+    // Cloudflare Worker counting app installs.    GitHub-workflow, 
+    //  .
     private const val PING_URL = "https://train-stats.queukat.workers.dev/ping"
 
     private const val SALT = "queukat-v1-hard-to-guess-string"
@@ -62,7 +62,7 @@ object UpdateCheck {
             .build()
     }
 
-    // Memoized install hash — вычисляется один раз за сессию
+    // Memoized install hash —     
     @Volatile
     private var cachedInstallHash: String? = null
 
@@ -77,9 +77,9 @@ object UpdateCheck {
         }
 
     /**
-     * Пытаемся получить максимально стабильный идентификатор устройства.
-     * 1) `ANDROID_ID` (постоянен после Android 8 при том же signing key)
-     * 2) Fallback → Firebase Installations ID (может меняться при reinstall)
+     *      .
+     * 1) `ANDROID_ID` (  Android 8    signing key)
+     * 2) Fallback → Firebase Installations ID (   reinstall)
      */
     private suspend fun obtainStableId(context: Context): String {
         val androidId = Settings.Secure.getString(
@@ -87,20 +87,20 @@ object UpdateCheck {
             Settings.Secure.ANDROID_ID
         )
         if (!androidId.isNullOrBlank()) return androidId
-        // Fallback — Firebase ID (не идеален, но лучше, чем ничего)
+        // Fallback — Firebase ID ( ,  ,  )
         return FirebaseInstallations.getInstance().id.await()
     }
 
     // --- API --------------------------------------------------------------
 
     /**
-     * Проверяет наличие обновлений и отправляет статистический ping.
+     *       ping.
      */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun checkForUpdates(context: Context): UpdateResult = coroutineScope {
         val currentVersion = context.versionName()
 
-        // 1) Ping — делаем в фоне, чтобы не тормозить основную логику
+        // 1) Ping —   ,     
         launch(Dispatchers.IO) {
             runCatching { sendPing(context, currentVersion) }
         }
@@ -141,7 +141,7 @@ object UpdateCheck {
             .trim()
             .removePrefix("v")
             .removePrefix("V")
-            .substringBefore('-') // убираем prerelease‑хвост
+            .substringBefore('-') //  prerelease‑
         val parts = cleaned.split('.')
         val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
         val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
@@ -159,7 +159,7 @@ object UpdateCheck {
         }
     }
 
-    /** HEAD‑ping; ошибки глотаем, чтобы не ломать UX. */
+    /** HEAD‑ping;  ,    UX. */
     private suspend fun sendPing(context: Context, currentVersion: String) =
         withContext(Dispatchers.IO) {
             val installHash = hashedInstallId(context)
@@ -171,7 +171,7 @@ object UpdateCheck {
             httpClient.newCall(request).execute().close()
         }
 
-    /** Выполняет GET с User‑Agent и возвращает тело ответа. */
+    /**  GET  User‑Agent    . */
     @Throws(IOException::class)
     private fun httpGet(url: String): String {
         val request = Request.Builder()

@@ -110,7 +110,7 @@ fun MainScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // --- Иконка «Пончик» слева (заливаем цветом primary) ---
+                        // ---  «»  (  primary) ---
                         FilledIconButton(
                             onClick = {
                                 val uri = "https://ko-fi.com/queukat".toUri()
@@ -126,7 +126,7 @@ fun MainScreen(
                                 contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
-                            // Если у вас есть своё "ic_donut", используйте painterResource(R.drawable.ic_donut)
+                            //     ё "ic_donut",  painterResource(R.drawable.ic_donut)
                             Icon(
                                 painter = painterResource(R.drawable.ic_donut_2),
                                 contentDescription = stringResource(R.string.label_support_dev_on_ko_fi),
@@ -134,7 +134,7 @@ fun MainScreen(
                             )
                         }
 
-                        // --- Иконка «Настройки» справа ---
+                        // ---  «»  ---
                         IconButton(onClick = onOpenSettings) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
@@ -153,7 +153,7 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background) // <- Фон всего экрана
+                .background(MaterialTheme.colorScheme.background) // <-   
         ) {
             if (loading) {
                 CircularProgressIndicator(
@@ -162,7 +162,7 @@ fun MainScreen(
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-                    // 1) Ошибка, если есть
+                    // 1) ,  
                     if (!errorMessage.isNullOrEmpty()) {
                         item {
                             Text(
@@ -173,7 +173,7 @@ fun MainScreen(
                         }
                     }
 
-                    // 2) Поисковая панель (SearchPanel)
+                    // 2)   (SearchPanel)
                     item {
                         SearchPanel(
                             fromStation = fromStation,
@@ -210,7 +210,7 @@ fun MainScreen(
                         )
                     }
 
-                    // 3) Блок сохранённых маршрутов (SavedRoutesBlock)
+                    // 3)  ё  (SavedRoutesBlock)
                     item {
                         SavedRoutesBlock(
                             fromStation = fromStation,
@@ -242,7 +242,7 @@ fun MainScreen(
                         )
                     }
 
-                    // 4) Если есть routesResponse – показываем direct/connected маршруты
+                    // 4)   routesResponse –  direct/connected 
                     routesResponse?.let { rr ->
                         val directRoutes = rr.direct.orEmpty()
                         val connectedRoutes = rr.connected.orEmpty()
@@ -297,7 +297,7 @@ fun MainScreen(
         }
     }
 
-    // Диалог "Full Route"
+    //  "Full Route"
     if (showFullRouteDialog && fullRoute != null) {
         FullRouteDialog(
             route = fullRoute!!.timetable_items ?: emptyList(),
@@ -309,7 +309,7 @@ fun MainScreen(
         )
     }
 
-    // Диалог выбора напоминания (ReminderChoiceDialog)
+    //    (ReminderChoiceDialog)
     if (reminderDialogRoute != null) {
         ReminderChoiceDialog(
             route = reminderDialogRoute!!,

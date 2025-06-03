@@ -56,16 +56,16 @@ fun SearchPanel(
     onDatePicked:  (String) -> Unit,
     onSearchClicked: () -> Unit
 ) {
-    // 1) локальные состояния TextFieldValue
+    // 1)   TextFieldValue
     var fromField by remember { mutableStateOf(TextFieldValue(fromStation)) }
     var toField   by remember { mutableStateOf(TextFieldValue(toStation)) }
 
-    /* если снаружи пришло новое значение – подстроимся */
+    /*      –  */
     LaunchedEffect(fromStation) {
         if (fromStation != fromField.text) {
             fromField = TextFieldValue(
                 text = fromStation,
-                selection = TextRange(fromStation.length)   // курсор в конец
+                selection = TextRange(fromStation.length)   //   
             )
         }
     }
@@ -84,8 +84,8 @@ fun SearchPanel(
         AutoCompleteTextField(
             value = fromField,
             onValueChange = { newValue ->
-                fromField = newValue           // обновляем поле
-                onFromChanged(newValue.text)   // наружу — строку
+                fromField = newValue           //  
+                onFromChanged(newValue.text)   //  — 
             },
             stops = stops,
             label = stringResource(R.string.hint_from_station),
@@ -108,7 +108,7 @@ fun SearchPanel(
             modifier = Modifier.fillMaxWidth()
         )
 
-        /* -------- дата, кнопка поиска — остаётся без изменений -------- */
+        /* -------- ,   — ё   -------- */
         Spacer(Modifier.height(6.dp))
         DatePickerField(selectedDate, onDatePicked)
         Spacer(Modifier.height(6.dp))
@@ -138,8 +138,8 @@ fun SearchPanel(
 
 
 /**
- * «Фейковое» поле для выбора даты: при нажатии — DatePickerDialog.
- * Убрали «label» сверху (как вы просили), отображаем только дату и иконку.
+ * «»    :   — DatePickerDialog.
+ *  «label»  (  ),     .
  */
 @Composable
 fun DatePickerField(
@@ -149,7 +149,7 @@ fun DatePickerField(
     var showDatePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Если dateString пустое, используем «сегодня»
+    //  dateString ,  «»
     val calendar = Calendar.getInstance()
     val defaultDateString = String.format(
         Locale.getDefault(),
@@ -160,7 +160,7 @@ fun DatePickerField(
     )
     val displayedDate = dateString.ifBlank { defaultDateString }
 
-    // Само «поле»
+    //  «»
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -175,7 +175,7 @@ fun DatePickerField(
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Текст даты
+        //  
         Text(
             text = displayedDate,
             color = MaterialTheme.colorScheme.onSurface,
@@ -184,7 +184,7 @@ fun DatePickerField(
             overflow = TextOverflow.Ellipsis
         )
 
-        // Иконка
+        // 
         Icon(
             imageVector = Icons.Outlined.DateRange,
             contentDescription = stringResource(R.string.label_date),
@@ -193,7 +193,7 @@ fun DatePickerField(
         )
     }
 
-    // Показать DatePickerDialog
+    //  DatePickerDialog
     if (showDatePicker) {
         val initCal = Calendar.getInstance()
         val parts = dateString.split("-")
@@ -238,7 +238,7 @@ fun SearchPanelLightPreview() {
                 stopId = 1,
                 nameEn = "Podgorica",
                 nameMe = "Podgorica",
-                nameMeCyr = "Подгорица",
+                nameMeCyr = "",
                 stopTypeId = 1,
                 latitude = 42.4417,
                 longitude = 19.2636,
@@ -248,7 +248,7 @@ fun SearchPanelLightPreview() {
                 stopId = 2,
                 nameEn = "Bar",
                 nameMe = "Bar",
-                nameMeCyr = "Бар",
+                nameMeCyr = "",
                 stopTypeId = 1,
                 latitude = 42.0930,
                 longitude = 19.1002,
@@ -283,7 +283,7 @@ fun SearchPanelDarkPreview() {
                 stopId = 1,
                 nameEn = "Podgorica",
                 nameMe = "Podgorica",
-                nameMeCyr = "Подгорица",
+                nameMeCyr = "",
                 stopTypeId = 1,
                 latitude = 42.4417,
                 longitude = 19.2636,
@@ -293,7 +293,7 @@ fun SearchPanelDarkPreview() {
                 stopId = 2,
                 nameEn = "Bar",
                 nameMe = "Bar",
-                nameMeCyr = "Бар",
+                nameMeCyr = "",
                 stopTypeId = 1,
                 latitude = 42.0930,
                 longitude = 19.1002,

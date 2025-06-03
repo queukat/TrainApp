@@ -26,7 +26,7 @@ object NotificationHelper {
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Вытягиваем из ресурсов имя и описание
+            //      
             val reminderName = context.getString(R.string.train_reminder_channel_name)
             val reminderDesc = context.getString(R.string.train_reminder_channel_description)
             val reminderChannel = NotificationChannel(
@@ -90,7 +90,7 @@ object NotificationHelper {
     ) {
         if (!canPostNotifications(context)) return
 
-        // Создаём канал (если нужно)
+        // ё  ( )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val updateName = context.getString(R.string.update_channel_name)
             val updateDesc = context.getString(R.string.update_channel_description)
@@ -105,7 +105,7 @@ object NotificationHelper {
                 .createNotificationChannel(updateChannel)
         }
 
-        // Интент на страницу релизов
+        //    
         val pendingIntent = PendingIntent.getActivity(
             context, 0,
             Intent(
@@ -115,7 +115,7 @@ object NotificationHelper {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Берём строки из ресурсов
+        // ё   
         val title = context.getString(
             R.string.update_notification_title,
             latestVersion

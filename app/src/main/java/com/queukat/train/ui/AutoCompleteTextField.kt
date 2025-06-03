@@ -66,7 +66,7 @@ fun AutoCompleteTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 200.dp),
-            properties = PopupProperties(focusable = false)  // ← вот тут
+            properties = PopupProperties(focusable = false)  // ←  
         ) {
             filteredStops.forEach { stop ->
                 val stationName = stop.getNameForLanguage(language)
@@ -80,7 +80,7 @@ fun AutoCompleteTextField(
                             )
                         )
                         expanded = false
-                        keyboard?.hide()  // клаву убираем только после выбора
+                        keyboard?.hide()  //     
                     }
                 )
             }

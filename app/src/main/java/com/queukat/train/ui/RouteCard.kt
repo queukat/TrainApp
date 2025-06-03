@@ -155,7 +155,7 @@ fun RouteCard(
                         )
                     }
 
-                    // "Через ..." or "В пути ..."
+                    // " ..." or "  ..."
                     if (!isPast && departureMs != null) {
                         val timeString = DateTimeUtils.getTimeUntilDepartureString(
                             departureTimeMs = departureMs,

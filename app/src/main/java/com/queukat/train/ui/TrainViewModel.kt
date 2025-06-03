@@ -246,7 +246,7 @@ open class TrainViewModel(
     // -- ё «time to departure» ( UI),  :
 
     fun refreshTimeToDeparture() {
-        _routes.value = _routes.value?.copy()   // data‑class делает shallow‑copy → новая ссылка
+        _routes.value = _routes.value?.copy()   // data‑class  shallow‑copy →  
     }
 
 

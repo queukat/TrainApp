@@ -43,10 +43,10 @@ class MainActivity : ComponentActivity() {
 
         FirebaseApp.initializeApp(this)
 
-        /* 0) канал REMINDER */
+        /* 0)  REMINDER */
         NotificationHelper.createNotificationChannel(this)
 
-        /* 1) launcher разрешения */
+        /* 1) launcher  */
         notifPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
             pendingUpdate = null
         }
 
-        /* 2) проверяем обновление */
+        /* 2)   */
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val result = UpdateCheck.checkForUpdates(this@MainActivity)
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                         } else {
                             Toast.makeText(
                                 this@MainActivity,
-                                "Новая версия ${result.latestVersion} доступна!",
+                                "  ${result.latestVersion} !",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
