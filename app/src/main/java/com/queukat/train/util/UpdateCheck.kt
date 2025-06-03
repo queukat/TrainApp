@@ -3,6 +3,7 @@ package com.queukat.train.util
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.firebase.installations.FirebaseInstallations
@@ -30,11 +31,12 @@ data class UpdateResult(
 )
 
 /**
- * Production‑ready проверка обновлений + анонимный ping для статистики.
+ * Production-ready проверка обновлений + анонимный ping для статистики.
  *
- * • Запрашивает `/releases/latest` GitHub‑API с корректным User‑Agent.
- * • Отправляет **асинхронный** HEAD‑ping на Cloudflare Workers‑endpoint для подсчёта MAU.
- * • Работает в IO‑корутине, имеет таймауты и единый OkHttp‑клиент.
+ * • Запрашивает `/releases/latest` GitHub-API с корректным User-Agent.
+ * • Отправляет **асинхронный** HEAD-ping на Cloudflare Workers-endpoint для подсчёта MAU.
+ * • Использует стабильный `ANDROID_ID` как базу хэша: переживает переустановку
+ *   приложения, но не раскрывает личных данных.
  */
 object UpdateCheck {
 
@@ -45,11 +47,11 @@ object UpdateCheck {
     private const val LATEST_RELEASE_URL =
         "https://api.github.com/repos/queukat/TrainApp/releases/latest"
 
-    // Cloudflare Worker counting app installs. Должен совпадать с GitHub‑workflow, который
+    // Cloudflare Worker counting app installs. Должен совпадать с GitHub-workflow, который
     // обновляет бейджики.
-    private const val PING_URL = "https://train-stats.queukat.workers.dev"
+    private const val PING_URL = "https://train-stats.queukat.workers.dev/ping"
 
-    private const val SALT = "queukat‑v1‑hard‑to‑guess‑string"
+    private const val SALT = "queukat-v1-hard-to-guess-string"
 
     // --- OkHttp -----------------------------------------------------------
 
@@ -64,22 +66,35 @@ object UpdateCheck {
     @Volatile
     private var cachedInstallHash: String? = null
 
-    private suspend fun hashedInstallId(): String = cachedInstallHash
-        ?: withContext(Dispatchers.IO) {
-            val rawId = FirebaseInstallations.getInstance().id.await()
+    private suspend fun hashedInstallId(context: Context): String =
+        cachedInstallHash ?: withContext(Dispatchers.IO) {
+            val rawId = obtainStableId(context)
             val md    = MessageDigest.getInstance("SHA-256")
             val hash  = md.digest((rawId + SALT).encodeToByteArray())
-            val result = hash.joinToString("") { "%02x".format(it) }
-            cachedInstallHash = result
-            result
+                .joinToString("") { "%02x".format(it) }
+            cachedInstallHash = hash
+            hash
         }
+
+    /**
+     * Пытаемся получить максимально стабильный идентификатор устройства.
+     * 1) `ANDROID_ID` (постоянен после Android 8 при том же signing key)
+     * 2) Fallback → Firebase Installations ID (может меняться при reinstall)
+     */
+    private suspend fun obtainStableId(context: Context): String {
+        val androidId = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ANDROID_ID
+        )
+        if (!androidId.isNullOrBlank()) return androidId
+        // Fallback — Firebase ID (не идеален, но лучше, чем ничего)
+        return FirebaseInstallations.getInstance().id.await()
+    }
 
     // --- API --------------------------------------------------------------
 
     /**
      * Проверяет наличие обновлений и отправляет статистический ping.
-     *
-     * @param context нужен только для получения текущей versionName
      */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun checkForUpdates(context: Context): UpdateResult = coroutineScope {
@@ -87,7 +102,7 @@ object UpdateCheck {
 
         // 1) Ping — делаем в фоне, чтобы не тормозить основную логику
         launch(Dispatchers.IO) {
-            runCatching { sendPing(currentVersion) }
+            runCatching { sendPing(context, currentVersion) }
         }
 
         // 2) GitHub Latest Release
@@ -102,7 +117,7 @@ object UpdateCheck {
 
             UpdateResult(updateAvailable, latestTag, releaseNotes)
         } catch (ex: Exception) {
-            Log.e(TAG, "Update check failed: ${ex.message}")
+            Log.e(TAG, "Update check failed: ${'$'}{ex.message}")
             UpdateResult(
                 isUpdateAvailable = false,
                 latestVersion = currentVersion,
@@ -127,7 +142,7 @@ object UpdateCheck {
             .removePrefix("v")
             .removePrefix("V")
             .substringBefore('-') // убираем prerelease‑хвост
-        val parts = cleaned.split(".")
+        val parts = cleaned.split('.')
         val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
         val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
         val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
@@ -145,16 +160,16 @@ object UpdateCheck {
     }
 
     /** HEAD‑ping; ошибки глотаем, чтобы не ломать UX. */
-    private suspend fun sendPing(currentVersion: String) = withContext(Dispatchers.IO) {
-        val installHash = hashedInstallId()
-        val request = Request.Builder()
-            .url("$PING_URL?v=$currentVersion")
-            .head()
-            .header("X-Install-Hash", installHash)
-            .build()
-
-        httpClient.newCall(request).execute().close()
-    }
+    private suspend fun sendPing(context: Context, currentVersion: String) =
+        withContext(Dispatchers.IO) {
+            val installHash = hashedInstallId(context)
+            val request = Request.Builder()
+                .url("${'$'}PING_URL?v=${'$'}currentVersion")
+                .head()
+                .header("X-Install-Hash", installHash)
+                .build()
+            httpClient.newCall(request).execute().close()
+        }
 
     /** Выполняет GET с User‑Agent и возвращает тело ответа. */
     @Throws(IOException::class)
@@ -169,7 +184,7 @@ object UpdateCheck {
 
         httpClient.newCall(request).execute().use { response: Response ->
             if (!response.isSuccessful) {
-                throw IOException("Unexpected code ${response.code}")
+                throw IOException("Unexpected code ${'$'}{response.code}")
             }
             return response.body?.string() ?: throw IOException("Empty body")
         }
