@@ -98,12 +98,10 @@ object UpdateCheck {
      */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun checkForUpdates(context: Context): UpdateResult = coroutineScope {
-        val currentVersion = context.versionName()
+        val currentVersion = context.safeVersionName()
 
-        // 1) Ping —   ,     
-        launch(Dispatchers.IO) {
-            runCatching { sendPing(context, currentVersion) }
-        }
+        // 1) Ping (fire-and-forget)
+        launch(Dispatchers.IO) { runCatching { sendPing(context, currentVersion) } }
 
         // 2) GitHub Latest Release
         try {
@@ -117,76 +115,66 @@ object UpdateCheck {
 
             UpdateResult(updateAvailable, latestTag, releaseNotes)
         } catch (ex: Exception) {
-            Log.e(TAG, "Update check failed: ${'$'}{ex.message}")
-            UpdateResult(
-                isUpdateAvailable = false,
-                latestVersion = currentVersion,
-                releaseNotes = null,
-                error = ex.message
-            )
+            Log.e(TAG, "Update check failed", ex)
+            UpdateResult(false, currentVersion, null, ex.message)
         }
     }
 
     // --- Internal helpers -------------------------------------------------
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun Context.versionName(): String =
-        packageManager.getPackageInfo(
-            packageName,
-            PackageManager.PackageInfoFlags.of(0)
-        ).versionName ?: "0.0.0"
+    private fun Context.safeVersionName(): String = try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageInfo(
+                packageName,
+                PackageManager.PackageInfoFlags.of(0)
+            ).versionName ?: "0.0.0"
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
+        }
+    } catch (_: Exception) { "0.0.0" }
 
-    private fun parseSemVer(version: String): Triple<Int, Int, Int> {
-        val cleaned = version
-            .trim()
-            .removePrefix("v")
-            .removePrefix("V")
-            .substringBefore('-') //  prerelease‑
-        val parts = cleaned.split('.')
-        val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
-        val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
-        val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
-        return Triple(major, minor, patch)
+    private fun parseSemVer(v: String): Triple<Int, Int, Int> {
+        val p = v.trim().removePrefix("v").removePrefix("V").substringBefore('-').split('.')
+        return Triple(p.getOrNull(0)?.toIntOrNull() ?: 0,
+            p.getOrNull(1)?.toIntOrNull() ?: 0,
+            p.getOrNull(2)?.toIntOrNull() ?: 0)
     }
 
     private fun isRemoteNewer(local: String, remote: String): Boolean {
-        val (lMaj, lMin, lPat) = parseSemVer(local)
-        val (rMaj, rMin, rPat) = parseSemVer(remote)
-        return when {
-            rMaj != lMaj -> rMaj > lMaj
-            rMin != lMin -> rMin > lMin
-            else         -> rPat > lPat
-        }
+        val (lMaj,lMin,lPat)=parseSemVer(local); val (rMaj,rMin,rPat)=parseSemVer(remote)
+        return when { rMaj!=lMaj -> rMaj>lMaj; rMin!=lMin -> rMin>lMin; else -> rPat>lPat }
     }
 
     /** HEAD‑ping;  ,    UX. */
     private suspend fun sendPing(context: Context, currentVersion: String) =
         withContext(Dispatchers.IO) {
-            val installHash = hashedInstallId(context)
+            val url = "$PING_URL?v=$currentVersion"
+            val hash = hashedInstallId(context)
             val request = Request.Builder()
-                .url("${'$'}PING_URL?v=${'$'}currentVersion")
-                .head()
-                .header("X-Install-Hash", installHash)
+                .url(url)
+                .get()
+                .header("X-Install-Hash", hash)
                 .build()
-            httpClient.newCall(request).execute().close()
+
+            httpClient.newCall(request).execute().use { resp ->
+                Log.d(TAG, "Ping → $url   X-Install-Hash=$hash   ← HTTP ${'$'}{resp.code}")
+            }
         }
 
     /**  GET  User‑Agent    . */
     @Throws(IOException::class)
-    private fun httpGet(url: String): String {
-        val request = Request.Builder()
+    private suspend fun httpGet(url: String): String = withContext(Dispatchers.IO) {
+        val req = Request.Builder()
             .url(url)
-            .header(
-                "User-Agent",
-                "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)"
-            )
+            .header("User-Agent",
+                "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)")
+            .header("Accept", "application/vnd.github+json")
             .build()
 
-        httpClient.newCall(request).execute().use { response: Response ->
-            if (!response.isSuccessful) {
-                throw IOException("Unexpected code ${'$'}{response.code}")
-            }
-            return response.body?.string() ?: throw IOException("Empty body")
+        httpClient.newCall(req).execute().use { resp ->
+            if (!resp.isSuccessful) throw IOException("HTTP ${'$'}{resp.code}")
+            resp.body?.string() ?: throw IOException("Empty body")
         }
     }
 }
