@@ -3,7 +3,7 @@ permissions: { contents: write }
 
 on:
   schedule:
-   - cron: '0 3 * * *'
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -13,25 +13,34 @@ jobs:
       - uses: actions/checkout@v4
       - run: mkdir -p badges
 
-      - id: mau
-        run: echo "value=$(curl -s https://train-stats.queukat.workers.dev/mau)" >> $GITHUB_OUTPUT
-      - id: total
-        run: echo "value=$(curl -s https://train-stats.queukat.workers.dev/total)" >> $GITHUB_OUTPUT
+      - name: Fetch stats
+        id: stats
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mau="$(curl -fsS --retry 3 --retry-all-errors --max-time 15 https://train-stats.queukat.workers.dev/mau)"
+          total="$(curl -fsS --retry 3 --retry-all-errors --max-time 15 https://train-stats.queukat.workers.dev/total)"
+
+          [[ "$mau" =~ ^[0-9]+$ ]] || { echo "Invalid MAU: $mau" >&2; exit 1; }
+          [[ "$total" =~ ^[0-9]+$ ]] || { echo "Invalid TOTAL: $total" >&2; exit 1; }
+
+          echo "mau=$mau" >> "$GITHUB_OUTPUT"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
 
       - uses: emibcn/badge-action@v2
         with:
           label: active users
-          status: ${{ steps.mau.outputs.value }}
+          status: ${{ steps.stats.outputs.mau }}
           color: blue
           path: badges/mau.svg
 
       - uses: emibcn/badge-action@v2
         with:
           label: total users
-          status: ${{ steps.total.outputs.value }}
+          status: ${{ steps.stats.outputs.total }}
           color: 9cf
           path: badges/total.svg
-
 
       - uses: EndBug/add-and-commit@v9
         with:
