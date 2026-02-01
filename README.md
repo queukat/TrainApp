@@ -3,8 +3,9 @@
 
 **An Android application to browse train routes, set reminders, and stay updated with schedule changes using Jetpack Compose.**
 
-![Active users](badges/mau.svg)
-![Total users](badges/total.svg)
+![Active users](badges/mau.svg?raw=1)
+![Total users](badges/total.svg?raw=1)
+
 
 ## Disclaimer
 
