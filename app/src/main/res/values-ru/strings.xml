@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Example app name -->
     <string name="app_name">TrainMe</string>
 
-    <!-- Common phrases -->
     <string name="toast_route_saved">Маршрут сохранён</string>
     <string name="toast_select_stations_first">Сначала выберите обе станции</string>
     <string name="toast_pick_date">Пожалуйста, выберите дату</string>
@@ -14,11 +12,8 @@
     <string name="toast_no_departure_time">Время отправления не найдено</string>
     <string name="toast_cant_parse_departure">Не удалось определить время отправления</string>
     <string name="toast_no_reminder_set">Напоминание не установлено</string>
-    <string name="toast_reminder_set">
-        Напоминание установлено для поезда %1$s (за %2$d мин до отправления)
-    </string>
+    <string name="toast_reminder_set">Напоминание установлено для поезда %1$s (за %2$d мин до отправления)</string>
 
-    <!-- Dialog: choose reminder -->
     <string name="dialog_reminder_title">Выберите тип напоминания</string>
     <string name="dialog_reminder_ok">ОК</string>
     <string name="dialog_reminder_cancel">Отмена</string>
@@ -29,25 +24,18 @@
     <string name="hint_reminder_minutes">Минут до отправления</string>
     <string name="checkbox_remember_choice">Запомнить мой выбор</string>
 
-    <!-- Date picker -->
     <string name="select_date_title">Выберите дату</string>
 
-    <!-- Labels for "connected routes" -->
     <string name="connected_routes_label">Пересадочные маршруты:</string>
 
-    <!-- Full route dialog -->
     <string name="full_route_title">Полный маршрут поезда %1$s</string>
 
-    <!-- "time to departure", etc. -->
     <string name="train_label">Поезд %1$s (%2$s - %3$s)</string>
     <string name="price_format">%.2f €</string>
     <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
 
-    <!-- Notification (Receiver) -->
     <string name="reminder_notification_title">Напоминание о поезде %1$s</string>
-    <string name="reminder_notification_message">
-        Пора выходить на станцию: %1$s (через %2$d мин).
-    </string>
+    <string name="reminder_notification_message">Пора выходить на станцию: %1$s (через %2$d мин).</string>
 
     <string name="label_default_reminder">Действие напоминания по умолчанию:</string>
     <string name="label_minutes_before">Минут до отправления (по умолчанию):</string>
@@ -56,43 +44,42 @@
     <string name="btn_test_push_later">Тестовое уведомление через 1 минуту</string>
     <string name="btn_apply">Применить</string>
 
-    <!-- Buttons -->
     <string name="btn_settings">Настройки</string>
     <string name="btn_search">Поиск</string>
     <string name="btn_save_route">Сохранить маршрут</string>
 
-    <!-- Station hints (editable fields) -->
     <string name="hint_from_station">Станция отправления</string>
     <string name="hint_to_station">Станция прибытия</string>
 
-    <!-- Accessibility contentDescriptions -->
     <string name="cdesc_select_departure_station">Выбрать станцию отправления</string>
     <string name="cdesc_select_arrival_station">Выбрать станцию прибытия</string>
     <string name="cdesc_clear_date">Очистить дату</string>
     <string name="cdesc_pick_date">Выбрать дату</string>
 
-    <!-- Label for date -->
     <string name="label_date">Дата:</string>
     <string name="cdesc_select_train">уведомление</string>
 
-    <!-- Disclaimer -->
     <string name="disclaimer_text">
         Это приложение не является официальным и не поддерживается никакой организацией.
         Оно создано добровольно, бесплатно, из личного энтузиазма.
     </string>
 
-    <!-- Language for stations -->
     <string name="label_select_language_for_stations">Выбрать язык станций</string>
-    <string name="hint_language_for_stations">
-        Этот параметр используется только для загрузки названий станций на выбранном языке
-    </string>
+    <string name="hint_language_for_stations">Этот параметр используется только для загрузки названий станций на выбранном языке</string>
     <string name="btn_back">Назад</string>
     <string name="direct_routes_label">Прямые маршруты:</string>
     <string name="unknown_label">Неизвестно</string>
     <string name="train_departed">Поезд уже отправился</string>
     <string name="label_travel_time">Время в пути: %1$s</string>
-    <string name="time_in_h_and_m"> %1$d ч %2$d мин</string>
-    <string name="time_in_m"> %1$d мин</string>
+
+    <!-- FIX: убрали лидирующие пробелы -->
+    <string name="time_in_h_and_m">%1$d ч %2$d мин</string>
+    <string name="time_in_m">%1$d мин</string>
+
+    <!-- NEW -->
+    <string name="time_in_d_and_h">%1$d д %2$d ч</string>
+    <string name="time_until_prefix">Через %1$s</string>
+
     <string name="label_reminder">Напоминание</string>
     <string name="two_class_prices_format">1 класс: %1$s / 2 класс: %2$s</string>
     <string name="one_class_price_format">Цена: %1$s</string>
@@ -111,19 +98,13 @@
     <string name="toast_no_map_app">Приложение для карт не установлено</string>
     <string name="label_support_dev_on_ko_fi">Поддержать разработчика на Ko-fi</string>
 
-    <!-- Канал напоминаний -->
     <string name="train_reminder_channel_name">Напоминания о поездах</string>
     <string name="train_reminder_channel_description">Напоминания о предстоящих рейсах поезда</string>
 
-    <!-- Канал обновлений -->
     <string name="update_channel_name">Обновления</string>
     <string name="update_channel_description">Новые версии TrainMe</string>
 
-    <!-- Уведомление об обновлении -->
     <string name="update_notification_title">Доступно обновление: v%1$s</string>
     <string name="update_notification_message">Нажмите, чтобы скачать новую версию</string>
-    <string name="update_notification_bigtext">
-        %1$s
-    </string>
-
+    <string name="update_notification_bigtext">%1$s</string>
 </resources>

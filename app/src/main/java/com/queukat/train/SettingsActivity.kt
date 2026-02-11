@@ -91,9 +91,24 @@ class SettingsActivity : ComponentActivity() {
      *     AlarmManager.
      */
     private fun scheduleTestPush(delayMs: Long) {
+        // 1) Если уведомления выключены (Android 12 и ниже — только так), ведём в настройки
+        if (!androidx.core.app.NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            Toast.makeText(
+                this,
+                "Enable notifications for TrainMe in system settings",
+                Toast.LENGTH_LONG
+            ).show()
+
+            val intent = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
+            }
+            startActivity(intent)
+            return
+        }
+
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        // Android S+  canScheduleExactAlarms()
+        // 2) Android S+ exact alarms: вместо молча “return” лучше открыть системный экран разрешения
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
                 Toast.makeText(
@@ -101,6 +116,7 @@ class SettingsActivity : ComponentActivity() {
                     "Exact alarms are not allowed. Please enable in system settings.",
                     Toast.LENGTH_LONG
                 ).show()
+                startActivity(Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
                 return
             }
         }
@@ -133,6 +149,7 @@ class SettingsActivity : ComponentActivity() {
                     pendingIntent
                 )
             }
+
             Toast.makeText(
                 this,
                 getString(R.string.toast_test_push_scheduled, delayMs / 1000),

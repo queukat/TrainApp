@@ -2,28 +2,38 @@ package com.queukat.train.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.queukat.train.data.api.RetrofitClient
 import com.queukat.train.data.db.AppDatabase
 import com.queukat.train.data.db.RouteInfoEntity
 import com.queukat.train.data.db.StopEntity
 import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.RoutesResponse
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 private const val TAG = "TrainRepository"
+
+// сколько держим cumulative в памяти прежде чем освежить (без дорогого парса всего JSON)
+private const val CUMULATIVE_TTL_MS = 12L * 60 * 60 * 1000 // 12 часов
 
 open class TrainRepository(
     private val db: AppDatabase,
     private val context: Context
 ) {
 
+    @Volatile
     private var cachedCumulative: String? = null
-    private var lastCumulativeFetchMillis: Long = 0
+
+    @Volatile
+    private var cachedCumulativeAtMs: Long = 0L
+
+    @Volatile
+    private var stopsMapCache: Map<Int, StopEntity>? = null
 
     suspend fun ensureStopsUpToDate(force: Boolean = false) {
         withContext(Dispatchers.IO) {
@@ -56,8 +66,12 @@ open class TrainRepository(
                                 )
                             }
                         }
+
                         db.appDao().insertAllStops(entities)
                         prefs.edit().putLong("stops_last_update", now).apply()
+
+                        // обновим кэш, чтобы fixCoordinates не читала БД заново
+                        stopsMapCache = entities.associateBy { it.stopId }
                     } else {
                         Log.e(TAG, "ensureStopsUpToDate failed: ${response.code()} ${response.message()}")
                     }
@@ -71,14 +85,12 @@ open class TrainRepository(
     }
 
     open suspend fun getAllStopsFromDb(): List<StopEntity> {
-        return withContext(Dispatchers.IO) {
-            db.appDao().getAllStops()
-        }
+        return withContext(Dispatchers.IO) { db.appDao().getAllStops() }
     }
 
     /**
-     *   /api/routes –   (direct, connected)   .
-     *   – «»  (fixCoordinates),  «» startStation / endStation  cumulative.
+     * ВАЖНО: тут НЕ трогаем cumulative (Android 9 будет лагать).
+     * start/end берем из timetable (или fallback на UI).
      */
     open suspend fun getRoutes(start: String, finish: String, date: String): RoutesResponse? {
         return withContext(Dispatchers.IO) {
@@ -87,8 +99,8 @@ open class TrainRepository(
                 if (response.isSuccessful) {
                     val routes = response.body()
                     routes?.let {
-                        fixCoordinates(it) // <--  
-                        fillStartEndStationFromCumulative(it)
+                        fixCoordinates(it)
+                        fillStartEndStationFromTimetable(it)
                     }
                     routes
                 } else {
@@ -102,27 +114,21 @@ open class TrainRepository(
         }
     }
 
+    /**
+     * Cumulative держим в памяти с TTL, без тяжёлого parseMinValidTo().
+     * Это ключевой фикс для Android 9.
+     */
     suspend fun ensureCumulativeCached(force: Boolean = false) {
         withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
+            val hasFreshCache = cachedCumulative != null && (now - cachedCumulativeAtMs) < CUMULATIVE_TTL_MS
+            if (!force && hasFreshCache) return@withContext
 
-            //   -   cachedCumulative,  minValidTo
-            if (!force && cachedCumulative != null) {
-                val minValidToStr = parseMinValidTo(cachedCumulative!!)
-                //      ё   —  :
-                if (minValidToStr != null && !isDateExpired(minValidToStr)) {
-                    Log.d(TAG, "ensureCumulativeCached: cached data still valid (validTo=$minValidToStr)")
-                    return@withContext
-                }
-            }
-
-            //    →  force=true,  cachedCumulative=null,
-            //  minValidTo  —    
             try {
                 val resp = RetrofitClient.api.getCumulativeRoutes().execute()
                 if (resp.isSuccessful) {
                     cachedCumulative = resp.body()?.string()
-                    lastCumulativeFetchMillis = now
+                    cachedCumulativeAtMs = now
                     Log.d(TAG, "Cumulative routes refreshed in memory.")
                 } else {
                     Log.e(TAG, "Failed to fetch cumulative: ${resp.code()}")
@@ -134,56 +140,8 @@ open class TrainRepository(
     }
 
     /**
-     *   JSON     ValidTo.
-     *    "yyyy-MM-dd",  null.
-     */
-    private fun parseMinValidTo(bigJson: String): String? {
-        return try {
-            val rootObj = Gson().fromJson(bigJson, JsonObject::class.java)
-            var minDate: String? = null
-            //    direct/connected,  route.ValidTo, ё 
-            for ((_, secondLevel) in rootObj.entrySet()) {
-                val secondObj = secondLevel.asJsonObject
-                for ((_, pairValue) in secondObj.entrySet()) {
-                    val pairObj = pairValue.asJsonObject
-
-                    if (pairObj.has("direct")) {
-                        val directArr = pairObj.getAsJsonArray("direct")
-                        directArr.forEach { elem ->
-                            val dr = Gson().fromJson(elem, DirectRoute::class.java)
-                            val vt = dr.route?.ValidTo
-                            if (vt != null) {
-                                minDate = minOfDates(minDate, vt)
-                            }
-                        }
-                    }
-
-                    if (pairObj.has("connected")) {
-                        val connArr = pairObj.getAsJsonArray("connected")
-                        connArr.forEach { elem ->
-                            val dr = Gson().fromJson(elem, DirectRoute::class.java)
-                            val vt = dr.route?.ValidTo
-                            if (vt != null) {
-                                minDate = minOfDates(minDate, vt)
-                            }
-                        }
-                    }
-                }
-            }
-            minDate
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun minOfDates(current: String?, candidate: String): String {
-        if (current == null) return candidate
-        return if (candidate < current) candidate else current
-    }
-
-    /**
-     * « »  routeId  cachedCumulative.
-     *   —   .
+     * Full route — вот тут cumulative реально нужен.
+     * Фикс: ищем и в "direct", и в "connected" (на всякий случай).
      */
     open suspend fun getFullRouteFromCumulative(routeId: Int): DirectRoute? {
         ensureCumulativeCached()
@@ -193,22 +151,40 @@ open class TrainRepository(
             try {
                 val gson = Gson()
                 val rootObj = gson.fromJson(bigJson, JsonObject::class.java)
+
                 for ((_, secondLevel) in rootObj.entrySet()) {
                     val secondObj = secondLevel.asJsonObject
                     for ((_, pairValue) in secondObj.entrySet()) {
                         val pairObj = pairValue.asJsonObject
-                        if (!pairObj.has("direct")) continue
-                        val directArr = pairObj.getAsJsonArray("direct")
-                        directArr.forEach { elem ->
-                            val dr = gson.fromJson(elem, DirectRoute::class.java)
-                            if (dr.RouteID == routeId) {
-                                fixCoordinatesForDirectRoute(dr) // <--  
-                                fillStartEndStation(dr)
-                                return@withContext dr
+
+                        // direct
+                        if (pairObj.has("direct")) {
+                            val directArr = pairObj.getAsJsonArray("direct")
+                            directArr.forEach { elem ->
+                                val dr = gson.fromJson(elem, DirectRoute::class.java)
+                                if (dr.RouteID == routeId) {
+                                    fixCoordinatesForDirectRoute(dr)
+                                    fillStartEndStation(dr)
+                                    return@withContext dr
+                                }
+                            }
+                        }
+
+                        // connected (фоллбек)
+                        if (pairObj.has("connected")) {
+                            val connArr = pairObj.getAsJsonArray("connected")
+                            connArr.forEach { elem ->
+                                val dr = gson.fromJson(elem, DirectRoute::class.java)
+                                if (dr.RouteID == routeId) {
+                                    fixCoordinatesForDirectRoute(dr)
+                                    fillStartEndStation(dr)
+                                    return@withContext dr
+                                }
                             }
                         }
                     }
                 }
+
                 null
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing cumulative routes: ${e.message}", e)
@@ -218,19 +194,26 @@ open class TrainRepository(
     }
 
     // -------------------------------------------------------------------------
-    //   "" coords   ,      = null
+    // Coordinates fix: используем кэш stopsMap
     // -------------------------------------------------------------------------
+    private suspend fun getStopsMap(): Map<Int, StopEntity> {
+        val cached = stopsMapCache
+        if (cached != null && cached.isNotEmpty()) return cached
+
+        val list = db.appDao().getAllStops()
+        val map = list.associateBy { it.stopId }
+        stopsMapCache = map
+        return map
+    }
+
     private suspend fun fixCoordinates(routesResponse: RoutesResponse) {
-        val stopsList = db.appDao().getAllStops()
-        val stopsMap = stopsList.associateBy { it.stopId }
+        val stopsMap = getStopsMap()
 
         routesResponse.direct?.forEach { directRoute ->
             directRoute.timetable_items?.forEach { item ->
                 val stopId = item.routestop?.StopID ?: return@forEach
                 val st = item.routestop.stop ?: return@forEach
                 val stopEntity = stopsMap[stopId] ?: return@forEach
-
-                //    null ->    
                 st.Latitude = st.Latitude ?: stopEntity.latitude
                 st.Longitude = st.Longitude ?: stopEntity.longitude
             }
@@ -241,7 +224,6 @@ open class TrainRepository(
                 val stopId = item.routestop?.StopID ?: return@forEach
                 val st = item.routestop.stop ?: return@forEach
                 val stopEntity = stopsMap[stopId] ?: return@forEach
-
                 st.Latitude = st.Latitude ?: stopEntity.latitude
                 st.Longitude = st.Longitude ?: stopEntity.longitude
             }
@@ -249,119 +231,43 @@ open class TrainRepository(
     }
 
     private suspend fun fixCoordinatesForDirectRoute(directRoute: DirectRoute) {
-        val stopsList = db.appDao().getAllStops()
-        val stopsMap = stopsList.associateBy { it.stopId }
+        val stopsMap = getStopsMap()
 
         directRoute.timetable_items?.forEach { item ->
             val stopId = item.routestop?.StopID ?: return@forEach
             val st = item.routestop.stop ?: return@forEach
             val stopEntity = stopsMap[stopId] ?: return@forEach
-
             st.Latitude = st.Latitude ?: stopEntity.latitude
             st.Longitude = st.Longitude ?: stopEntity.longitude
         }
     }
 
     // -------------------------------------------------------------------------
-    // "" startStation / endStation  cumulative
+    // Лёгкое заполнение start/end без cumulative
     // -------------------------------------------------------------------------
-    private suspend fun fillStartEndStationFromCumulative(routesResponse: RoutesResponse) {
-        ensureCumulativeCached()
-        val bigJson = cachedCumulative ?: return
-        if (bigJson.isEmpty()) return
-
-        val gson = Gson()
-        val rootObj = gson.fromJson(bigJson, JsonObject::class.java)
-
-        //  direct
-        routesResponse.direct?.forEach { dr ->
-            dr.RouteID?.let { rid ->
-                val maybeFull = findRouteInCumulativeJson(rootObj, gson, rid)
-                if (maybeFull != null) {
-                    fillStartEndStation(dr, maybeFull)
-                }
-            }
-        }
-        // connected
-        routesResponse.connected?.forEach { dr ->
-            dr.RouteID?.let { rid ->
-                val maybeFull = findRouteInCumulativeJson(rootObj, gson, rid)
-                if (maybeFull != null) {
-                    fillStartEndStation(dr, maybeFull)
-                }
-            }
-        }
+    private fun fillStartEndStationFromTimetable(routesResponse: RoutesResponse) {
+        routesResponse.direct?.forEach { fillStartEndStation(it) }
+        routesResponse.connected?.forEach { fillStartEndStation(it) }
     }
 
-    // Fallback: read start/end stations from local DB if still null
-    private suspend fun fillStartEndStationFromDb(routesResponse: RoutesResponse) {
-        val dao = db.routeInfoDao()
-
-        routesResponse.direct?.forEach { dr ->
-            val rid = dr.RouteID ?: return@forEach
-            if (dr.startStation != null && dr.endStation != null) return@forEach
-            val entity = dao.findByRouteId(rid) ?: return@forEach
-            if (dr.startStation == null) dr.startStation = entity.startNameEn
-            if (dr.endStation == null) dr.endStation = entity.endNameEn
-            if (dr.validFrom == null) dr.validFrom = entity.validFrom
-            if (dr.validTo == null) dr.validTo = entity.validTo
-        }
-
-        routesResponse.connected?.forEach { dr ->
-            val rid = dr.RouteID ?: return@forEach
-            if (dr.startStation != null && dr.endStation != null) return@forEach
-            val entity = dao.findByRouteId(rid) ?: return@forEach
-            if (dr.startStation == null) dr.startStation = entity.startNameEn
-            if (dr.endStation == null) dr.endStation = entity.endNameEn
-            if (dr.validFrom == null) dr.validFrom = entity.validFrom
-            if (dr.validTo == null) dr.validTo = entity.validTo
-        }
-    }
-
-    private fun fillStartEndStation(
-        dr: DirectRoute,
-        full: DirectRoute? = null
-    ) {
+    private fun fillStartEndStation(dr: DirectRoute, full: DirectRoute? = null) {
         val actual = full ?: dr
         val firstStop = actual.timetable_items?.firstOrNull()?.routestop?.stop
         val lastStop = actual.timetable_items?.lastOrNull()?.routestop?.stop
 
-        firstStop?.let {
-            dr.startStation = it.Name_en ?: "Unknown start"
+        if (dr.startStation == null) {
+            dr.startStation = firstStop?.Name_en ?: "Unknown start"
         }
-        lastStop?.let {
-            dr.endStation = it.Name_en ?: "Unknown end"
+        if (dr.endStation == null) {
+            dr.endStation = lastStop?.Name_en ?: "Unknown end"
         }
 
-        //    validFrom/validTo
         dr.validFrom = actual.route?.ValidFrom
         dr.validTo = actual.route?.ValidTo
     }
 
-    private fun findRouteInCumulativeJson(
-        rootObj: JsonObject,
-        gson: Gson,
-        routeId: Int
-    ): DirectRoute? {
-        for ((_, secondLevel) in rootObj.entrySet()) {
-            val secondObj = secondLevel.asJsonObject
-            for ((_, pairValue) in secondObj.entrySet()) {
-                val pairObj = pairValue.asJsonObject
-                if (!pairObj.has("direct")) continue
-                val directArr = pairObj.getAsJsonArray("direct")
-                directArr.forEach { elem ->
-                    val dr = gson.fromJson(elem, DirectRoute::class.java)
-                    if (dr.RouteID == routeId) {
-                        return dr
-                    }
-                }
-            }
-        }
-        return null
-    }
-
     // ------------------------------------------------------------------------
-    //    route_info    ( )
+    // route_info (оставил как у тебя)
     // ------------------------------------------------------------------------
     suspend fun updateRouteInfoFromCumulative(force: Boolean = false) {
         withContext(Dispatchers.IO) {
@@ -410,18 +316,19 @@ open class TrainRepository(
                         val lastStop = dr.timetable_items?.lastOrNull()?.routestop?.stop
                         if (firstStop == null || lastStop == null) return@forEach
 
-                        val entity = RouteInfoEntity(
-                            routeId = routeId,
-                            startNameEn = firstStop.Name_en ?: "",
-                            startNameMe = firstStop.Name_me ?: "",
-                            startNameMeCyr = firstStop.Name_me_cyr,
-                            endNameEn = lastStop.Name_en ?: "",
-                            endNameMe = lastStop.Name_me ?: "",
-                            endNameMeCyr = lastStop.Name_me_cyr,
-                            validFrom = dr.route?.ValidFrom,
-                            validTo = dr.route?.ValidTo
+                        result.add(
+                            RouteInfoEntity(
+                                routeId = routeId,
+                                startNameEn = firstStop.Name_en ?: "",
+                                startNameMe = firstStop.Name_me ?: "",
+                                startNameMeCyr = firstStop.Name_me_cyr,
+                                endNameEn = lastStop.Name_en ?: "",
+                                endNameMe = lastStop.Name_me ?: "",
+                                endNameMeCyr = lastStop.Name_me_cyr,
+                                validFrom = dr.route?.ValidFrom,
+                                validTo = dr.route?.ValidTo
+                            )
                         )
-                        result.add(entity)
                     }
                 }
 
@@ -434,18 +341,19 @@ open class TrainRepository(
                         val lastStop = dr.timetable_items?.lastOrNull()?.routestop?.stop
                         if (firstStop == null || lastStop == null) return@forEach
 
-                        val entity = RouteInfoEntity(
-                            routeId = routeId,
-                            startNameEn = firstStop.Name_en ?: "",
-                            startNameMe = firstStop.Name_me ?: "",
-                            startNameMeCyr = firstStop.Name_me_cyr,
-                            endNameEn = lastStop.Name_en ?: "",
-                            endNameMe = lastStop.Name_me ?: "",
-                            endNameMeCyr = lastStop.Name_me_cyr,
-                            validFrom = dr.route?.ValidFrom,
-                            validTo = dr.route?.ValidTo
+                        result.add(
+                            RouteInfoEntity(
+                                routeId = routeId,
+                                startNameEn = firstStop.Name_en ?: "",
+                                startNameMe = firstStop.Name_me ?: "",
+                                startNameMeCyr = firstStop.Name_me_cyr,
+                                endNameEn = lastStop.Name_en ?: "",
+                                endNameMe = lastStop.Name_me ?: "",
+                                endNameMeCyr = lastStop.Name_me_cyr,
+                                validFrom = dr.route?.ValidFrom,
+                                validTo = dr.route?.ValidTo
+                            )
                         )
-                        result.add(entity)
                     }
                 }
             }
@@ -453,13 +361,20 @@ open class TrainRepository(
         return result
     }
 
+    /**
+     * validTo = yyyy-MM-dd считаем “включительно до конца дня”.
+     */
     private fun isDateExpired(dateStr: String?): Boolean {
         if (dateStr.isNullOrEmpty()) return true
         return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = sdf.parse(dateStr)
-            date?.time ?: 0 < System.currentTimeMillis()
-        } catch (e: Exception) {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val date = sdf.parse(dateStr) ?: return true
+            val cal = Calendar.getInstance().apply {
+                time = date
+                add(Calendar.DATE, 1)
+            }
+            System.currentTimeMillis() >= cal.timeInMillis
+        } catch (_: Exception) {
             true
         }
     }

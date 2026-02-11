@@ -19,25 +19,32 @@ import com.queukat.train.R
 
 object NotificationHelper {
 
-    /* ---------- Reminder channel ---------- */
     private const val REMINDER_CHANNEL_ID = "TRAIN_REMINDER_CHANNEL"
-    private const val UPDATE_CHANNEL_ID   = "UPDATE_CHANNEL"
+    private const val UPDATE_CHANNEL_ID = "UPDATE_CHANNEL"
     private const val UPDATE_NOTIFICATION_ID = 1003
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            //      
+            val nm = context.getSystemService(NotificationManager::class.java)
+
             val reminderName = context.getString(R.string.train_reminder_channel_name)
             val reminderDesc = context.getString(R.string.train_reminder_channel_description)
             val reminderChannel = NotificationChannel(
                 REMINDER_CHANNEL_ID,
                 reminderName,
                 NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = reminderDesc
-            }
-            context.getSystemService(NotificationManager::class.java)
-                .createNotificationChannel(reminderChannel)
+            ).apply { description = reminderDesc }
+
+            val updateName = context.getString(R.string.update_channel_name)
+            val updateDesc = context.getString(R.string.update_channel_description)
+            val updateChannel = NotificationChannel(
+                UPDATE_CHANNEL_ID,
+                updateName,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply { description = updateDesc }
+
+            nm.createNotificationChannel(reminderChannel)
+            nm.createNotificationChannel(updateChannel)
         }
     }
 
@@ -51,14 +58,13 @@ object NotificationHelper {
         if (!canPostNotifications(context)) return
 
         val pendingIntent = PendingIntent.getActivity(
-            context, 0,
+            context,
+            0,
             Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val largeIcon = BitmapFactory.decodeResource(
-            context.resources, R.mipmap.ic_my_new_icon
-        )
+        val largeIcon = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_my_new_icon)
 
         val builder = NotificationCompat.Builder(context, REMINDER_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_my_new_icon)
@@ -69,18 +75,21 @@ object NotificationHelper {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
 
-        NotificationManagerCompat.from(context)
-            .notify(notificationId, builder.build())
+        NotificationManagerCompat.from(context).notify(notificationId, builder.build())
     }
 
-    fun canPostNotifications(context: Context): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    fun canPostNotifications(context: Context): Boolean {
+        val appEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+
+        val permOk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            NotificationManagerCompat.from(context).areNotificationsEnabled()
-        }
+        } else true
+
+        return appEnabled && permOk
+    }
+
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun showUpdateNotification(
@@ -90,24 +99,9 @@ object NotificationHelper {
     ) {
         if (!canPostNotifications(context)) return
 
-        // ё  ( )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val updateName = context.getString(R.string.update_channel_name)
-            val updateDesc = context.getString(R.string.update_channel_description)
-            val updateChannel = NotificationChannel(
-                UPDATE_CHANNEL_ID,
-                updateName,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = updateDesc
-            }
-            NotificationManagerCompat.from(context)
-                .createNotificationChannel(updateChannel)
-        }
-
-        //    
         val pendingIntent = PendingIntent.getActivity(
-            context, 0,
+            context,
+            0,
             Intent(
                 Intent.ACTION_VIEW,
                 "https://github.com/queukat/TrainApp/releases/latest".toUri()
@@ -115,27 +109,19 @@ object NotificationHelper {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        // ё   
-        val title = context.getString(
-            R.string.update_notification_title,
-            latestVersion
-        )
-        val text  = context.getString(R.string.update_notification_message)
-        val bigText = releaseNotes
-            ?: context.getString(R.string.update_notification_bigtext)
+        val title = context.getString(R.string.update_notification_title, latestVersion)
+        val text = context.getString(R.string.update_notification_message)
+        val bigText = releaseNotes ?: context.getString(R.string.update_notification_bigtext, "")
 
         val builder = NotificationCompat.Builder(context, UPDATE_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_download_done)
+            .setSmallIcon(R.mipmap.ic_my_new_icon)
             .setContentTitle(title)
             .setContentText(text)
-            .setStyle(
-                NotificationCompat.BigTextStyle().bigText(bigText)
-            )
+            .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
 
-        NotificationManagerCompat.from(context)
-            .notify(UPDATE_NOTIFICATION_ID, builder.build())
+        NotificationManagerCompat.from(context).notify(UPDATE_NOTIFICATION_ID, builder.build())
     }
 }

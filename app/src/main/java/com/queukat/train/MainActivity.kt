@@ -14,7 +14,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.firebase.FirebaseApp
 import com.queukat.train.data.db.AppDatabase
 import com.queukat.train.data.repository.TrainRepository
 import com.queukat.train.ui.MainScreen
@@ -22,7 +21,6 @@ import com.queukat.train.ui.TrainViewModel
 import com.queukat.train.ui.TrainViewModelFactory
 import com.queukat.train.ui.theme.TrainAppTheme
 import com.queukat.train.util.NotificationHelper
-import com.queukat.train.util.ReminderUtils
 import com.queukat.train.util.UpdateCheck
 import com.queukat.train.util.UpdateResult
 import kotlinx.coroutines.launch
@@ -36,34 +34,36 @@ class MainActivity : ComponentActivity() {
     private lateinit var notifPermissionLauncher: ActivityResultLauncher<String>
     private var pendingUpdate: UpdateResult? = null
 
-
-    @RequiresApi(Build.VERSION_CODES.S)
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        FirebaseApp.initializeApp(this)
-
-        /* 0)  REMINDER */
+        // 0) Notification channels
         NotificationHelper.createNotificationChannel(this)
 
-        /* 1) launcher  */
+        // 1) Permission launcher
         notifPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
-            if (granted) pendingUpdate?.let {
-                @Suppress("MissingPermission")
-                NotificationHelper.showUpdateNotification(
-                    this, it.latestVersion, it.releaseNotes
-                )
+            if (granted) {
+                pendingUpdate?.let { result ->
+                    @Suppress("MissingPermission")
+                    NotificationHelper.showUpdateNotification(
+                        this,
+                        result.latestVersion,
+                        result.releaseNotes
+                    )
+                    markUpdateNotified(result.latestVersion)
+                }
             }
             pendingUpdate = null
         }
 
-        /* 2)   */
+        // 2) Update check (throttled inside UpdateCheck) + notify once per version
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val result = UpdateCheck.checkForUpdates(this@MainActivity)
-                if (result.isUpdateAvailable) {
+                if (result.isUpdateAvailable && shouldNotifyUpdate(result.latestVersion)) {
                     if (NotificationHelper.canPostNotifications(this@MainActivity)) {
                         @Suppress("MissingPermission")
                         NotificationHelper.showUpdateNotification(
@@ -71,6 +71,7 @@ class MainActivity : ComponentActivity() {
                             result.latestVersion,
                             result.releaseNotes
                         )
+                        markUpdateNotified(result.latestVersion)
                     } else {
                         pendingUpdate = result
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -78,19 +79,19 @@ class MainActivity : ComponentActivity() {
                         } else {
                             Toast.makeText(
                                 this@MainActivity,
-                                "  ${result.latestVersion} !",
+                                "Update ${result.latestVersion} available!",
                                 Toast.LENGTH_LONG
                             ).show()
+                            // для <13 отметим, чтобы не повторять
+                            markUpdateNotified(result.latestVersion)
+                            pendingUpdate = null
                         }
                     }
                 }
             }
         }
 
-        /* 3) Exact Alarm permission */
-        ReminderUtils.ensureExactAlarmPermission(this, 1002)
-
-        /* 4) ViewModel + UI */
+        // 3) ViewModel + UI
         val db = AppDatabase.getInstance(applicationContext)
         val repo = TrainRepository(db, applicationContext)
         val factory = TrainViewModelFactory(application, repo)
@@ -110,5 +111,16 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    private fun shouldNotifyUpdate(latestVersion: String): Boolean {
+        val prefs = getSharedPreferences("train_prefs", MODE_PRIVATE)
+        val lastNotified = prefs.getString("last_notified_update_version", null)
+        return lastNotified != latestVersion
+    }
+
+    private fun markUpdateNotified(latestVersion: String) {
+        val prefs = getSharedPreferences("train_prefs", MODE_PRIVATE)
+        prefs.edit().putString("last_notified_update_version", latestVersion).apply()
     }
 }

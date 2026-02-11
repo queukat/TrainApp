@@ -21,15 +21,6 @@ import kotlinx.coroutines.withTimeout
 
 private const val TAG = "TrainViewModel"
 
-/**
- * ViewModel  MainActivity.
- * -   (fromStation, toStation, selectedDate),
- * -   (stops),
- * -   (routes),
- * -   (fullRoute)  ,
- * -  ,  loading,
- * -   (handleReminderAction).
- */
 open class TrainViewModel(
     application: Application,
     private val repo: TrainRepository
@@ -44,9 +35,6 @@ open class TrainViewModel(
         loadSavedRoutes()
     }
 
-    /**
-     *   «»   SharedPreferences  ё  StateFlow.
-     */
     fun loadSavedRoutes() {
         val routes = prefs.getStringSet("saved_routes", emptySet())
             ?.toList()
@@ -55,9 +43,6 @@ open class TrainViewModel(
         _savedRoutes.value = routes
     }
 
-    /**
-     *  (from - to)  «» ,   StateFlow.
-     */
     fun saveRoute(from: String, to: String) {
         viewModelScope.launch {
             if (from.isNotBlank() && to.isNotBlank()) {
@@ -94,21 +79,9 @@ open class TrainViewModel(
     private val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
 
-    // --  :
-
-    fun setFromStation(text: String) {
-        _fromStation.value = text
-    }
-
-    fun setToStation(text: String) {
-        _toStation.value = text
-    }
-
-    fun setSelectedDate(date: String) {
-        _selectedDate.value = date
-    }
-
-    // --   + cumulative ( ):
+    fun setFromStation(text: String) { _fromStation.value = text }
+    fun setToStation(text: String) { _toStation.value = text }
+    fun setSelectedDate(date: String) { _selectedDate.value = date }
 
     fun loadStops(force: Boolean = false) {
         viewModelScope.launch {
@@ -117,8 +90,9 @@ open class TrainViewModel(
                 repo.ensureStopsUpToDate(force)
                 _stops.value = repo.getAllStopsFromDb()
 
-                //  (  UI)  cumulative-
-                repo.ensureCumulativeCached()
+                // ВАЖНО: не прогреваем cumulative на старте — это тормозит Android 9.
+                // Cumulative подтянется только когда реально понадобится Full Route.
+
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load stops: ${e.message}", e)
                 _errorMessage.value = getApplication<Application>().getString(
@@ -131,18 +105,11 @@ open class TrainViewModel(
         }
     }
 
-    // --    API ( ):
-
     fun loadRoutes(from: String, to: String, date: String) {
-        // :   ё "Belgrade Center",   "Beograd Centar"
         var fromForApi = from
         var toForApi = to
-        if (fromForApi.equals("Belgrade Center", ignoreCase = true)) {
-            fromForApi = "Beograd Centar"
-        }
-        if (toForApi.equals("Belgrade Center", ignoreCase = true)) {
-            toForApi = "Beograd Centar"
-        }
+        if (fromForApi.equals("Belgrade Center", ignoreCase = true)) fromForApi = "Beograd Centar"
+        if (toForApi.equals("Belgrade Center", ignoreCase = true)) toForApi = "Beograd Centar"
 
         viewModelScope.launch {
             _loading.value = true
@@ -150,13 +117,10 @@ open class TrainViewModel(
                 withTimeout(10_000) {
                     val r = repo.getRoutes(fromForApi, toForApi, date)
                     _routes.value = r
-                    _errorMessage.value = null // reset previous errors
+                    _errorMessage.value = null
                     if (r == null || (r.direct.isNullOrEmpty() && r.connected.isNullOrEmpty())) {
-                        _errorMessage.value =
-                            getApplication<Application>().getString(R.string.toast_no_results)
-                        if (r == null) {
-                            _routes.value = null
-                        }
+                        _errorMessage.value = getApplication<Application>().getString(R.string.toast_no_results)
+                        if (r == null) _routes.value = null
                     }
                 }
             } catch (e: Exception) {
@@ -171,20 +135,15 @@ open class TrainViewModel(
         }
     }
 
-    // --    ( cumulative):
-
     fun loadFullRoute(routeId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            val dr = repo.getFullRouteFromCumulative(routeId)
-            _fullRoute.value = dr
+            _fullRoute.value = repo.getFullRouteFromCumulative(routeId)
         }
     }
 
     fun clearFullRoute() {
         _fullRoute.value = null
     }
-
-    // --   (Push / Calendar / Both / None):
 
     fun handleReminderAction(
         route: DirectRoute,
@@ -198,8 +157,8 @@ open class TrainViewModel(
                 _errorMessage.value = context.getString(R.string.toast_no_departure_time)
                 return@launch
             }
-            val dateStr = selectedDate.value.ifBlank { return@launch }
 
+            val dateStr = selectedDate.value.ifBlank { return@launch }
             val depDateTime = DateTimeUtils.parseDateTime("$dateStr $depTime") ?: run {
                 _errorMessage.value = context.getString(R.string.toast_cant_parse_departure)
                 return@launch
@@ -208,15 +167,27 @@ open class TrainViewModel(
             val depMillis = depDateTime.time
             val trainNum = route.TrainNumber ?: "Unknown"
 
+            val stationName = route.startStation
+                ?: route.timetable_items?.firstOrNull()?.routestop?.stop?.Name_en
+                ?: context.getString(R.string.unknown_station)
+
             when (action) {
-                "push" -> {
-                    ReminderUtils.schedulePushNotification(context, trainNum, depMillis, minutesBefore)
-                }
-                "calendar" -> {
-                    addEventToCalendar(context, route, depMillis)
-                }
+                "push" -> ReminderUtils.schedulePushNotification(
+                    context = context,
+                    trainNumber = trainNum,
+                    departureTimeMs = depMillis,
+                    minutesBefore = minutesBefore,
+                    stationName = stationName
+                )
+                "calendar" -> addEventToCalendar(context, route, depMillis)
                 "both" -> {
-                    ReminderUtils.schedulePushNotification(context, trainNum, depMillis, minutesBefore)
+                    ReminderUtils.schedulePushNotification(
+                        context = context,
+                        trainNumber = trainNum,
+                        departureTimeMs = depMillis,
+                        minutesBefore = minutesBefore,
+                        stationName = stationName
+                    )
                     addEventToCalendar(context, route, depMillis)
                 }
                 "none" -> Unit
@@ -227,11 +198,15 @@ open class TrainViewModel(
     private fun addEventToCalendar(context: Context, route: DirectRoute, departureTimeMs: Long) {
         val endTimeMs = departureTimeMs + 60L * 60_000
         val trainNum = route.TrainNumber ?: "Unknown"
-        val fromSt = route.timetable_items?.firstOrNull()?.routestop?.stop?.Name_en ?: "From"
-        val toSt   = route.timetable_items?.lastOrNull()?.routestop?.stop?.Name_en  ?: "To"
+        val fromSt = route.startStation
+            ?: route.timetable_items?.firstOrNull()?.routestop?.stop?.Name_en
+            ?: "From"
+        val toSt = route.endStation
+            ?: route.timetable_items?.lastOrNull()?.routestop?.stop?.Name_en
+            ?: "To"
 
         val title = "Train $trainNum: $fromSt → $toSt"
-        val desc = "Generated from handleReminderAction"
+        val desc = "Generated from reminder action"
 
         ReminderUtils.scheduleCalendarEvent(
             context,
@@ -243,14 +218,9 @@ open class TrainViewModel(
         )
     }
 
-    // -- ё «time to departure» ( UI),  :
-
     fun refreshTimeToDeparture() {
-        _routes.value = _routes.value?.copy()   // data‑class  shallow‑copy →  
+        _routes.value = _routes.value?.copy()
     }
-
-
-    // --  ,    :
 
     fun clearError() {
         _errorMessage.value = null

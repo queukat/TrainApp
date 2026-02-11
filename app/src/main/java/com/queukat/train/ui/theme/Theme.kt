@@ -23,25 +23,22 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = CustomBackground
 )
 
-
 private val DarkColorScheme = darkColorScheme(
     primary = CustomPrimary,
     onPrimary = CustomSurface,
     secondary = CustomAccentYellow,
     onSecondary = CustomTextPrimary,
-    background = CustomTextPrimary, //  #121212
-    surface = CustomTextPrimary,    //  #1E1E1E
+    background = CustomTextPrimary,
+    surface = CustomTextPrimary,
 )
 
 @Composable
 fun TrainAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    //     Material3 (Android 12+)
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        //   dynamicColor ( )
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (darkTheme) dynamicDarkColorScheme(LocalView.current.context)
             else dynamicLightColorScheme(LocalView.current.context)
@@ -50,15 +47,21 @@ fun TrainAppTheme(
         else -> LightColorScheme
     }
 
-    //   - ( )
     val view = LocalView.current
     SideEffect {
         val activity = view.context as? android.app.Activity ?: return@SideEffect
-        //   -
-        activity.window?.statusBarColor = android.graphics.Color.TRANSPARENT
-        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
 
-        //   WindowCompat  ""  "ё"  
+        // На Android 9/10 popup-меню (DropdownMenu) часто ломается при edge-to-edge.
+        // Поэтому edge-to-edge включаем только на Android 11+.
+        val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+
+        if (edgeToEdge) {
+            activity.window?.statusBarColor = android.graphics.Color.TRANSPARENT
+            WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        } else {
+            WindowCompat.setDecorFitsSystemWindows(activity.window, true)
+        }
+
         WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
             isAppearanceLightStatusBars = !darkTheme
         }
@@ -66,7 +69,7 @@ fun TrainAppTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // . Type.kt,   
+        typography = Typography,
         content = content
     )
 }

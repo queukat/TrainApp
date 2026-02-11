@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Example app name -->
     <string name="app_name">TrainMe</string>
 
-    <!-- Common phrases -->
     <string name="toast_route_saved">Ruta sačuvana</string>
     <string name="toast_select_stations_first">Molimo vas, najprije izaberite obje stanice</string>
     <string name="toast_pick_date">Molimo vas, odaberite datum</string>
@@ -14,11 +12,8 @@
     <string name="toast_no_departure_time">Nije pronađeno vrijeme polaska</string>
     <string name="toast_cant_parse_departure">Ne mogu da protumačim vrijeme polaska</string>
     <string name="toast_no_reminder_set">Podsjetnik nije postavljen</string>
-    <string name="toast_reminder_set">
-        Podsjetnik postavljen za voz %1$s (%2$d min prije)
-    </string>
+    <string name="toast_reminder_set">Podsjetnik postavljen za voz %1$s (%2$d min prije)</string>
 
-    <!-- Dialog: choose reminder -->
     <string name="dialog_reminder_title">Izaberite tip podsjetnika</string>
     <string name="dialog_reminder_ok">U redu</string>
     <string name="dialog_reminder_cancel">Otkaži</string>
@@ -29,25 +24,18 @@
     <string name="hint_reminder_minutes">Minuta prije polaska</string>
     <string name="checkbox_remember_choice">Zapamti moj izbor</string>
 
-    <!-- Date picker -->
     <string name="select_date_title">Odaberite datum</string>
 
-    <!-- Labels for "connected routes" -->
     <string name="connected_routes_label">Povezane rute:</string>
 
-    <!-- Full route dialog -->
     <string name="full_route_title">Cjelovita ruta voza %1$s</string>
 
-    <!-- "time to departure", etc. -->
     <string name="train_label">Voz %1$s (%2$s - %3$s)</string>
     <string name="price_format">%.2f €</string>
     <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
 
-    <!-- Notification (Receiver) -->
     <string name="reminder_notification_title">Podsjetnik za voz %1$s</string>
-    <string name="reminder_notification_message">
-        Vrijeme je da krenete do stanice: %1$s (za %2$d min).
-    </string>
+    <string name="reminder_notification_message">Vrijeme je da krenete do stanice: %1$s (za %2$d min).</string>
 
     <string name="label_default_reminder">Podrazumijevana radnja podsjetnika:</string>
     <string name="label_minutes_before">Minuta prije polaska (podrazumijevano):</string>
@@ -56,43 +44,42 @@
     <string name="btn_test_push_later">Test obavještenja za 1 minut</string>
     <string name="btn_apply">Primijeni</string>
 
-    <!-- Buttons -->
     <string name="btn_settings">Postavke</string>
     <string name="btn_search">Pretraga</string>
     <string name="btn_save_route">Sačuvaj rutu</string>
 
-    <!-- Station hints (editable fields) -->
     <string name="hint_from_station">Polazna stanica</string>
     <string name="hint_to_station">Dolazna stanica</string>
 
-    <!-- Accessibility contentDescriptions -->
     <string name="cdesc_select_departure_station">Izaberi polaznu stanicu</string>
     <string name="cdesc_select_arrival_station">Izaberi dolaznu stanicu</string>
     <string name="cdesc_clear_date">Obriši datum</string>
     <string name="cdesc_pick_date">Odaberi datum</string>
 
-    <!-- Label for date -->
     <string name="label_date">Datum:</string>
     <string name="cdesc_select_train">obavještenje</string>
 
-    <!-- Disclaimer -->
     <string name="disclaimer_text">
         Ova aplikacija nije zvanična niti podržana od bilo koje organizacije.
         Napravljena je dobrovoljno, besplatno, iz ličnog entuzijazma.
     </string>
 
-    <!-- Language for stations -->
     <string name="label_select_language_for_stations">Odaberite jezik stanica</string>
-    <string name="hint_language_for_stations">
-        Ova opcija se koristi samo za preuzimanje naziva stanica na izabranom jeziku
-    </string>
+    <string name="hint_language_for_stations">Ova opcija se koristi samo za preuzimanje naziva stanica na izabranom jeziku</string>
     <string name="btn_back">Nazad</string>
     <string name="direct_routes_label">Direktne rute:</string>
     <string name="unknown_label">Nepoznato</string>
     <string name="train_departed">Voz je krenuo</string>
     <string name="label_travel_time">Vrijeme putovanja: %1$s</string>
-    <string name="time_in_h_and_m"> %1$d h %2$d min</string>
-    <string name="time_in_m"> %1$d min</string>
+
+    <!-- FIX -->
+    <string name="time_in_h_and_m">%1$d h %2$d min</string>
+    <string name="time_in_m">%1$d min</string>
+
+    <!-- NEW -->
+    <string name="time_in_d_and_h">%1$d d %2$d h</string>
+    <string name="time_until_prefix">Za %1$s</string>
+
     <string name="label_reminder">Podsjetnik</string>
     <string name="two_class_prices_format">Klasa1: %1$s / Klasa2: %2$s</string>
     <string name="one_class_price_format">Cijena: %1$s</string>
@@ -120,5 +107,4 @@
     <string name="update_notification_title">Dostupno ažuriranje: v%1$s</string>
     <string name="update_notification_message">Dodirnite da preuzmete novu verziju</string>
     <string name="update_notification_bigtext">%1$s</string>
-
 </resources>

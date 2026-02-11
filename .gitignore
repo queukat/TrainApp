@@ -29,7 +29,6 @@ local.properties
 # --- 2) Gradle ---
 
 /.gradle
-/local.properties
 gradle-app.setting
 gradle.properties
 gradlew
@@ -46,7 +45,6 @@ gradlew.bat
 
 #     
 .idea/
-*.iml
 *.ipr
 *.iws
 *.idea/misc.xml
@@ -61,7 +59,17 @@ gradlew.bat
 *.orig
 *.bak
 *.tmp
-
-.DS_Store
 Thumbs.db
 /keystore.b64
+# secrets
+KEY_B64.txt
+*.jks
+*.keystore
+*.b64
+
+# build artifacts
+/app/release/
+/app/build/
+/**/*.apk
+/**/*.aab
+/**/output-metadata.json

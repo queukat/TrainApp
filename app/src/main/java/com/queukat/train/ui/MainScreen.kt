@@ -45,9 +45,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.core.content.edit
 import com.queukat.train.R
 import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.ui.theme.TrainAppTheme
+import com.queukat.train.util.DateTimeUtils
 import kotlinx.coroutines.delay
 import java.util.Calendar
 import java.util.Locale
@@ -61,7 +63,6 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
-    //    ViewModel
     val savedRoutes by mainViewModel.savedRoutes.collectAsState()
     val fromStation by mainViewModel.fromStation.collectAsState()
     val toStation by mainViewModel.toStation.collectAsState()
@@ -72,17 +73,26 @@ fun MainScreen(
     val errorMessage by mainViewModel.errorMessage.collectAsState()
     val fullRoute by mainViewModel.fullRoute.collectAsState()
 
-    //      ё 
     LaunchedEffect(Unit) {
         mainViewModel.loadSavedRoutes()
     }
 
-    // ё   prefs (    )
     val prefs: SharedPreferences = context.getSharedPreferences("train_prefs", Activity.MODE_PRIVATE)
-    val lang = prefs.getString("appLanguage", Locale.getDefault().language) ?: "en"
+
+    // --- FIX: язык станций не должен зависеть от языка интерфейса ---
+    // Если pref отсутствует/битый — ставим EN и сохраняем, чтобы дальше не “скакало”.
+    val allowedLangs = setOf("en", "me", "meCyr")
+    val lang = remember {
+        val raw = prefs.getString("appLanguage", null)
+        val normalized = if (raw in allowedLangs) raw!! else "en"
+        if (raw == null || raw !in allowedLangs) {
+            prefs.edit { putString("appLanguage", normalized) }
+        }
+        normalized
+    }
+
     val autoRefreshTime = remember { mutableStateOf(prefs.getBoolean("autoRefreshTime", true)) }
 
-    //   «» ViewModel,   « X »
     LaunchedEffect(autoRefreshTime.value) {
         while (true) {
             delay(60_000)
@@ -92,13 +102,11 @@ fun MainScreen(
         }
     }
 
-    //    (FullRouteDialog)
     var showFullRouteDialog by remember { mutableStateOf(false) }
     LaunchedEffect(fullRoute) {
         showFullRouteDialog = (fullRoute != null)
     }
 
-    //    (ReminderChoiceDialog)
     var reminderDialogRoute by remember { mutableStateOf<DirectRoute?>(null) }
 
     Scaffold(
@@ -110,14 +118,10 @@ fun MainScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // ---  «»  (  primary) ---
                         FilledIconButton(
                             onClick = {
                                 val uri = "https://ko-fi.com/queukat".toUri()
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    uri
-                                )
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
                                 context.startActivity(intent)
                             },
                             modifier = Modifier.size(26.dp),
@@ -126,7 +130,6 @@ fun MainScreen(
                                 contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
-                            //     ё "ic_donut",  painterResource(R.drawable.ic_donut)
                             Icon(
                                 painter = painterResource(R.drawable.ic_donut_2),
                                 contentDescription = stringResource(R.string.label_support_dev_on_ko_fi),
@@ -134,7 +137,6 @@ fun MainScreen(
                             )
                         }
 
-                        // ---  «»  ---
                         IconButton(onClick = onOpenSettings) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
@@ -153,16 +155,13 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background) // <-   
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-                    // 1) ,  
                     if (!errorMessage.isNullOrEmpty()) {
                         item {
                             Text(
@@ -173,7 +172,6 @@ fun MainScreen(
                         }
                     }
 
-                    // 2)   (SearchPanel)
                     item {
                         SearchPanel(
                             fromStation = fromStation,
@@ -195,22 +193,15 @@ fun MainScreen(
                                 }
 
                                 val finalDate = selectedDate.ifBlank {
-                                    val cal = Calendar.getInstance()
-                                    String.format(
-                                        Locale.getDefault(),
-                                        "%04d-%02d-%02d",
-                                        cal.get(Calendar.YEAR),
-                                        cal.get(Calendar.MONTH) + 1,
-                                        cal.get(Calendar.DAY_OF_MONTH)
-                                    )
+                                    DateTimeUtils.todayTrainDateString()
                                 }
+
                                 mainViewModel.setSelectedDate(finalDate)
                                 mainViewModel.loadRoutes(fromStation, toStation, finalDate)
                             }
                         )
                     }
 
-                    // 3)  ё  (SavedRoutesBlock)
                     item {
                         SavedRoutesBlock(
                             fromStation = fromStation,
@@ -242,7 +233,6 @@ fun MainScreen(
                         )
                     }
 
-                    // 4)   routesResponse –  direct/connected 
                     routesResponse?.let { rr ->
                         val directRoutes = rr.direct.orEmpty()
                         val connectedRoutes = rr.connected.orEmpty()
@@ -262,9 +252,7 @@ fun MainScreen(
                                     selectedDate = selectedDate,
                                     priceInfo = priceInfo,
                                     onTrainSelected = { chosen -> reminderDialogRoute = chosen },
-                                    onFullRouteNeeded = { routeId ->
-                                        mainViewModel.loadFullRoute(routeId)
-                                    },
+                                    onFullRouteNeeded = { routeId -> mainViewModel.loadFullRoute(routeId) },
                                     onReminderClick = { chosen -> reminderDialogRoute = chosen }
                                 )
                             }
@@ -284,9 +272,7 @@ fun MainScreen(
                                     selectedDate = selectedDate,
                                     priceInfo = priceInfo,
                                     onTrainSelected = { chosen -> reminderDialogRoute = chosen },
-                                    onFullRouteNeeded = { routeId ->
-                                        mainViewModel.loadFullRoute(routeId)
-                                    },
+                                    onFullRouteNeeded = { routeId -> mainViewModel.loadFullRoute(routeId) },
                                     onReminderClick = { chosen -> reminderDialogRoute = chosen }
                                 )
                             }
@@ -297,7 +283,6 @@ fun MainScreen(
         }
     }
 
-    //  "Full Route"
     if (showFullRouteDialog && fullRoute != null) {
         FullRouteDialog(
             route = fullRoute!!.timetable_items ?: emptyList(),
@@ -309,7 +294,6 @@ fun MainScreen(
         )
     }
 
-    //    (ReminderChoiceDialog)
     if (reminderDialogRoute != null) {
         ReminderChoiceDialog(
             route = reminderDialogRoute!!,

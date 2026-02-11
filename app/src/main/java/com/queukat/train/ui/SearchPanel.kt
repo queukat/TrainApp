@@ -21,51 +21,49 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.queukat.train.R
 import com.queukat.train.data.db.StopEntity
 import com.queukat.train.ui.theme.CustomSurface
-import com.queukat.train.ui.theme.TrainAppTheme
+import com.queukat.train.util.Dbg
 import java.util.Calendar
 import java.util.Locale
-import androidx.compose.ui.text.input.TextFieldValue
-
 
 @Composable
 fun SearchPanel(
     fromStation: String,
-    toStation:   String,
+    toStation: String,
     selectedDate: String,
     stops: List<StopEntity>,
     language: String,
     onFromChanged: (String) -> Unit,
-    onToChanged:   (String) -> Unit,
-    onDatePicked:  (String) -> Unit,
+    onToChanged: (String) -> Unit,
+    onDatePicked: (String) -> Unit,
     onSearchClicked: () -> Unit
 ) {
-    // 1)   TextFieldValue
-    var fromField by remember { mutableStateOf(TextFieldValue(fromStation)) }
-    var toField   by remember { mutableStateOf(TextFieldValue(toStation)) }
+    val context = LocalContext.current
+    val dbgEnabled = remember { Dbg.isEnabled(context) }
 
-    /*      –  */
+    var fromField by remember { mutableStateOf(TextFieldValue(fromStation)) }
+    var toField by remember { mutableStateOf(TextFieldValue(toStation)) }
+
+    LaunchedEffect(stops.size, language) {
+        Dbg.d(context, "SearchPanel", "stops.size=${stops.size} lang=$language")
+    }
+
     LaunchedEffect(fromStation) {
         if (fromStation != fromField.text) {
             fromField = TextFieldValue(
                 text = fromStation,
-                selection = TextRange(fromStation.length)   //   
+                selection = TextRange(fromStation.length)
             )
         }
     }
@@ -80,22 +78,30 @@ fun SearchPanel(
 
     Column(Modifier.padding(8.dp)) {
 
-        /* -------- From -------- */
+        if (dbgEnabled) {
+            Text(
+                text = "DBG[SearchPanel] stops=${stops.size} lang=$language from='${fromStation.take(18)}' to='${toStation.take(18)}'",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+        }
+
         AutoCompleteTextField(
             value = fromField,
             onValueChange = { newValue ->
-                fromField = newValue           //  
-                onFromChanged(newValue.text)   //  — 
+                fromField = newValue
+                onFromChanged(newValue.text)
             },
             stops = stops,
             label = stringResource(R.string.hint_from_station),
             language = language,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            debugKey = "FROM"
         )
 
         Spacer(Modifier.height(6.dp))
 
-        /* -------- To -------- */
         AutoCompleteTextField(
             value = toField,
             onValueChange = { newValue ->
@@ -105,10 +111,10 @@ fun SearchPanel(
             stops = stops,
             label = stringResource(R.string.hint_to_station),
             language = language,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            debugKey = "TO"
         )
 
-        /* -------- ,   — ё   -------- */
         Spacer(Modifier.height(6.dp))
         DatePickerField(selectedDate, onDatePicked)
         Spacer(Modifier.height(6.dp))
@@ -136,11 +142,6 @@ fun SearchPanel(
     }
 }
 
-
-/**
- * «»    :   — DatePickerDialog.
- *  «label»  (  ),     .
- */
 @Composable
 fun DatePickerField(
     dateString: String,
@@ -149,7 +150,6 @@ fun DatePickerField(
     var showDatePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    //  dateString ,  «»
     val calendar = Calendar.getInstance()
     val defaultDateString = String.format(
         Locale.getDefault(),
@@ -160,7 +160,6 @@ fun DatePickerField(
     )
     val displayedDate = dateString.ifBlank { defaultDateString }
 
-    //  «»
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -175,7 +174,6 @@ fun DatePickerField(
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        //  
         Text(
             text = displayedDate,
             color = MaterialTheme.colorScheme.onSurface,
@@ -184,7 +182,6 @@ fun DatePickerField(
             overflow = TextOverflow.Ellipsis
         )
 
-        // 
         Icon(
             imageVector = Icons.Outlined.DateRange,
             contentDescription = stringResource(R.string.label_date),
@@ -193,7 +190,6 @@ fun DatePickerField(
         )
     }
 
-    //  DatePickerDialog
     if (showDatePicker) {
         val initCal = Calendar.getInstance()
         val parts = dateString.split("-")
@@ -224,94 +220,3 @@ fun DatePickerField(
         ).show()
     }
 }
-
-@Composable
-@Preview(name = "SearchPanel Light Theme", showBackground = true)
-fun SearchPanelLightPreview() {
-    TrainAppTheme(darkTheme = false) {
-        var fromStation by remember { mutableStateOf("Podgorica") }
-        var toStation by remember { mutableStateOf("Bar") }
-        var date by remember { mutableStateOf("2025-12-31") }
-
-        val dummyStops = listOf(
-            StopEntity(
-                stopId = 1,
-                nameEn = "Podgorica",
-                nameMe = "Podgorica",
-                nameMeCyr = "",
-                stopTypeId = 1,
-                latitude = 42.4417,
-                longitude = 19.2636,
-                local = 1
-            ),
-            StopEntity(
-                stopId = 2,
-                nameEn = "Bar",
-                nameMe = "Bar",
-                nameMeCyr = "",
-                stopTypeId = 1,
-                latitude = 42.0930,
-                longitude = 19.1002,
-                local = 1
-            )
-        )
-
-        SearchPanel(
-            fromStation = fromStation,
-            toStation = toStation,
-            selectedDate = date,
-            stops = dummyStops,
-            language = "en",
-            onFromChanged = { fromStation = it },
-            onToChanged = { toStation = it },
-            onDatePicked = { date = it },
-            onSearchClicked = {}
-        )
-    }
-}
-
-@Composable
-@Preview(name = "SearchPanel Dark Theme", showBackground = true)
-fun SearchPanelDarkPreview() {
-    TrainAppTheme(darkTheme = true) {
-        var fromStation by remember { mutableStateOf("Podgorica") }
-        var toStation by remember { mutableStateOf("Bar") }
-        var date by remember { mutableStateOf("2025-12-31") }
-
-        val dummyStops = listOf(
-            StopEntity(
-                stopId = 1,
-                nameEn = "Podgorica",
-                nameMe = "Podgorica",
-                nameMeCyr = "",
-                stopTypeId = 1,
-                latitude = 42.4417,
-                longitude = 19.2636,
-                local = 1
-            ),
-            StopEntity(
-                stopId = 2,
-                nameEn = "Bar",
-                nameMe = "Bar",
-                nameMeCyr = "",
-                stopTypeId = 1,
-                latitude = 42.0930,
-                longitude = 19.1002,
-                local = 1
-            )
-        )
-
-        SearchPanel(
-            fromStation = fromStation,
-            toStation = toStation,
-            selectedDate = date,
-            stops = dummyStops,
-            language = "en",
-            onFromChanged = { fromStation = it },
-            onToChanged = { toStation = it },
-            onDatePicked = { date = it },
-            onSearchClicked = {}
-        )
-    }
-}
-
