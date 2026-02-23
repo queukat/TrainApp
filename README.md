@@ -1,19 +1,28 @@
-
 # 🚆 TrainApp
 
 **An Android application to browse train routes, set reminders, and stay updated with schedule changes using Jetpack Compose.**
 
+[![Get it on Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.queukat.train)
+
 ![Active users](badges/mau.svg?raw=1)
 ![Total users](badges/total.svg?raw=1)
 
+---
+
+## 📲 Get it on Google Play
+
+**Install the latest release here:** https://play.google.com/store/apps/details?id=com.queukat.train
+
+> Tip: If you’re sharing this repo, this is the fastest way for people to try the app.
+
+---
 
 ## Disclaimer
 
 This application is **not** the official timetable or service app of **ŽPCG AD Podgorica** (Željeznički prevoz Crne Gore).  
 For official train schedules, ticketing, and company information, please refer to the official ŽPCG website:
 
-👉 [https://www.zpcg.me](https://www.zpcg.me)
-
+👉 https://www.zpcg.me
 
 ---
 
@@ -32,8 +41,6 @@ For official train schedules, ticketing, and company information, please refer t
 - [License](#-license)
 
 ---
-
-
 
 ## 🚀 Overview
 
@@ -67,7 +74,7 @@ Jetpack Compose provides a declarative, modern UI with minimal XML, simplifying 
 
 ## 📂 Project Structure
 
-```
+```text
 train/
 ├─ MainActivity.kt
 ├─ SettingsActivity.kt
