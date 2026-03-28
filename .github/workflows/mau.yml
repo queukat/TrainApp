@@ -16,6 +16,16 @@ jobs:
           ref: ${{ github.ref_name }}
       - run: mkdir -p badges
 
+      - name: Refresh Worker cache
+        env:
+          TRAIN_STATS_REFRESH_TOKEN: ${{ secrets.TRAIN_STATS_REFRESH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 3 --retry-all-errors --max-time 15 \
+            -H "x-refresh-token: ${TRAIN_STATS_REFRESH_TOKEN}" \
+            https://train-stats.queukat.workers.dev/refresh-cache
+
       - name: Fetch stats
         id: stats
         shell: bash
