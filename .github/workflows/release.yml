@@ -44,17 +44,17 @@ jobs:
       - name: Extract version from tag
         run: |
           echo "VERSION_NAME=${GITHUB_REF_NAME}" >> $GITHUB_ENV
-          echo "VERSION_CODE=$(git tag --sort=creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l)" >> $GITHUB_ENV
+          echo "VERSION_CODE=$(git rev-list --count HEAD)" >> $GITHUB_ENV
 
 
       - name: Build with Gradle
-        run: ./gradlew assembleRelease
+        run: ./gradlew bundleRelease
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          name: release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
 
 # ---------- RELEASE ----------
   release:
@@ -69,19 +69,18 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Download APK artifact
+      - name: Download AAB artifact
         uses: actions/download-artifact@v4
         with:
-          name: release-apk
-          path: release-apk                   # ← та же папка
+          name: release-aab
+          path: release-aab
 
-      # Берём первый найденный .apk и переименовываем
-      - name: Rename APK for release
+      - name: Rename AAB for release
         run: |
-          APK_FILE=$(find release-apk -maxdepth 1 -name '*.apk' -print -quit)
-          mv "$APK_FILE" "TrainME_${{ github.ref_name }}.apk"
+          AAB_FILE=$(find release-aab -maxdepth 1 -name '*.aab' -print -quit)
+          mv "$AAB_FILE" "TrainME_${{ github.ref_name }}.aab"
 
-      - name: Create GitHub Release and upload APK
+      - name: Create GitHub Release and upload AAB
         uses: softprops/action-gh-release@v1
         with:
           tag_name:    ${{ github.ref_name }}
@@ -89,4 +88,4 @@ jobs:
           draft:       false
           prerelease:  false
           files: |
-            TrainME_${{ github.ref_name }}.apk
+            TrainME_${{ github.ref_name }}.aab
