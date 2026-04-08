@@ -50,6 +50,17 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew bundleRelease
 
+      - name: Sign AAB with jarsigner
+        run: |
+          jarsigner \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore "$TRAINAPP_KEYSTORE_FILE" \
+            -storepass "$TRAINAPP_KEYSTORE_PASSWORD" \
+            -keypass "$TRAINAPP_KEY_PASSWORD" \
+            app/build/outputs/bundle/release/app-release.aab \
+            "$TRAINAPP_KEY_ALIAS"
+
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
