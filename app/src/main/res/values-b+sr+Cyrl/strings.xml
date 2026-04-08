@@ -36,6 +36,19 @@
 
     <string name="reminder_notification_title">Подсјетник за воз %1$s</string>
     <string name="reminder_notification_message">Вријеме је да кренете до станице: %1$s (за %2$d мин).</string>
+    <string name="reminder_status_notification_permission_missing">За push подсјетник потребно је одобрење за обавјештења.</string>
+    <string name="reminder_status_exact_alarm_missing">За push подсјетник на овој верзији Androidа потребно је одобрење за тачне аларме.</string>
+    <string name="reminder_status_too_late">Подсјетник није креиран јер је полазак преблизу.</string>
+    <string name="reminder_status_push_failed">Push подсјетник није могуће заказати.</string>
+    <string name="reminder_status_calendar_opened">Календар је отворен за воз %1$s.</string>
+    <string name="reminder_status_calendar_failed">Календар није могуће отворити за воз %1$s.</string>
+    <string name="reminder_status_push_created">Подсјетник креиран за воз %1$s (%2$d мин прије поласка).</string>
+    <string name="reminder_status_push_and_calendar_created">Подсјетник је креиран и календар је отворен за воз %1$s (%2$d мин прије поласка).</string>
+    <string name="reminder_status_push_created_calendar_failed">Подсјетник је креиран за воз %1$s (%2$d мин прије поласка), али календар није могуће отворити.</string>
+    <string name="reminder_status_calendar_opened_push_notification_missing">Календар је отворен за воз %1$s, али push подсјетник није креиран јер обавјештења нијесу дозвољена.</string>
+    <string name="reminder_status_calendar_opened_push_exact_alarm_missing">Календар је отворен за воз %1$s, али push подсјетник није креиран јер тачни аларми нијесу дозвољени.</string>
+    <string name="reminder_status_calendar_opened_push_too_late">Календар је отворен за воз %1$s, али push подсјетник није креиран јер је полазак преблизу.</string>
+    <string name="reminder_status_calendar_opened_push_failed">Календар је отворен за воз %1$s, али push подсјетник није могуће заказати.</string>
 
     <string name="label_default_reminder">Подразумијевана радња подсјетника:</string>
     <string name="label_minutes_before">Минута прије поласка (подразумијевано):</string>
@@ -47,6 +60,11 @@
     <string name="btn_settings">Поставке</string>
     <string name="btn_search">Претрага</string>
     <string name="btn_save_route">Сачувај руту</string>
+    <string name="label_repeat_routes">Брзе руте</string>
+    <string name="label_favorite_routes">Омиљене</string>
+    <string name="label_recent_searches">Недавне претраге</string>
+    <string name="label_favorite_route_shortcut">Сачувана рута</string>
+    <string name="label_recent_search_last_used">Посљедња претрага %1$s</string>
 
     <string name="hint_from_station">Полазна станица</string>
     <string name="hint_to_station">Долазна станица</string>
@@ -66,17 +84,17 @@
 
     <string name="label_select_language_for_stations">Изаберите језик станица</string>
     <string name="hint_language_for_stations">Ова опција се користи само за преузимање назива станица на изабраном језику</string>
+    <string name="station_language_english">Енглески</string>
+    <string name="station_language_montenegrin_latin">Црногорски (латиница)</string>
+    <string name="station_language_montenegrin_cyrillic">Црногорски (ћирилица)</string>
     <string name="btn_back">Назад</string>
     <string name="direct_routes_label">Директне руте:</string>
     <string name="unknown_label">Непознато</string>
     <string name="train_departed">Воз је кренуо</string>
     <string name="label_travel_time">Вријеме путовања: %1$s</string>
 
-    <!-- FIX -->
     <string name="time_in_h_and_m">%1$d ч %2$d мин</string>
     <string name="time_in_m">%1$d мин</string>
-
-    <!-- NEW -->
     <string name="time_in_d_and_h">%1$d д %2$d ч</string>
     <string name="time_until_prefix">За %1$s</string>
 
@@ -92,6 +110,11 @@
     <string name="toast_failed_load_stops">Неуспјешно учитавање станица: %1$s</string>
     <string name="toast_failed_load_routes">Неуспјешно учитавање рута: %1$s</string>
     <string name="toast_no_results">Ниједна рута није пронађена</string>
+    <string name="stops_refresh_using_cache">Приказују се кеширане станице. Листа станица се тренутно не може освјежити.</string>
+    <string name="error_routes_server">Сервис реда вожње вратио је грешку (%1$d).</string>
+    <string name="error_routes_network">Није могуће контактирати сервис реда вожње. Провјерите везу и покушајте поново.</string>
+    <string name="error_routes_invalid_response">Сервис реда вожње вратио је неважећи одговор.</string>
+    <string name="error_routes_timeout">Сервис реда вожње предуго одговара.</string>
 
     <string name="label_does_not_stop">Не зауставља се</string>
     <string name="label_crossing_no_passengers">Нема путничког стајалишта</string>

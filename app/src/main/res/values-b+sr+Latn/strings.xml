@@ -36,6 +36,19 @@
 
     <string name="reminder_notification_title">Podsjetnik za voz %1$s</string>
     <string name="reminder_notification_message">Vrijeme je da krenete do stanice: %1$s (za %2$d min).</string>
+    <string name="reminder_status_notification_permission_missing">Za push podsjetnik potrebno je odobrenje za obavještenja.</string>
+    <string name="reminder_status_exact_alarm_missing">Za push podsjetnik na ovoj verziji Androida potrebno je odobrenje za tačne alarme.</string>
+    <string name="reminder_status_too_late">Podsjetnik nije kreiran jer je polazak preblizu.</string>
+    <string name="reminder_status_push_failed">Push podsjetnik nije moguće zakazati.</string>
+    <string name="reminder_status_calendar_opened">Kalendar je otvoren za voz %1$s.</string>
+    <string name="reminder_status_calendar_failed">Kalendar nije moguće otvoriti za voz %1$s.</string>
+    <string name="reminder_status_push_created">Podsjetnik kreiran za voz %1$s (%2$d min prije polaska).</string>
+    <string name="reminder_status_push_and_calendar_created">Podsjetnik je kreiran i kalendar je otvoren za voz %1$s (%2$d min prije polaska).</string>
+    <string name="reminder_status_push_created_calendar_failed">Podsjetnik je kreiran za voz %1$s (%2$d min prije polaska), ali kalendar nije moguće otvoriti.</string>
+    <string name="reminder_status_calendar_opened_push_notification_missing">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije kreiran jer obavještenja nijesu dozvoljena.</string>
+    <string name="reminder_status_calendar_opened_push_exact_alarm_missing">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije kreiran jer tačni alarmi nijesu dozvoljeni.</string>
+    <string name="reminder_status_calendar_opened_push_too_late">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije kreiran jer je polazak preblizu.</string>
+    <string name="reminder_status_calendar_opened_push_failed">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije moguće zakazati.</string>
 
     <string name="label_default_reminder">Podrazumijevana radnja podsjetnika:</string>
     <string name="label_minutes_before">Minuta prije polaska (podrazumijevano):</string>
@@ -47,6 +60,11 @@
     <string name="btn_settings">Postavke</string>
     <string name="btn_search">Pretraga</string>
     <string name="btn_save_route">Sačuvaj rutu</string>
+    <string name="label_repeat_routes">Brze rute</string>
+    <string name="label_favorite_routes">Omiljene</string>
+    <string name="label_recent_searches">Nedavne pretrage</string>
+    <string name="label_favorite_route_shortcut">Sačuvana ruta</string>
+    <string name="label_recent_search_last_used">Posljednja pretraga %1$s</string>
 
     <string name="hint_from_station">Polazna stanica</string>
     <string name="hint_to_station">Dolazna stanica</string>
@@ -66,17 +84,17 @@
 
     <string name="label_select_language_for_stations">Odaberite jezik stanica</string>
     <string name="hint_language_for_stations">Ova opcija se koristi samo za preuzimanje naziva stanica na izabranom jeziku</string>
+    <string name="station_language_english">Engleski</string>
+    <string name="station_language_montenegrin_latin">Crnogorski (latinica)</string>
+    <string name="station_language_montenegrin_cyrillic">Crnogorski (ćirilica)</string>
     <string name="btn_back">Nazad</string>
     <string name="direct_routes_label">Direktne rute:</string>
     <string name="unknown_label">Nepoznato</string>
     <string name="train_departed">Voz je krenuo</string>
     <string name="label_travel_time">Vrijeme putovanja: %1$s</string>
 
-    <!-- FIX -->
     <string name="time_in_h_and_m">%1$d h %2$d min</string>
     <string name="time_in_m">%1$d min</string>
-
-    <!-- NEW -->
     <string name="time_in_d_and_h">%1$d d %2$d h</string>
     <string name="time_until_prefix">Za %1$s</string>
 
@@ -92,6 +110,11 @@
     <string name="toast_failed_load_stops">Neuspješno učitavanje stanica: %1$s</string>
     <string name="toast_failed_load_routes">Neuspješno učitavanje ruta: %1$s</string>
     <string name="toast_no_results">Nijedna ruta nije pronađena</string>
+    <string name="stops_refresh_using_cache">Prikazuju se keširane stanice. Lista stanica se trenutno ne može osvježiti.</string>
+    <string name="error_routes_server">Servis reda vožnje vratio je grešku (%1$d).</string>
+    <string name="error_routes_network">Nije moguće kontaktirati servis reda vožnje. Provjerite vezu i pokušajte ponovo.</string>
+    <string name="error_routes_invalid_response">Servis reda vožnje vratio je nevažeći odgovor.</string>
+    <string name="error_routes_timeout">Servis reda vožnje predugo odgovara.</string>
 
     <string name="label_does_not_stop">Ne zaustavlja se</string>
     <string name="label_crossing_no_passengers">Nema putničkog stajališta</string>

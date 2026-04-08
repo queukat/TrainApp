@@ -28,8 +28,13 @@ fun ReminderChoiceDialog(
     onActionChosen: (String, Int) -> Unit
 ) {
     val trainNumber = route.TrainNumber ?: "Unknown"
-    var selectedAction by remember { mutableStateOf("push") }
-    var minutesInput by remember { mutableStateOf("15") }
+    val storedAction = prefs.getString("defaultReminderAction", "push")
+        ?.takeIf { it in setOf("push", "calendar", "both", "none") }
+        ?: "push"
+    val storedMinutes = prefs.getInt("defaultMinutesBefore", 15)
+
+    var selectedAction by remember { mutableStateOf(storedAction) }
+    var minutesInput by remember { mutableStateOf(storedMinutes.toString()) }
     var rememberChoice by remember { mutableStateOf(false) }
 
     AlertDialog(

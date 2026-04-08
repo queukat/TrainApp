@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.queukat.train.R
 import com.queukat.train.data.model.TimetableItem
+import com.queukat.train.data.model.getNameForLanguage
 
 /**
  * ,    .
@@ -20,6 +21,7 @@ import com.queukat.train.data.model.TimetableItem
 fun FullRouteDialog(
     route: List<TimetableItem>,
     trainNumber: String,
+    stationLanguage: String,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -35,7 +37,7 @@ fun FullRouteDialog(
         text = {
             Column {
                 route.forEach { item ->
-                    val stationName = item.routestop?.stop?.Name_en ?: "Unknown"
+                    val stationName = item.routestop?.stop?.getNameForLanguage(stationLanguage) ?: "Unknown"
                     val arr = item.ArrivalTime ?: "-"
                     val dep = item.DepartureTime ?: "-"
                     Text("$stationName | Arr: $arr, Dep: $dep")

@@ -33,6 +33,7 @@ fun AutoCompleteTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     stops: List<StopEntity>,
+    onSuggestionSelected: (StopEntity) -> Unit = {},
     modifier: Modifier = Modifier,
     label: String = "Station",
     language: String = "en",
@@ -128,15 +129,6 @@ fun AutoCompleteTextField(
                 }
         )
 
-        if (dbgEnabled) {
-            Text(
-                text = "DBG[$debugKey] focused=$focused stops=${stops.size} q='${value.text.take(20)}' sug=${suggestions.size} lang=$language",
-                modifier = Modifier.padding(top = 4.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-        }
-
         if (focused && suggestions.isNotEmpty()) {
             Card(
                 modifier = Modifier
@@ -167,6 +159,7 @@ fun AutoCompleteTextField(
                                             selection = TextRange(stationName.length)
                                         )
                                     )
+                                    onSuggestionSelected(stop)
 
                                     // 3) Закрываем подсказки и убираем IME
                                     suggestions = emptyList()

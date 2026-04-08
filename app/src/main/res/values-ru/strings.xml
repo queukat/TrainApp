@@ -36,6 +36,19 @@
 
     <string name="reminder_notification_title">Напоминание о поезде %1$s</string>
     <string name="reminder_notification_message">Пора выходить на станцию: %1$s (через %2$d мин).</string>
+    <string name="reminder_status_notification_permission_missing">Для push-напоминания нужно разрешение на уведомления.</string>
+    <string name="reminder_status_exact_alarm_missing">Для push-напоминания на этой версии Android нужно разрешение на точные будильники.</string>
+    <string name="reminder_status_too_late">Напоминание не создано: до отправления осталось слишком мало времени.</string>
+    <string name="reminder_status_push_failed">Не удалось запланировать push-напоминание.</string>
+    <string name="reminder_status_calendar_opened">Календарь открыт для поезда %1$s.</string>
+    <string name="reminder_status_calendar_failed">Не удалось открыть календарь для поезда %1$s.</string>
+    <string name="reminder_status_push_created">Напоминание создано для поезда %1$s (за %2$d мин до отправления).</string>
+    <string name="reminder_status_push_and_calendar_created">Напоминание создано и календарь открыт для поезда %1$s (за %2$d мин до отправления).</string>
+    <string name="reminder_status_push_created_calendar_failed">Напоминание создано для поезда %1$s (за %2$d мин до отправления), но календарь открыть не удалось.</string>
+    <string name="reminder_status_calendar_opened_push_notification_missing">Календарь открыт для поезда %1$s, но push-напоминание не создано: уведомления запрещены.</string>
+    <string name="reminder_status_calendar_opened_push_exact_alarm_missing">Календарь открыт для поезда %1$s, но push-напоминание не создано: точные будильники запрещены.</string>
+    <string name="reminder_status_calendar_opened_push_too_late">Календарь открыт для поезда %1$s, но push-напоминание не создано: отправление слишком скоро.</string>
+    <string name="reminder_status_calendar_opened_push_failed">Календарь открыт для поезда %1$s, но push-напоминание запланировать не удалось.</string>
 
     <string name="label_default_reminder">Действие напоминания по умолчанию:</string>
     <string name="label_minutes_before">Минут до отправления (по умолчанию):</string>
@@ -47,6 +60,11 @@
     <string name="btn_settings">Настройки</string>
     <string name="btn_search">Поиск</string>
     <string name="btn_save_route">Сохранить маршрут</string>
+    <string name="label_repeat_routes">Быстрые маршруты</string>
+    <string name="label_favorite_routes">Избранные</string>
+    <string name="label_recent_searches">Недавние поиски</string>
+    <string name="label_favorite_route_shortcut">Сохранённый маршрут</string>
+    <string name="label_recent_search_last_used">Искали %1$s</string>
 
     <string name="hint_from_station">Станция отправления</string>
     <string name="hint_to_station">Станция прибытия</string>
@@ -66,17 +84,17 @@
 
     <string name="label_select_language_for_stations">Выбрать язык станций</string>
     <string name="hint_language_for_stations">Этот параметр используется только для загрузки названий станций на выбранном языке</string>
+    <string name="station_language_english">Английский</string>
+    <string name="station_language_montenegrin_latin">Черногорский (латиница)</string>
+    <string name="station_language_montenegrin_cyrillic">Черногорский (кириллица)</string>
     <string name="btn_back">Назад</string>
     <string name="direct_routes_label">Прямые маршруты:</string>
     <string name="unknown_label">Неизвестно</string>
     <string name="train_departed">Поезд уже отправился</string>
     <string name="label_travel_time">Время в пути: %1$s</string>
 
-    <!-- FIX: убрали лидирующие пробелы -->
     <string name="time_in_h_and_m">%1$d ч %2$d мин</string>
     <string name="time_in_m">%1$d мин</string>
-
-    <!-- NEW -->
     <string name="time_in_d_and_h">%1$d д %2$d ч</string>
     <string name="time_until_prefix">Через %1$s</string>
 
@@ -92,6 +110,11 @@
     <string name="toast_failed_load_stops">Не удалось загрузить остановки: %1$s</string>
     <string name="toast_failed_load_routes">Не удалось загрузить маршруты: %1$s</string>
     <string name="toast_no_results">Маршруты не найдены</string>
+    <string name="stops_refresh_using_cache">Показываются кэшированные станции. Сейчас не удалось обновить список станций.</string>
+    <string name="error_routes_server">Сервис расписаний вернул ошибку (%1$d).</string>
+    <string name="error_routes_network">Не удалось связаться с сервисом расписаний. Проверьте соединение и попробуйте снова.</string>
+    <string name="error_routes_invalid_response">Сервис расписаний вернул некорректный ответ.</string>
+    <string name="error_routes_timeout">Сервис расписаний отвечает слишком долго.</string>
 
     <string name="label_does_not_stop">Не останавливается</string>
     <string name="label_crossing_no_passengers">Нет пассажирской остановки</string>

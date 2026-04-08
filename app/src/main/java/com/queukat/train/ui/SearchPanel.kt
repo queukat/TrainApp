@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.queukat.train.R
 import com.queukat.train.data.db.StopEntity
+import com.queukat.train.data.db.getNameForLanguage
 import com.queukat.train.ui.theme.CustomSurface
 import com.queukat.train.util.Dbg
 import java.util.Calendar
@@ -46,6 +47,8 @@ fun SearchPanel(
     language: String,
     onFromChanged: (String) -> Unit,
     onToChanged: (String) -> Unit,
+    onFromStopSelected: (StopEntity, String) -> Unit,
+    onToStopSelected: (StopEntity, String) -> Unit,
     onDatePicked: (String) -> Unit,
     onSearchClicked: () -> Unit
 ) {
@@ -77,16 +80,6 @@ fun SearchPanel(
     }
 
     Column(Modifier.padding(8.dp)) {
-
-        if (dbgEnabled) {
-            Text(
-                text = "DBG[SearchPanel] stops=${stops.size} lang=$language from='${fromStation.take(18)}' to='${toStation.take(18)}'",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(bottom = 6.dp)
-            )
-        }
-
         AutoCompleteTextField(
             value = fromField,
             onValueChange = { newValue ->
@@ -94,6 +87,9 @@ fun SearchPanel(
                 onFromChanged(newValue.text)
             },
             stops = stops,
+            onSuggestionSelected = { stop ->
+                onFromStopSelected(stop, stop.getNameForLanguage(language))
+            },
             label = stringResource(R.string.hint_from_station),
             language = language,
             modifier = Modifier.fillMaxWidth(),
@@ -109,6 +105,9 @@ fun SearchPanel(
                 onToChanged(newValue.text)
             },
             stops = stops,
+            onSuggestionSelected = { stop ->
+                onToStopSelected(stop, stop.getNameForLanguage(language))
+            },
             label = stringResource(R.string.hint_to_station),
             language = language,
             modifier = Modifier.fillMaxWidth(),

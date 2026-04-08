@@ -42,9 +42,14 @@ class FakeTrainRepository(
         )
     }
 
-    override suspend fun getRoutes(start: String, finish: String, date: String): RoutesResponse? {
-        //   
-        return null
+    override suspend fun getRoutes(start: String, finish: String, date: String): RouteLookupResult {
+        return RouteLookupResult.Success(
+            RoutesResponse(
+                price = null,
+                direct = emptyList(),
+                connected = emptyList()
+            )
+        )
     }
 
     override suspend fun getFullRouteFromCumulative(routeId: Int): DirectRoute? {

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,6 +11,29 @@ plugins {
 android {
     namespace = "com.queukat.train"
     compileSdk = 35
+
+    val signingProps = Properties().apply {
+        val file = rootProject.file("keystore.properties")
+        if (file.exists()) {
+            file.inputStream().use(::load)
+        }
+    }
+
+    fun signingValue(key: String): String? =
+        System.getenv("TRAINAPP_$key")
+            ?.takeIf { it.isNotBlank() }
+            ?: signingProps.getProperty(key)?.takeIf { it.isNotBlank() }
+
+    val releaseKeystoreFile = signingValue("KEYSTORE_FILE")
+    val releaseStorePassword = signingValue("KEYSTORE_PASSWORD")
+    val releaseKeyAlias = signingValue("KEY_ALIAS")
+    val releaseKeyPassword = signingValue("KEY_PASSWORD")
+    val hasReleaseSigning = listOf(
+        releaseKeystoreFile,
+        releaseStorePassword,
+        releaseKeyAlias,
+        releaseKeyPassword
+    ).all { !it.isNullOrBlank() }
 
     defaultConfig {
         applicationId = "com.queukat.train"
@@ -22,18 +47,24 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
     signingConfigs {
-        create("release") {
-            storeFile = file(project.property("KEYSTORE_FILE") as String)
-            storePassword = project.property("KEYSTORE_PASSWORD") as String
-            keyAlias = project.property("KEY_ALIAS") as String
-            keyPassword = project.property("KEY_PASSWORD") as String
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseKeystoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                println("Release signing config not provided; assembling an unsigned release artifact.")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -90,7 +121,6 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.monitor)
     implementation(libs.androidx.junit.ktx)
-    implementation(libs.google.firebase.installations.ktx)
     debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.room.compiler)
     implementation(libs.accompanist.swiperefresh)
@@ -98,10 +128,10 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     testImplementation(kotlin("test"))
     testImplementation(libs.junit4)
-    implementation (platform(libs.firebase.bom))
-    implementation (libs.firebase.installations.ktx)
-    implementation (libs.kotlinx.coroutines.play.services)
-
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.junit.ktx)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.uiautomator)
 }
 
 

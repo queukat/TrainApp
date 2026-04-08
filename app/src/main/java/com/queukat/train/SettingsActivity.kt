@@ -30,11 +30,15 @@ class SettingsActivity : ComponentActivity() {
 
         //   (  3 )
         val languages = listOf("en", "me", "meCyr")
-        val currentLang = prefs.getString("appLanguage", "en") ?: "en"
+        val currentLang = prefs.getString("appLanguage", "en")
+            ?.takeIf { it in languages }
+            ?: "en"
 
-        //  : push, calendar, ask, both, none
-        val reminderOptions = listOf("push", "calendar", "ask", "both", "none")
-        val currentRem = prefs.getString("defaultReminderAction", "ask") ?: "ask"
+        // Stored defaults should represent real reminder actions used by the dialog.
+        val reminderOptions = listOf("push", "calendar", "both", "none")
+        val currentRem = prefs.getString("defaultReminderAction", "push")
+            ?.takeIf { it in reminderOptions }
+            ?: "push"
 
         //  
         val defMins = prefs.getInt("defaultMinutesBefore", 15)

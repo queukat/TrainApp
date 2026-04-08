@@ -3,19 +3,13 @@ package com.queukat.train.util
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
-import java.security.MessageDigest
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 data class UpdateResult(
@@ -33,15 +27,10 @@ object UpdateCheck {
     private const val KEY_LAST_CHECK_MS = "update_last_check_ms"
     private const val KEY_CACHED_TAG = "update_cached_tag"
     private const val KEY_CACHED_NOTES = "update_cached_notes"
-    private const val CHECK_TTL_MS = 6L * 60 * 60 * 1000 // 6 часов
-
-    private const val KEY_LAST_PING_DAY = "update_last_ping_day"
+    private const val CHECK_TTL_MS = 6L * 60 * 60 * 1000 // 6 hours
 
     private const val LATEST_RELEASE_URL =
         "https://api.github.com/repos/queukat/TrainApp/releases/latest"
-
-    private const val PING_URL = "https://train-stats.queukat.workers.dev/ping"
-    private const val SALT = "queukat-v1-hard-to-guess-string"
 
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -50,42 +39,9 @@ object UpdateCheck {
             .build()
     }
 
-    @Volatile
-    private var cachedInstallHash: String? = null
-
-    private suspend fun hashedInstallId(context: Context): String =
-        cachedInstallHash ?: withContext(Dispatchers.IO) {
-            val rawId = obtainStableId(context)
-            val md = MessageDigest.getInstance("SHA-256")
-            val hash = md.digest((rawId + SALT).encodeToByteArray())
-                .joinToString("") { "%02x".format(it) }
-            cachedInstallHash = hash
-            hash
-        }
-
-    private fun obtainStableId(context: Context): String {
-        val androidId = Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ANDROID_ID
-        )
-        if (!androidId.isNullOrBlank()) return androidId
-
-        // крайний fallback: uuid в prefs (на практике почти не нужен)
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val existing = prefs.getString("install_uuid", null)
-        if (!existing.isNullOrBlank()) return existing
-        val newId = java.util.UUID.randomUUID().toString()
-        prefs.edit().putString("install_uuid", newId).apply()
-        return newId
-    }
-
-    suspend fun checkForUpdates(context: Context): UpdateResult = coroutineScope {
+    suspend fun checkForUpdates(context: Context): UpdateResult {
         val currentVersion = context.safeVersionName()
 
-        // Ping не чаще 1 раза в сутки
-        launch(Dispatchers.IO) { runCatching { sendPingThrottled(context, currentVersion) } }
-
-        // Cached result (TTL)
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
         val lastCheck = prefs.getLong(KEY_LAST_CHECK_MS, 0L)
@@ -93,7 +49,7 @@ object UpdateCheck {
             val cachedTag = prefs.getString(KEY_CACHED_TAG, null)
             if (!cachedTag.isNullOrBlank()) {
                 val cachedNotes = prefs.getString(KEY_CACHED_NOTES, null)
-                return@coroutineScope UpdateResult(
+                return UpdateResult(
                     isUpdateAvailable = isRemoteNewer(currentVersion, cachedTag),
                     latestVersion = cachedTag,
                     releaseNotes = cachedNotes
@@ -101,8 +57,7 @@ object UpdateCheck {
             }
         }
 
-        // GitHub Latest Release
-        try {
+        return try {
             val latestJson = httpGet(LATEST_RELEASE_URL)
             val root = JSONObject(latestJson)
 
@@ -137,11 +92,11 @@ object UpdateCheck {
     }
 
     private fun parseSemVer(v: String): Triple<Int, Int, Int> {
-        val p = v.trim().removePrefix("v").removePrefix("V").substringBefore('-').split('.')
+        val parts = v.trim().removePrefix("v").removePrefix("V").substringBefore('-').split('.')
         return Triple(
-            p.getOrNull(0)?.toIntOrNull() ?: 0,
-            p.getOrNull(1)?.toIntOrNull() ?: 0,
-            p.getOrNull(2)?.toIntOrNull() ?: 0
+            parts.getOrNull(0)?.toIntOrNull() ?: 0,
+            parts.getOrNull(1)?.toIntOrNull() ?: 0,
+            parts.getOrNull(2)?.toIntOrNull() ?: 0
         )
     }
 
@@ -154,31 +109,6 @@ object UpdateCheck {
             else -> rPat > lPat
         }
     }
-
-    private suspend fun sendPingThrottled(context: Context, currentVersion: String) =
-        withContext(Dispatchers.IO) {
-            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-
-            val dayKey = SimpleDateFormat("yyyyMMdd", Locale.US).format(java.util.Date())
-            val lastDay = prefs.getString(KEY_LAST_PING_DAY, null)
-            if (lastDay == dayKey) return@withContext
-
-            val url = "$PING_URL?v=$currentVersion"
-            val hash = hashedInstallId(context)
-
-            val request = Request.Builder()
-                .url(url)
-                .get()
-                .header("X-Install-Hash", hash)
-                .build()
-
-            httpClient.newCall(request).execute().use { resp ->
-                val shortHash = if (hash.length >= 8) hash.substring(0, 8) else hash
-                Log.d(TAG, "Ping → HTTP ${resp.code} (hash=$shortHash...)")
-            }
-
-            prefs.edit().putString(KEY_LAST_PING_DAY, dayKey).apply()
-        }
 
     @Throws(IOException::class)
     private suspend fun httpGet(url: String): String = withContext(Dispatchers.IO) {

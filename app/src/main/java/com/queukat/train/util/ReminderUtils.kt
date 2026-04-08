@@ -1,6 +1,5 @@
 package com.queukat.train.util
 
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -12,18 +11,15 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import com.queukat.train.R
 
-object ReminderUtils {
+sealed interface PushReminderScheduleResult {
+    data object Scheduled : PushReminderScheduleResult
+    data object NotificationPermissionMissing : PushReminderScheduleResult
+    data object ExactAlarmPermissionMissing : PushReminderScheduleResult
+    data object TriggerTimeTooSoon : PushReminderScheduleResult
+    data class Failed(val reason: String? = null) : PushReminderScheduleResult
+}
 
-    @Suppress("DEPRECATION")
-    fun ensureExactAlarmPermission(activity: Activity, requestCode: Int = 1010) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            val alarmManager = activity.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            if (!alarmManager.canScheduleExactAlarms()) {
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                activity.startActivityForResult(intent, requestCode)
-            }
-        }
-    }
+object ReminderUtils {
 
     /**
      * Push reminder через AlarmManager.
@@ -38,34 +34,23 @@ object ReminderUtils {
         departureTimeMs: Long,
         minutesBefore: Int,
         stationName: String
-    ) {
+    ): PushReminderScheduleResult {
+        if (!NotificationHelper.canPostNotifications(context)) {
+            return PushReminderScheduleResult.NotificationPermissionMissing
+        }
+
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                Toast.makeText(
-                    context,
-                    "Exact alarms are not allowed. Please enable in system settings.",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                runCatching { context.startActivity(intent) }
-                return
+                return PushReminderScheduleResult.ExactAlarmPermissionMissing
             }
         }
 
         val triggerTime = departureTimeMs - minutesBefore * 60_000L
         val now = System.currentTimeMillis()
         if (triggerTime <= now + 2_000L) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.toast_no_reminder_set),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
+            return PushReminderScheduleResult.TriggerTimeTooSoon
         }
 
         val intent = Intent(context, ReminderReceiver::class.java).apply {
@@ -81,17 +66,18 @@ object ReminderUtils {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerTime,
-            pendingIntent
-        )
-
-        Toast.makeText(
-            context,
-            context.getString(R.string.toast_reminder_set, trainNumber, minutesBefore),
-            Toast.LENGTH_SHORT
-        ).show()
+        return try {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                pendingIntent
+            )
+            PushReminderScheduleResult.Scheduled
+        } catch (e: SecurityException) {
+            PushReminderScheduleResult.Failed(e.localizedMessage)
+        } catch (e: Exception) {
+            PushReminderScheduleResult.Failed(e.localizedMessage)
+        }
     }
 
     fun scheduleCalendarEvent(
@@ -101,7 +87,7 @@ object ReminderUtils {
         beginTimeMs: Long,
         endTimeMs: Long,
         locationUri: String? = null
-    ) {
+    ): Boolean {
         val intent = Intent(Intent.ACTION_INSERT).apply {
             data = CalendarContract.Events.CONTENT_URI
             putExtra(CalendarContract.Events.TITLE, title)
@@ -114,7 +100,14 @@ object ReminderUtils {
             putExtra(CalendarContract.Events.HAS_ALARM, true)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        runCatching { context.startActivity(intent) }
+
+        return if (intent.resolveActivity(context.packageManager) != null) {
+            runCatching {
+                context.startActivity(intent)
+            }.isSuccess
+        } else {
+            false
+        }
     }
 
     fun openLocationInMaps(context: Context, lat: Double, lng: Double, stationName: String) {

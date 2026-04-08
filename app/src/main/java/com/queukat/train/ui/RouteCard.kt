@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.queukat.train.R
 import com.queukat.train.data.model.*
+import com.queukat.train.data.model.getNameForLanguage
 import com.queukat.train.ui.theme.CustomGreen
 import com.queukat.train.ui.theme.TrainAppTheme
 import com.queukat.train.util.DateTimeUtils
@@ -39,6 +40,7 @@ import java.util.Locale
 fun RouteCard(
     route: DirectRoute,
     selectedDate: String,
+    stationLanguage: String,
     priceInfo: PriceInfo? = null,
     onTrainSelected: (DirectRoute) -> Unit,
     onFullRouteNeeded: (Int) -> Unit,
@@ -50,18 +52,18 @@ fun RouteCard(
         ?.firstOrNull()
         ?.routestop
         ?.stop
-        ?.Name_en
+        ?.getNameForLanguage(stationLanguage)
         ?: stringResource(R.string.unknown_label)
 
     val fallbackLast = route.timetable_items
         ?.lastOrNull()
         ?.routestop
         ?.stop
-        ?.Name_en
+        ?.getNameForLanguage(stationLanguage)
         ?: stringResource(R.string.unknown_label)
 
-    val startName = route.startStation ?: fallbackFirst
-    val endName = route.endStation ?: fallbackLast
+    val startName = fallbackFirst.ifBlank { route.startStation ?: stringResource(R.string.unknown_label) }
+    val endName = fallbackLast.ifBlank { route.endStation ?: stringResource(R.string.unknown_label) }
     val trainNum = route.TrainNumber ?: stringResource(R.string.unknown_label)
 
     val departureRaw = route.timetable_items
@@ -248,7 +250,7 @@ fun RouteCard(
                         val shortDeparture = if (depRaw.length >= 5) depRaw.substring(0, 5) else depRaw
                         val dwellMin = getDwellMinutes(arrRaw, depRaw)
 
-                        val stationName = item.routestop?.stop?.Name_en
+                        val stationName = item.routestop?.stop?.getNameForLanguage(stationLanguage)
                             ?: stringResource(R.string.unknown_station)
                         val stopTypeId = item.routestop?.stop?.StopTypeID
 
@@ -384,6 +386,7 @@ fun PreviewRouteCardLight() {
         RouteCard(
             route = sampleRoute,
             selectedDate = "2025-04-06",
+            stationLanguage = "en",
             priceInfo = null,
             onTrainSelected = {},
             onFullRouteNeeded = {},

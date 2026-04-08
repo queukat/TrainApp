@@ -1,13 +1,10 @@
 package com.queukat.train
 
-import android.Manifest
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.Lifecycle
@@ -31,9 +28,6 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { if (it.resultCode == RESULT_OK) recreate() }
 
-    private lateinit var notifPermissionLauncher: ActivityResultLauncher<String>
-    private var pendingUpdate: UpdateResult? = null
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,25 +35,8 @@ class MainActivity : ComponentActivity() {
         // 0) Notification channels
         NotificationHelper.createNotificationChannel(this)
 
-        // 1) Permission launcher
-        notifPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { granted ->
-            if (granted) {
-                pendingUpdate?.let { result ->
-                    @Suppress("MissingPermission")
-                    NotificationHelper.showUpdateNotification(
-                        this,
-                        result.latestVersion,
-                        result.releaseNotes
-                    )
-                    markUpdateNotified(result.latestVersion)
-                }
-            }
-            pendingUpdate = null
-        }
-
-        // 2) Update check (throttled inside UpdateCheck) + notify once per version
+        // 1) Update check (throttled inside UpdateCheck) + notify once per version.
+        // Do not request notification permission here; that prompt belongs to the reminder flow.
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val result = UpdateCheck.checkForUpdates(this@MainActivity)
@@ -72,26 +49,12 @@ class MainActivity : ComponentActivity() {
                             result.releaseNotes
                         )
                         markUpdateNotified(result.latestVersion)
-                    } else {
-                        pendingUpdate = result
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            Toast.makeText(
-                                this@MainActivity,
-                                "Update ${result.latestVersion} available!",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            // для <13 отметим, чтобы не повторять
-                            markUpdateNotified(result.latestVersion)
-                            pendingUpdate = null
-                        }
                     }
                 }
             }
         }
 
-        // 3) ViewModel + UI
+        // 2) ViewModel + UI
         val db = AppDatabase.getInstance(applicationContext)
         val repo = TrainRepository(db, applicationContext)
         val factory = TrainViewModelFactory(application, repo)

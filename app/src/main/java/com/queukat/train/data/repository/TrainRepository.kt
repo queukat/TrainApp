@@ -12,6 +12,7 @@ import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.RoutesResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -35,8 +36,8 @@ open class TrainRepository(
     @Volatile
     private var stopsMapCache: Map<Int, StopEntity>? = null
 
-    suspend fun ensureStopsUpToDate(force: Boolean = false) {
-        withContext(Dispatchers.IO) {
+    suspend fun ensureStopsUpToDate(force: Boolean = false): StopsSyncResult {
+        return withContext(Dispatchers.IO) {
             val prefs = context.getSharedPreferences("train_prefs", Context.MODE_PRIVATE)
             val lastUpdate = prefs.getLong("stops_last_update", 0L)
             val now = System.currentTimeMillis()
@@ -72,14 +73,18 @@ open class TrainRepository(
 
                         // обновим кэш, чтобы fixCoordinates не читала БД заново
                         stopsMapCache = entities.associateBy { it.stopId }
+                        StopsSyncResult.Refreshed(entities.size)
                     } else {
                         Log.e(TAG, "ensureStopsUpToDate failed: ${response.code()} ${response.message()}")
+                        StopsSyncResult.Failed("HTTP ${response.code()} ${response.message()}")
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error fetching stops: ${e.message}", e)
+                    StopsSyncResult.Failed(e.localizedMessage)
                 }
             } else {
                 Log.d(TAG, "Not updating stops: already have data & <24h since last update.")
+                StopsSyncResult.UpToDate
             }
         }
     }
@@ -92,24 +97,33 @@ open class TrainRepository(
      * ВАЖНО: тут НЕ трогаем cumulative (Android 9 будет лагать).
      * start/end берем из timetable (или fallback на UI).
      */
-    open suspend fun getRoutes(start: String, finish: String, date: String): RoutesResponse? {
+    open suspend fun getRoutes(start: String, finish: String, date: String): RouteLookupResult {
         return withContext(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.api.getRoutes(start, finish, date).execute()
                 if (response.isSuccessful) {
                     val routes = response.body()
-                    routes?.let {
-                        fixCoordinates(it)
-                        fillStartEndStationFromTimetable(it)
+                        ?: return@withContext RouteLookupResult.InvalidResponse("Empty response body")
+
+                    routes.let {
+                        fixCoordinates(routes)
+                        fillStartEndStationFromTimetable(routes)
                     }
-                    routes
+                    RouteLookupResult.Success(routes)
                 } else {
                     Log.e(TAG, "getRoutes failed: ${response.code()} ${response.message()}")
-                    null
+                    RouteLookupResult.HttpError(
+                        code = response.code(),
+                        message = response.message(),
+                        responsePreview = response.errorBody()?.string()?.take(200)
+                    )
                 }
+            } catch (e: IOException) {
+                Log.e(TAG, "Network error in getRoutes: ${e.message}", e)
+                RouteLookupResult.NetworkError(e.localizedMessage)
             } catch (e: Exception) {
                 Log.e(TAG, "Error in getRoutes: ${e.message}", e)
-                null
+                RouteLookupResult.InvalidResponse(e.localizedMessage)
             }
         }
     }

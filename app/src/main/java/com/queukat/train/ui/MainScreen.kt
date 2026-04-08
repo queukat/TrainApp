@@ -2,11 +2,15 @@ package com.queukat.train.ui
 
 import android.app.Activity
 import android.app.Application
+import android.Manifest
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,12 +51,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.content.edit
 import com.queukat.train.R
+import com.queukat.train.data.db.getNameForLanguage
 import com.queukat.train.data.model.DirectRoute
+import com.queukat.train.data.model.SavedRoutePreference
 import com.queukat.train.ui.theme.TrainAppTheme
 import com.queukat.train.util.DateTimeUtils
+import com.queukat.train.util.NotificationHelper
 import kotlinx.coroutines.delay
-import java.util.Calendar
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,14 +69,16 @@ fun MainScreen(
     val context = LocalContext.current
 
     val savedRoutes by mainViewModel.savedRoutes.collectAsState()
+    val recentSearches by mainViewModel.recentSearches.collectAsState()
     val fromStation by mainViewModel.fromStation.collectAsState()
     val toStation by mainViewModel.toStation.collectAsState()
     val selectedDate by mainViewModel.selectedDate.collectAsState()
     val stops by mainViewModel.stops.collectAsState()
-    val routesResponse by mainViewModel.routes.collectAsState()
+    val routeSearchState by mainViewModel.routeSearchState.collectAsState()
+    val stopsNotice by mainViewModel.stopsNotice.collectAsState()
     val loading by mainViewModel.loading.collectAsState()
-    val errorMessage by mainViewModel.errorMessage.collectAsState()
     val fullRoute by mainViewModel.fullRoute.collectAsState()
+    val reminderUiState by mainViewModel.reminderUiState.collectAsState()
 
     LaunchedEffect(Unit) {
         mainViewModel.loadSavedRoutes()
@@ -92,6 +99,21 @@ fun MainScreen(
     }
 
     val autoRefreshTime = remember { mutableStateOf(prefs.getBoolean("autoRefreshTime", true)) }
+    val routesResponse = (routeSearchState as? RouteSearchUiState.Results)?.response
+    val routeNotice = when (val state = routeSearchState) {
+        is RouteSearchUiState.Error -> state.notice
+        RouteSearchUiState.Empty -> UiNotice(
+            message = stringResource(R.string.toast_no_results),
+            tone = UiNoticeTone.Info
+        )
+        else -> null
+    }
+    val reminderNotice = when (val state = reminderUiState) {
+        is ReminderUiState.Success -> state.notice
+        is ReminderUiState.PermissionMissing -> state.notice
+        is ReminderUiState.Failure -> state.notice
+        ReminderUiState.Idle -> null
+    }
 
     LaunchedEffect(autoRefreshTime.value) {
         while (true) {
@@ -108,6 +130,53 @@ fun MainScreen(
     }
 
     var reminderDialogRoute by remember { mutableStateOf<DirectRoute?>(null) }
+    var pendingReminderRequest by remember { mutableStateOf<PendingReminderRequest?>(null) }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val pending = pendingReminderRequest
+        pendingReminderRequest = null
+
+        if (granted && pending != null) {
+            mainViewModel.handleReminderAction(
+                route = pending.route,
+                context = context,
+                action = pending.action,
+                minutesBefore = pending.minutesBefore
+            )
+        } else {
+            mainViewModel.reportNotificationPermissionDenied()
+        }
+    }
+
+    LaunchedEffect(reminderUiState) {
+        val state = reminderUiState
+        if (
+            state is ReminderUiState.PermissionMissing &&
+            state.permission == ReminderPermissionKind.ExactAlarm &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        ) {
+            context.startActivity(
+                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            )
+        }
+    }
+
+    val savedRouteLabels = remember(savedRoutes, stops, lang) {
+        val stopMap = stops.associateBy { it.stopId }
+        savedRoutes.map { route ->
+            route to routeLabel(route, stopMap, lang)
+        }
+    }
+    val recentSearchLabels = remember(recentSearches, stops, lang) {
+        val stopMap = stops.associateBy { it.stopId }
+        recentSearches.map { route ->
+            route to recentSearchLabel(route, stopMap, lang)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -161,14 +230,21 @@ fun MainScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-
-                    if (!errorMessage.isNullOrEmpty()) {
+                    if (routeNotice != null) {
                         item {
-                            Text(
-                                text = errorMessage!!,
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.padding(8.dp)
-                            )
+                            StatusBanner(notice = routeNotice)
+                        }
+                    }
+
+                    if (stopsNotice != null) {
+                        item {
+                            StatusBanner(notice = stopsNotice!!)
+                        }
+                    }
+
+                    if (reminderNotice != null) {
+                        item {
+                            StatusBanner(notice = reminderNotice)
                         }
                     }
 
@@ -181,6 +257,12 @@ fun MainScreen(
                             language = lang,
                             onFromChanged = { mainViewModel.setFromStation(it) },
                             onToChanged = { mainViewModel.setToStation(it) },
+                            onFromStopSelected = { stop, displayName ->
+                                mainViewModel.selectFromStop(stop, displayName)
+                            },
+                            onToStopSelected = { stop, displayName ->
+                                mainViewModel.selectToStop(stop, displayName)
+                            },
                             onDatePicked = { dateStr -> mainViewModel.setSelectedDate(dateStr) },
                             onSearchClicked = {
                                 if (fromStation.isBlank() || toStation.isBlank()) {
@@ -204,22 +286,25 @@ fun MainScreen(
 
                     item {
                         SavedRoutesBlock(
-                            fromStation = fromStation,
-                            toStation = toStation,
-                            savedRoutes = savedRoutes,
-                            onSelectRoute = { routeStr ->
-                                val parts = routeStr.split(" - ")
-                                if (parts.size == 2) {
-                                    mainViewModel.setFromStation(parts[0])
-                                    mainViewModel.setToStation(parts[1])
-                                }
+                            savedRoutes = savedRouteLabels,
+                            recentSearches = recentSearchLabels,
+                            onSelectRoute = { route ->
+                                mainViewModel.repeatSavedRoute(route, lang, selectedDate)
+                            },
+                            onSelectRecentSearch = { route ->
+                                mainViewModel.repeatRecentSearch(route, lang, selectedDate)
                             },
                             onSaveRoute = {
                                 if (fromStation.isNotBlank() && toStation.isNotBlank()) {
-                                    mainViewModel.saveRoute(fromStation, toStation)
+                                    val saved = mainViewModel.saveRoute(fromStation, toStation)
+                                    val messageRes = if (saved) {
+                                        R.string.toast_route_saved
+                                    } else {
+                                        R.string.toast_select_stations_first
+                                    }
                                     Toast.makeText(
                                         context,
-                                        R.string.toast_route_saved,
+                                        messageRes,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else {
@@ -250,6 +335,7 @@ fun MainScreen(
                                 RouteCard(
                                     route = route,
                                     selectedDate = selectedDate,
+                                    stationLanguage = lang,
                                     priceInfo = priceInfo,
                                     onTrainSelected = { chosen -> reminderDialogRoute = chosen },
                                     onFullRouteNeeded = { routeId -> mainViewModel.loadFullRoute(routeId) },
@@ -270,6 +356,7 @@ fun MainScreen(
                                 RouteCard(
                                     route = route,
                                     selectedDate = selectedDate,
+                                    stationLanguage = lang,
                                     priceInfo = priceInfo,
                                     onTrainSelected = { chosen -> reminderDialogRoute = chosen },
                                     onFullRouteNeeded = { routeId -> mainViewModel.loadFullRoute(routeId) },
@@ -287,6 +374,7 @@ fun MainScreen(
         FullRouteDialog(
             route = fullRoute!!.timetable_items ?: emptyList(),
             trainNumber = fullRoute!!.TrainNumber ?: stringResource(R.string.unknown_label),
+            stationLanguage = lang,
             onDismiss = {
                 showFullRouteDialog = false
                 mainViewModel.clearFullRoute()
@@ -298,14 +386,27 @@ fun MainScreen(
         ReminderChoiceDialog(
             route = reminderDialogRoute!!,
             prefs = prefs,
-            onDismiss = { reminderDialogRoute = null },
+            onDismiss = {
+                reminderDialogRoute = null
+                mainViewModel.clearReminderStatus()
+            },
             onActionChosen = { action, minutes ->
-                mainViewModel.handleReminderAction(
-                    route = reminderDialogRoute!!,
-                    context = context,
-                    action = action,
-                    minutesBefore = minutes
-                )
+                val route = reminderDialogRoute!!
+                if (
+                    (action == "push" || action == "both") &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    !NotificationHelper.hasNotificationRuntimePermission(context)
+                ) {
+                    pendingReminderRequest = PendingReminderRequest(route, action, minutes)
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    mainViewModel.handleReminderAction(
+                        route = route,
+                        context = context,
+                        action = action,
+                        minutesBefore = minutes
+                    )
+                }
                 reminderDialogRoute = null
             }
         )
@@ -343,3 +444,21 @@ fun MainScreenDarkPreview() {
         )
     }
 }
+
+private data class PendingReminderRequest(
+    val route: DirectRoute,
+    val action: String,
+    val minutesBefore: Int
+)
+
+private fun routeLabel(
+    route: SavedRoutePreference,
+    stopMap: Map<Int, com.queukat.train.data.db.StopEntity>,
+    language: String
+): String = resolveSavedRouteLabel(route, stopMap, language)
+
+private fun recentSearchLabel(
+    route: com.queukat.train.data.model.RecentSearchPreference,
+    stopMap: Map<Int, com.queukat.train.data.db.StopEntity>,
+    language: String
+): String = resolveRecentSearchLabel(route, stopMap, language)

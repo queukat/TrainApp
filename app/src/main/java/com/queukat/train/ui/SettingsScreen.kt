@@ -100,7 +100,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = selectedLanguage,
+                    value = stationLanguageLabel(selectedLanguage),
                     onValueChange = {},
                     readOnly = true,
                     label = { Text(stringResource(R.string.label_select_language_for_stations)) },
@@ -120,7 +120,7 @@ fun SettingsScreen(
                 ) {
                     languages.forEach { lang ->
                         DropdownMenuItem(
-                            text = { Text(lang) },
+                            text = { Text(stationLanguageLabel(lang)) },
                             onClick = {
                                 selectedLanguage = lang
                                 langMenuExpanded = false
@@ -145,7 +145,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = selectedReminder,
+                    value = reminderOptionLabel(selectedReminder),
                     onValueChange = {},
                     readOnly = true,
                     label = { Text(stringResource(R.string.dialog_reminder_title)) },
@@ -165,7 +165,7 @@ fun SettingsScreen(
                 ) {
                     reminderOptions.forEach { rem ->
                         DropdownMenuItem(
-                            text = { Text(rem) },
+                            text = { Text(reminderOptionLabel(rem)) },
                             onClick = {
                                 selectedReminder = rem
                                 reminderMenuExpanded = false
@@ -250,14 +250,35 @@ fun SettingsScreen(
 }
 
 @Composable
+private fun stationLanguageLabel(option: String): String {
+    return when (option) {
+        "en" -> stringResource(R.string.station_language_english)
+        "me" -> stringResource(R.string.station_language_montenegrin_latin)
+        "meCyr" -> stringResource(R.string.station_language_montenegrin_cyrillic)
+        else -> option
+    }
+}
+
+@Composable
+private fun reminderOptionLabel(option: String): String {
+    return when (option) {
+        "push" -> stringResource(R.string.radio_push)
+        "calendar" -> stringResource(R.string.radio_calendar)
+        "both" -> stringResource(R.string.radio_both)
+        "none" -> stringResource(R.string.radio_none)
+        else -> option
+    }
+}
+
+@Composable
 @Preview(name = "Settings Light Theme", showBackground = true)
 fun PreviewSettingsScreenLight() {
     TrainAppTheme(darkTheme = false) {
         SettingsScreen(
             languages = listOf("me", "en", "meCyr"),
             reminderOptions = listOf("Push", "Calendar", "Both", "None"),
-            initialLanguage = "English",
-            initialReminder = "Push",
+            initialLanguage = "en",
+            initialReminder = "push",
             initialMinutes = 15,
             initialAutoRefresh = true,
             onApply = { _, _, _, _ -> },
@@ -275,8 +296,8 @@ fun PreviewSettingsScreenDark() {
         SettingsScreen(
             languages = listOf("me", "en", "meCyr"),
             reminderOptions = listOf("Push", "Calendar", "Both", "None"),
-            initialLanguage = "English",
-            initialReminder = "Push",
+            initialLanguage = "en",
+            initialReminder = "push",
             initialMinutes = 15,
             initialAutoRefresh = true,
             onApply = { _, _, _, _ -> },

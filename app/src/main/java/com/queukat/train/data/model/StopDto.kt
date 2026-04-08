@@ -17,3 +17,12 @@ data class StopType(
     val Name_me: String?,
     val Name_en: String?
 )
+
+fun StopDto.getNameForLanguage(lang: String): String {
+    return when (lang) {
+        "en" -> this.Name_en
+        "me" -> this.Name_me
+        "ru", "meCyr" -> this.Name_me_cyr ?: this.Name_me
+        else -> this.Name_me ?: this.Name_en
+    } ?: this.Name_en ?: this.Name_me ?: this.Name_me_cyr ?: "Unknown"
+}

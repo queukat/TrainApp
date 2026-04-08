@@ -80,14 +80,20 @@ object NotificationHelper {
 
     fun canPostNotifications(context: Context): Boolean {
         val appEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
-
-        val permOk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(
-                context, Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        } else true
+        val permOk = hasNotificationRuntimePermission(context)
 
         return appEnabled && permOk
+    }
+
+    fun hasNotificationRuntimePermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
     }
 
 

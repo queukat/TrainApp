@@ -66,6 +66,7 @@ KEY_B64.txt
 *.jks
 *.keystore
 *.b64
+keystore.properties
 
 # build artifacts
 /app/release/

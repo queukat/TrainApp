@@ -148,6 +148,8 @@ cd TrainApp
 - Kotlin: 1.8.x
 - Gradle: 7.x
 
+For current local build and release-signing setup, see [docs/release_setup.md](docs/release_setup.md).
+
 ---
 
 ## 📌 Usage
