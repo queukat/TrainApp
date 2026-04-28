@@ -1,10 +1,10 @@
 // AppDatabase.kt
 package com.queukat.train.data.db
 
+import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import android.content.Context
 
 @Database(
     entities = [
@@ -29,9 +29,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "zpcg.db"
-                ).fallbackToDestructiveMigration()
-                 .build()
-                 .also { instance = it }
+                )
+                    .fallbackToDestructiveMigration(dropAllTables = true)
+                    .build()
+                    .also { instance = it }
             }
         }
     }

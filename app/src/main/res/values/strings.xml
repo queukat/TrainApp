@@ -7,7 +7,13 @@
     <string name="toast_pick_date">Please pick a date</string>
     <string name="toast_no_routes_found">No routes found</string>
     <string name="toast_settings_applied">Settings applied</string>
-    <string name="toast_test_push_scheduled">Test push scheduled in %1$d sec</string>
+    <plurals name="toast_test_push_scheduled">
+        <item quantity="one">Test push scheduled in %1$d second</item>
+        <item quantity="other">Test push scheduled in %1$d seconds</item>
+    </plurals>
+    <string name="toast_enable_notifications_settings">Enable notifications for TrainMe in system settings</string>
+    <string name="toast_enable_exact_alarms_settings">Exact alarms are not allowed. Please enable them in system settings.</string>
+    <string name="toast_cannot_schedule_exact_alarm">Cannot schedule exact alarm: %1$s</string>
     <string name="toast_no_coords">No coordinates for %1$s</string>
     <string name="toast_no_departure_time">No departure time found</string>
     <string name="toast_cant_parse_departure">Can\'t parse departure time</string>

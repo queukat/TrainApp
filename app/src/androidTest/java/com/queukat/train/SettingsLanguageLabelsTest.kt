@@ -40,6 +40,7 @@ class SettingsLanguageLabelsTest {
     @Test
     fun settings_showHumanReadableLanguageLabels_andPersistRawCodes() {
         launchSettings()
+        val englishLabel = context.getString(R.string.station_language_english)
 
         assertNotNull(
             waitForObject(
@@ -62,10 +63,12 @@ class SettingsLanguageLabelsTest {
         assertNull(device.findObject(By.text("me")))
         assertNull(device.findObject(By.text("meCyr")))
 
-        device.findObject(By.text(context.getString(R.string.station_language_english)))!!.click()
-        device.findObject(By.text(context.getString(R.string.btn_apply)))!!.click()
+        device.findObject(By.text(englishLabel))!!.click()
+        assertNotNull(waitForEditTextWithText(englishLabel, 5_000))
+        waitForObject(By.text(context.getString(R.string.btn_apply)), 5_000)!!.click()
+        device.wait(Until.gone(By.text(context.getString(R.string.btn_apply))), 5_000)
 
-        assertEquals("en", prefs.getString("appLanguage", null))
+        assertEquals("en", waitForPreference("appLanguage", "en", 5_000))
 
         launchSettings()
 
@@ -106,5 +109,30 @@ class SettingsLanguageLabelsTest {
             Thread.sleep(200)
         }
         error("Expected at least $count EditText fields")
+    }
+
+    private fun waitForEditTextWithText(expectedText: String, timeoutMs: Long): UiObject2? {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            val field = device.findObjects(By.clazz("android.widget.EditText"))
+                .firstOrNull { it.text == expectedText }
+            if (field != null) {
+                return field
+            }
+            Thread.sleep(200)
+        }
+        return null
+    }
+
+    private fun waitForPreference(key: String, expectedValue: String, timeoutMs: Long): String? {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            val value = prefs.getString(key, null)
+            if (value == expectedValue) {
+                return value
+            }
+            Thread.sleep(200)
+        }
+        return prefs.getString(key, null)
     }
 }

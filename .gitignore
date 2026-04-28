@@ -74,3 +74,20 @@ keystore.properties
 /**/*.apk
 /**/*.aab
 /**/output-metadata.json
+
+# local QA / release scratch artifacts
+.kotlin/
+artifacts/
+tmp-*
+tmp_preview_*.png
+runtime-*.png
+runtime-*.xml
+commuter-ui.xml
+changes.patch
+**/Gemfile.lock
+app/fastlane/report.xml
+app/fastlane/README.md
+app/fastlane/metadata/android/screenshots.html
+tools/train_ping_kv/
+__pycache__/
+*.pyc

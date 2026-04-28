@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -64,11 +65,11 @@ object UpdateCheck {
             val latestTag = root.optString("tag_name", "0.0.0")
             val releaseNotes = root.optString("body").takeIf { it.isNotBlank() }
 
-            prefs.edit()
-                .putLong(KEY_LAST_CHECK_MS, now)
-                .putString(KEY_CACHED_TAG, latestTag)
-                .putString(KEY_CACHED_NOTES, releaseNotes)
-                .apply()
+            prefs.edit {
+                putLong(KEY_LAST_CHECK_MS, now)
+                putString(KEY_CACHED_TAG, latestTag)
+                putString(KEY_CACHED_NOTES, releaseNotes)
+            }
 
             UpdateResult(isRemoteNewer(currentVersion, latestTag), latestTag, releaseNotes)
         } catch (ex: Exception) {

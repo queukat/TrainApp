@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -50,19 +51,23 @@ fun TrainAppTheme(
     val view = LocalView.current
     SideEffect {
         val activity = view.context as? android.app.Activity ?: return@SideEffect
+        val window = activity.window ?: return@SideEffect
 
         // На Android 9/10 popup-меню (DropdownMenu) часто ломается при edge-to-edge.
         // Поэтому edge-to-edge включаем только на Android 11+.
         val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
 
         if (edgeToEdge) {
-            activity.window?.statusBarColor = android.graphics.Color.TRANSPARENT
-            WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+            @Suppress("DEPRECATION")
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            WindowCompat.setDecorFitsSystemWindows(window, false)
         } else {
-            WindowCompat.setDecorFitsSystemWindows(activity.window, true)
+            @Suppress("DEPRECATION")
+            window.statusBarColor = colorScheme.background.toArgb()
+            WindowCompat.setDecorFitsSystemWindows(window, true)
         }
 
-        WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = !darkTheme
         }
     }

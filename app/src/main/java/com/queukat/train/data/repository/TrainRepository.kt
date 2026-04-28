@@ -10,6 +10,7 @@ import com.queukat.train.data.db.RouteInfoEntity
 import com.queukat.train.data.db.StopEntity
 import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.RoutesResponse
+import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -69,7 +70,7 @@ open class TrainRepository(
                         }
 
                         db.appDao().insertAllStops(entities)
-                        prefs.edit().putLong("stops_last_update", now).apply()
+                        prefs.edit { putLong("stops_last_update", now) }
 
                         // обновим кэш, чтобы fixCoordinates не читала БД заново
                         stopsMapCache = entities.associateBy { it.stopId }

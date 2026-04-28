@@ -4,8 +4,11 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,7 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.edit
 import com.queukat.train.ui.SettingsScreen
 import com.queukat.train.ui.theme.TrainAppTheme
+import com.queukat.train.util.applyForcedAppLocale
 import com.queukat.train.util.ReminderReceiver
+
+private const val TAG = "SettingsActivity"
 
 /**
  *    ( ,    ..).
@@ -25,6 +31,9 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val forcedUiLocale = intent?.getStringExtra(MainActivity.EXTRA_FORCE_UI_LOCALE).orEmpty()
+        applyForcedAppLocale(this, forcedUiLocale)
 
         val prefs = getSharedPreferences("train_prefs", MODE_PRIVATE)
 
@@ -60,7 +69,7 @@ class SettingsActivity : ComponentActivity() {
                         initialAutoRefresh = autoRefresh,
                         onApply = { chosenLang, chosenReminder, minutes, autoRf ->
                             //  
-                            prefs.edit {
+                            prefs.edit(commit = true) {
                                 putString("appLanguage", chosenLang)
                                 putString("defaultReminderAction", chosenReminder)
                                 putInt("defaultMinutesBefore", minutes)
@@ -99,14 +108,11 @@ class SettingsActivity : ComponentActivity() {
         if (!androidx.core.app.NotificationManagerCompat.from(this).areNotificationsEnabled()) {
             Toast.makeText(
                 this,
-                "Enable notifications for TrainMe in system settings",
+                getString(R.string.toast_enable_notifications_settings),
                 Toast.LENGTH_LONG
             ).show()
 
-            val intent = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
-            }
-            startActivity(intent)
+            startActivity(notificationSettingsIntent())
             return
         }
 
@@ -117,10 +123,10 @@ class SettingsActivity : ComponentActivity() {
             if (!alarmManager.canScheduleExactAlarms()) {
                 Toast.makeText(
                     this,
-                    "Exact alarms are not allowed. Please enable in system settings.",
+                    getString(R.string.toast_enable_exact_alarms_settings),
                     Toast.LENGTH_LONG
                 ).show()
-                startActivity(Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+                startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
                 return
             }
         }
@@ -140,32 +146,41 @@ class SettingsActivity : ComponentActivity() {
         val triggerTime = System.currentTimeMillis() + delayMs
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerTime,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerTime,
-                    pendingIntent
-                )
-            }
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                pendingIntent
+            )
 
+            val delaySeconds = (delayMs / 1000L).toInt()
             Toast.makeText(
                 this,
-                getString(R.string.toast_test_push_scheduled, delayMs / 1000),
+                resources.getQuantityString(
+                    R.plurals.toast_test_push_scheduled,
+                    delaySeconds,
+                    delaySeconds
+                ),
                 Toast.LENGTH_SHORT
             ).show()
         } catch (e: SecurityException) {
-            e.printStackTrace()
+            Log.e(TAG, "Cannot schedule exact alarm", e)
             Toast.makeText(
                 this,
-                "Cannot schedule exact alarm: ${e.message}",
+                getString(R.string.toast_cannot_schedule_exact_alarm, e.localizedMessage.orEmpty()),
                 Toast.LENGTH_LONG
             ).show()
+        }
+    }
+
+    private fun notificationSettingsIntent(): Intent {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            }
+        } else {
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+            }
         }
     }
 }

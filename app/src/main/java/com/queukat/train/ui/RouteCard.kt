@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -47,6 +48,7 @@ fun RouteCard(
     onReminderClick: (DirectRoute) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
 
     val fallbackFirst = route.timetable_items
         ?.firstOrNull()
@@ -136,7 +138,7 @@ fun RouteCard(
 
                     // Time range display (в TZ Черногории)
                     val timeRange = if (departureMs != null && arrivalMs != null) {
-                        val fmt = SimpleDateFormat("HH:mm", Locale.getDefault()).apply {
+                        val fmt = SimpleDateFormat("HH:mm", locale).apply {
                             timeZone = DateTimeUtils.TRAIN_TIME_ZONE
                         }
                         "${fmt.format(departureMs)} - ${fmt.format(arrivalMs)}"
@@ -209,22 +211,22 @@ fun RouteCard(
                         val c2 = pi.Class2Price
                         if (c1 != null || c2 != null) {
                             if (c1 != null && c2 != null) {
-                                val s1 = String.format(Locale.getDefault(), "%.2f€", c1)
-                                val s2 = String.format(Locale.getDefault(), "%.2f€", c2)
+                                val s1 = String.format(locale, "%.2f€", c1)
+                                val s2 = String.format(locale, "%.2f€", c2)
                                 Text(
                                     text = stringResource(R.string.two_class_prices_format, s1, s2),
                                     fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             } else if (c1 != null) {
-                                val s1 = String.format(Locale.getDefault(), "%.2f€", c1)
+                                val s1 = String.format(locale, "%.2f€", c1)
                                 Text(
                                     text = stringResource(R.string.one_class_price_format, s1),
                                     fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             } else if (c2 != null) {
-                                val s2 = String.format(Locale.getDefault(), "%.2f€", c2)
+                                val s2 = String.format(locale, "%.2f€", c2)
                                 Text(
                                     text = stringResource(R.string.two_class_only_price_format, s2),
                                     fontSize = 13.sp,
@@ -248,7 +250,7 @@ fun RouteCard(
                         val depRaw = item.DepartureTime ?: ""
                         val shortArrival = if (arrRaw.length >= 5) arrRaw.substring(0, 5) else arrRaw
                         val shortDeparture = if (depRaw.length >= 5) depRaw.substring(0, 5) else depRaw
-                        val dwellMin = getDwellMinutes(arrRaw, depRaw)
+                        val dwellMin = getDwellMinutes(arrRaw, depRaw, locale)
 
                         val stationName = item.routestop?.stop?.getNameForLanguage(stationLanguage)
                             ?: stringResource(R.string.unknown_station)
@@ -331,9 +333,9 @@ fun RouteCard(
     }
 }
 
-private fun getDwellMinutes(arrivalTime: String, departureTime: String): Long {
+private fun getDwellMinutes(arrivalTime: String, departureTime: String, locale: Locale): Long {
     if (arrivalTime.isBlank() || departureTime.isBlank()) return 0
-    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    val sdf = SimpleDateFormat("HH:mm:ss", locale)
     return try {
         val arrDate = sdf.parse(arrivalTime)
         val depDate = sdf.parse(departureTime)

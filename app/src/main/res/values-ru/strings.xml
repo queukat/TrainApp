@@ -7,7 +7,15 @@
     <string name="toast_pick_date">Пожалуйста, выберите дату</string>
     <string name="toast_no_routes_found">Маршрутов не найдено</string>
     <string name="toast_settings_applied">Настройки применены</string>
-    <string name="toast_test_push_scheduled">Тестовое уведомление запланировано через %1$d сек</string>
+    <plurals name="toast_test_push_scheduled">
+        <item quantity="one">Тестовое уведомление запланировано через %1$d секунду</item>
+        <item quantity="few">Тестовое уведомление запланировано через %1$d секунды</item>
+        <item quantity="many">Тестовое уведомление запланировано через %1$d секунд</item>
+        <item quantity="other">Тестовое уведомление запланировано через %1$d секунды</item>
+    </plurals>
+    <string name="toast_enable_notifications_settings">Включите уведомления для TrainMe в настройках системы</string>
+    <string name="toast_enable_exact_alarms_settings">Точные будильники запрещены. Включите их в настройках системы.</string>
+    <string name="toast_cannot_schedule_exact_alarm">Не удалось запланировать точный будильник: %1$s</string>
     <string name="toast_no_coords">Нет координат для %1$s</string>
     <string name="toast_no_departure_time">Время отправления не найдено</string>
     <string name="toast_cant_parse_departure">Не удалось определить время отправления</string>

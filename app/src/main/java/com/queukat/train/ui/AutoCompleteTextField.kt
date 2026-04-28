@@ -33,8 +33,8 @@ fun AutoCompleteTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     stops: List<StopEntity>,
-    onSuggestionSelected: (StopEntity) -> Unit = {},
     modifier: Modifier = Modifier,
+    onSuggestionSelected: (StopEntity) -> Unit = {},
     label: String = "Station",
     language: String = "en",
     debugKey: String = label
@@ -49,7 +49,7 @@ fun AutoCompleteTextField(
 
     // LOCK: после клика по подсказке IME может прислать “старое” значение и затереть выбранное.
     var lockedText by remember { mutableStateOf<String?>(null) }
-    var lockUntilMs by remember { mutableStateOf(0L) }
+    var lockUntilMs by remember { mutableLongStateOf(0L) }
 
     fun lockSelection(text: String) {
         lockedText = text

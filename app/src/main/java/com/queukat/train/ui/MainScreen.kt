@@ -8,7 +8,6 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -59,7 +58,6 @@ import com.queukat.train.util.DateTimeUtils
 import com.queukat.train.util.NotificationHelper
 import kotlinx.coroutines.delay
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -413,7 +411,6 @@ fun MainScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(name = "MainScreen Light Theme", showBackground = true)
 @Composable
 fun MainScreenLightPreview() {
@@ -429,7 +426,6 @@ fun MainScreenLightPreview() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(name = "MainScreen Dark Theme", showBackground = true)
 @Composable
 fun MainScreenDarkPreview() {

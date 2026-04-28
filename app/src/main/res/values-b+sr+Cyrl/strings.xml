@@ -7,7 +7,14 @@
     <string name="toast_pick_date">Молимо вас, одаберите датум</string>
     <string name="toast_no_routes_found">Ниједна рута није пронађена</string>
     <string name="toast_settings_applied">Поставке примијењене</string>
-    <string name="toast_test_push_scheduled">Тест обавјештење заказано за %1$d сек</string>
+    <plurals name="toast_test_push_scheduled">
+        <item quantity="one">Тест обавјештење заказано за %1$d секунду</item>
+        <item quantity="few">Тест обавјештење заказано за %1$d секунде</item>
+        <item quantity="other">Тест обавјештење заказано за %1$d секунди</item>
+    </plurals>
+    <string name="toast_enable_notifications_settings">Укључите обавјештења за TrainMe у системским поставкама</string>
+    <string name="toast_enable_exact_alarms_settings">Тачни аларми нијесу дозвољени. Укључите их у системским поставкама.</string>
+    <string name="toast_cannot_schedule_exact_alarm">Није могуће заказати тачан аларм: %1$s</string>
     <string name="toast_no_coords">Нема координата за %1$s</string>
     <string name="toast_no_departure_time">Није пронађено вријеме поласка</string>
     <string name="toast_cant_parse_departure">Не могу да протумачим вријеме поласка</string>

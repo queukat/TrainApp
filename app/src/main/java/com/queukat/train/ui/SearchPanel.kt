@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -36,7 +37,6 @@ import com.queukat.train.data.db.getNameForLanguage
 import com.queukat.train.ui.theme.CustomSurface
 import com.queukat.train.util.Dbg
 import java.util.Calendar
-import java.util.Locale
 
 @Composable
 fun SearchPanel(
@@ -148,10 +148,11 @@ fun DatePickerField(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
 
     val calendar = Calendar.getInstance()
     val defaultDateString = String.format(
-        Locale.getDefault(),
+        locale,
         "%04d-%02d-%02d",
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH) + 1,
@@ -204,7 +205,7 @@ fun DatePickerField(
             { _, year, month, dayOfMonth ->
                 val realMonth = month + 1
                 val newDateString = String.format(
-                    Locale.getDefault(),
+                    locale,
                     "%04d-%02d-%02d",
                     year,
                     realMonth,

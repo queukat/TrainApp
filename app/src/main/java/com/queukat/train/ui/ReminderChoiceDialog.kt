@@ -95,7 +95,7 @@ fun ReminderChoiceDialog(
                     val mins = minutesInput.toIntOrNull() ?: 15
                     //      :
                     if (rememberChoice) {
-                        prefs.edit() {
+                        prefs.edit {
                             putString("defaultReminderAction", selectedAction)
                                 .putInt("defaultMinutesBefore", mins)
                         }
