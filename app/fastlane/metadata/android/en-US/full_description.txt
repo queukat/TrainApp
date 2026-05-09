@@ -1,0 +1,26 @@
+TrainMe is a passenger command center for Montenegro rail journeys. It turns timetable uncertainty into a controlled route surface: station intelligence, route reconstruction, departure awareness, and reminder orchestration in one Android experience.
+
+Capability system:
+
+Signal Acquisition Layer
+Stabilizes station and timetable signals before they become passenger decisions.
+
+Localized Station Intelligence
+Supports station names in English, Montenegrin Latin, and Montenegrin Cyrillic so the search surface matches the passenger context.
+
+Route Reconstruction Core
+Turns direct and connected timetable results into review-ready route cards with travel time, price signals, departure windows, and full-route visibility.
+
+Departure Awareness Engine
+Keeps selected journeys operational with time-to-departure state and optional auto-refresh.
+
+Reminder Orchestration Layer
+Governs push reminders, calendar handoff, combined reminder paths, and visible permission outcomes.
+
+Continuity Vault
+Preserves favorite routes, repeat routes, and recent searches so regular journeys stay close to the surface.
+
+Operational Telemetry Surface
+Exposes cached station state, route errors, update availability, and reminder outcomes instead of leaving the passenger guessing.
+
+TrainMe is independent and is not the official timetable, ticketing product, or service channel of ZPCG AD Podgorica. For official schedules, tickets, service notices, and company information, use the official ZPCG website.

@@ -1,199 +1,223 @@
-# 🚆 TrainApp
+# TrainMe
 
-**An Android application to browse train routes, set reminders, and stay updated with schedule changes using Jetpack Compose.**
+**Passenger Operations Command Center for Montenegro rail journeys.**
+
+TrainMe turns timetable uncertainty into an operational surface: localized station intelligence, route reconstruction, departure awareness, reminder orchestration, and release-governed Android delivery.
 
 [![Get it on Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.queukat.train)
 
 ![Active users](badges/mau.svg?raw=1)
 ![Total users](badges/total.svg?raw=1)
 
----
+<p align="center">
+  <img src="app/fastlane/metadata/android/en-US/images/featureGraphic.png" alt="TrainMe command center preview" width="100%">
+</p>
 
-## 📲 Get it on Google Play
+## Install
 
-**Install the latest release here:** https://play.google.com/store/apps/details?id=com.queukat.train
+**Google Play release:** https://play.google.com/store/apps/details?id=com.queukat.train
 
-> Tip: If you’re sharing this repo, this is the fastest way for people to try the app.
+## Visual Command Surface
 
----
+<table>
+  <tr>
+    <td width="25%" align="center">
+      <img src="app/fastlane/metadata/android/en-US/images/phoneScreenshots/01-home.png" alt="TrainMe home command center">
+    </td>
+    <td width="25%" align="center">
+      <img src="app/fastlane/metadata/android/en-US/images/phoneScreenshots/02-search-results.png" alt="TrainMe route results">
+    </td>
+    <td width="25%" align="center">
+      <img src="app/fastlane/metadata/android/en-US/images/phoneScreenshots/03-expanded-route.png" alt="TrainMe expanded route intelligence">
+    </td>
+    <td width="25%" align="center">
+      <img src="app/fastlane/metadata/android/en-US/images/phoneScreenshots/04-settings.png" alt="TrainMe settings governance">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Command Center</strong></td>
+    <td align="center"><strong>Route Reconstruction</strong></td>
+    <td align="center"><strong>Stop Intelligence</strong></td>
+    <td align="center"><strong>Governance Surface</strong></td>
+  </tr>
+</table>
 
-## Disclaimer
+## Independence Notice
 
-This application is **not** the official timetable or service app of **ŽPCG AD Podgorica** (Željeznički prevoz Crne Gore).  
-For official train schedules, ticketing, and company information, please refer to the official ŽPCG website:
+TrainMe is an independent passenger-facing system. It is **not** the official timetable, ticketing product, or service channel of **ZPCG AD Podgorica** (Zeljeznicki prevoz Crne Gore).
 
-👉 https://www.zpcg.me
+For official schedules, tickets, service notices, and company information, use the official ZPCG website:
 
----
+https://www.zpcg.me
 
-## 📖 Table of Contents
+## Public Positioning
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Project Structure](#-project-structure)
-- [Architecture & Libraries](#️-architecture--libraries)
-- [Screens & Workflows](#-screens--workflows)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Reminders & Permissions](#-reminders--permissions)
-- [Settings & Customization](#️-settings--customization)
-- [Contributions](#-contributions)
-- [License](#-license)
+TrainMe should be presented as a serious product system, not as a loose list of screens or technical tasks. Every public capability should explain what disorder it detects, what control it introduces, and what visible result the passenger receives.
 
----
+The repository keeps the full rule in [docs/presentation_style.md](docs/presentation_style.md).
 
-## 🚀 Overview
+## System Overview
 
-**TrainApp** is a Kotlin-based Android app built using **Jetpack Compose** to easily search, view, and manage train schedules.
+Rail planning is not a search box. It is a stack of disorder:
 
-You can:
-- ✅ **Select Origin/Destination stations.**
-- 📅 **Choose a date to search routes.**
-- 💾 **Save your favorite routes.**
-- 🔔 **Set push or calendar reminders for departures.**
-- 🌐 **Choose station name language (English, Montenegrin Latin/Cyrillic).**
-- 🔄 **Check app updates seamlessly.**
+- station names appear across languages and writing systems
+- timetable services can return stale, missing, or unreachable signals
+- direct and connected journeys compete for attention
+- departure time keeps moving after the passenger chooses a route
+- Android reminder permissions differ across devices and OS versions
+- release delivery needs signed artifacts, changelog discipline, and store validation
 
-**Why Compose?**  
-Jetpack Compose provides a declarative, modern UI with minimal XML, simplifying development and enhancing maintainability.
+TrainMe organizes those moving parts into named control layers.
 
----
+## System Map
 
-## 🌟 Key Features
+```mermaid
+flowchart LR
+    timetable["Timetable Signals"] --> acquisition["Signal Acquisition Layer"]
+    languages["Station Languages"] --> station["Localized Station Intelligence"]
+    acquisition --> reconstruction["Route Reconstruction Core"]
+    station --> reconstruction
+    reconstruction --> command["Passenger Command Center"]
+    command --> departure["Departure Awareness Engine"]
+    command --> continuity["Continuity Vault"]
+    departure --> reminders["Reminder Orchestration Layer"]
+    command --> telemetry["Operational Telemetry Surface"]
+    artifacts["Release Artifacts"] --> release["Release Governance Rail"]
+    release --> play["Google Play Delivery"]
+```
 
-- 🎨 **Material 3 Design** (Dynamic themes, Light/Dark mode)
-- ✏️ **Station Autocomplete**
-- 💼 **Saved Routes**
-- 🛤️ **Direct & Connected routes**
-- ⏳ **Live Time-to-Departure countdown**
-- 🔄 **In-App Update Check (GitHub)**
-- 📅 **Notifications & Calendar integration**
-- 🗄️ **Room Database (Offline Support)**
+## Capability Domains
 
----
+| Capability | Disorder It Detects | Control It Introduces | Passenger-Visible Result |
+| --- | --- | --- | --- |
+| **Signal Acquisition Layer** | Remote timetable and station signals may be unavailable or inconsistent. | Retrofit-backed acquisition with structured repository handling. | Route search has a stable entry point instead of scattered network behavior. |
+| **Localized Station Intelligence** | Station names shift between English, Montenegrin Latin, and Montenegrin Cyrillic. | Language-aware station catalogs with local persistence. | Passengers search in the station language that matches their context. |
+| **Route Reconstruction Core** | Raw timetable responses do not naturally read as decisions. | Direct and connected journeys are shaped into route cards, travel time, price signals, and full-route views. | The passenger sees review-ready travel options instead of raw schedule fragments. |
+| **Transfer Clarity Surface** | Intermediate stops and transfer segments can hide the real journey shape. | Full-route expansion and stop-state labels expose the path. | Passengers understand what happens between origin and destination. |
+| **Departure Awareness Engine** | A chosen departure becomes less useful as time passes. | Time-to-departure calculation and optional auto-refresh keep the route state current. | The journey card remains operational after the first search. |
+| **Reminder Orchestration Layer** | Calendar flow, push notifications, exact alarms, and Android permissions can conflict. | A governed reminder path supports push, calendar, both, or no reminder. | The passenger receives a clear reminder outcome and visible failure reasons. |
+| **Continuity Vault** | Repeated journeys and recent searches disappear unless the system remembers them. | Favorites, repeat routes, and recent searches preserve intent across sessions. | Commuter patterns become one-tap starting points. |
+| **Operational Telemetry Surface** | Network errors, cached data, update state, and permission failures can feel invisible. | Status banners, notification channels, and update messaging expose operational state. | The passenger sees what the system knows and what needs attention. |
+| **Release Governance Rail** | Store delivery can drift through unsigned bundles, missing changelogs, or accidental package targeting. | Play release commands enforce signing checks, package targeting, changelog staging, and validation before upload. | Public releases ship through a controlled delivery path. |
 
-## 📂 Project Structure
+## Architecture
+
+| Layer | Role |
+| --- | --- |
+| **Jetpack Compose Command Center** | Main passenger surface for station selection, date control, route review, reminders, and settings. |
+| **ViewModel Orchestration Layer** | Coordinates user intent, loading state, cached signals, route results, and reminder outcomes. |
+| **Repository Signal Pipeline** | Shields the UI from remote service details and converts acquisition results into domain decisions. |
+| **Room Continuity Store** | Persists station intelligence, favorites, recent searches, and route continuity data. |
+| **Android Reminder Rail** | Uses AlarmManager, BroadcastReceiver, notification channels, and calendar intents where the device allows it. |
+| **Release Governance Rail** | Builds, verifies, signs, validates, and publishes Android artifacts through the documented Play path. |
 
 ```text
-train/
-├─ MainActivity.kt
-├─ SettingsActivity.kt
-├─ data/
-│  ├─ api/ (Retrofit)
-│  ├─ db/ (Room DB)
-│  ├─ model/ (Data models)
-│  └─ repository/ (Data layer)
-├─ ui/ (Compose UI)
-│  ├─ AutoCompleteTextField.kt
-│  ├─ MainScreen.kt
-│  ├─ SearchPanel.kt
-│  ├─ RouteCard.kt
-│  ├─ FullRouteDialog.kt
-│  ├─ ReminderChoiceDialog.kt
-│  ├─ SettingsScreen.kt
-│  ├─ SavedRoutesBlock.kt
-│  ├─ theme/ (M3 Design)
-│  └─ TrainViewModel.kt
-└─ util/ (Helpers & Notifications)
+app/src/main/java/com/queukat/train/
+|- data/api/          Signal Acquisition Gateway
+|- data/db/           Room Continuity Store
+|- data/model/        Timetable Signal Contracts
+|- data/repository/   Route Reconstruction Pipeline
+|- ui/                Passenger Command Center
+|- util/              Reminder, Locale, Time, and Update Rails
 ```
 
----
+## Operational Surfaces
 
-## 🛠️ Architecture & Libraries
+**Main Command Center**
 
-- **MVVM Pattern**
-  - **Model:** Data classes, Room entities
-  - **ViewModel:** Business logic & data handling
-  - **View:** Jetpack Compose UI
-- **Networking:** Retrofit
-- **Database:** Room
-- **Notifications:** AlarmManager & Broadcast Receivers
-- **UI:** Material 3 (Compose)
+- Origin and destination station control
+- Date selection for a specific travel window
+- Direct and connected route surfaces
+- Favorite and repeat-route continuity
+- Reminder entry point from the route card
 
----
+**Route Intelligence Surface**
 
-## 📱 Screens & Workflows
+- Travel time
+- Price signals
+- Departure and arrival windows
+- Full-route expansion
+- Intermediate stop state
+- Map handoff when coordinates are available
 
-### 🏠 **Main Screen**
-- Search "From/To" stations
-- Direct & Connected routes displayed
-- Quick-add reminders
+**Settings Governance Surface**
 
-### ⚙️ **Settings Screen**
-- Language selection
-- Default reminder preferences
-- Auto-refresh departures
+- Station language policy
+- Default reminder action
+- Reminder lead time
+- Auto-refresh policy
+- Notification verification path
 
----
+## Developer Entry Points
 
-## 💻 Installation
+Clone and open the Android workspace:
 
-**Clone repository**
-```bash
-git clone https://github.com/<YourUsername>/TrainApp.git
-cd TrainApp
+```powershell
+git clone https://github.com/queukat/TrainApp.git TrainMe
+cd TrainMe
 ```
 
-**Open in Android Studio**
-- File → Open → Select project folder.
-- Let Gradle sync.
+Build the debug artifact:
 
-**Build/Run**
-- Connect Android device/emulator.
-- Click ▶ (Run).
+```powershell
+.\gradlew.bat :app:assembleDebug
+```
 
-**Requirements:**
-- Min SDK: 21+
-- Target SDK: 33 (Android 13)
-- Kotlin: 1.8.x
-- Gradle: 7.x
+Install on a connected device or emulator:
 
-For current local build and release-signing setup, see [docs/release_setup.md](docs/release_setup.md).
+```powershell
+.\gradlew.bat :app:installDebug
+```
 
----
+Run focused unit tests:
 
-## 📌 Usage
+```powershell
+.\gradlew.bat :app:testDebugUnitTest
+```
 
-1. Enter **"From"** and **"To"** stations.
-2. Pick a date or use today.
-3. Tap 🔍 to search routes.
-4. Set reminders (bell icon), save routes, or view intermediate stops.
+## Build Profile
 
----
+- Android package: `com.queukat.train`
+- Min SDK: 24
+- Target SDK: 35
+- Compile SDK: 36
+- Java: 17
+- Kotlin: 2.1.10
+- Android Gradle Plugin: 8.9.3
+- UI: Jetpack Compose with Material 3
+- Persistence: Room
+- Network: Retrofit and OkHttp
 
-## 🔔 Reminders & Permissions
+For signing and Play delivery, use [docs/release_setup.md](docs/release_setup.md) and [docs/play_release.md](docs/play_release.md).
 
-- **Exact Alarms:** Permission needed (Android 12+)
-- **Notifications:** `POST_NOTIFICATIONS` permission (Android 13+)
-- **Calendar:** User confirmation required (no explicit runtime permission)
+## Release Governance
 
----
+The Play delivery path is intentionally governed. Production releases should pass through the repository release rail:
 
-## ⚙️ Settings & Customization
+```powershell
+.\tools\play-release.ps1 -Track production -ReleaseStatus completed -Upload
+```
 
-- **Language settings** (English, Montenegrin Latin/Cyrillic)
-- **Reminder options** (push/calendar/both/none)
-- **Auto Refresh**
-- **Test Push Notifications**
+That path builds or accepts the artifact, verifies signing, targets the expected package, stages localized changelogs, validates against Play, and uploads only when publishing is explicitly requested.
 
----
+## Contribution Standard
 
-## 🤝 Contributions
+Contributions should preserve the system language:
 
-Contributions, bug reports, and feature requests are welcome!
+- name capabilities by the layer of disorder they control
+- describe user-visible order before implementation mechanics
+- keep official-affiliation language precise and conservative
+- keep release notes public-facing and free of internal jargon
+- avoid adding unsupported scale, partnership, revenue, or guarantee claims
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/new-feature`)
-3. Commit your changes (`git commit -m 'Add new feature'`)
-4. Push your changes (`git push origin feature/new-feature`)
-5. Open a Pull Request
+Typical contribution flow:
 
-Thanks for improving TrainApp!
+```powershell
+git checkout -b capability/<name>
+git commit -m "Strengthen <capability>"
+git push origin capability/<name>
+```
 
----
+## License
 
-## 📄 License
-
-Distributed under **MIT License**.
-
-Enjoy your journey with **TrainApp**! If you like the project, don't forget to ⭐ it on GitHub.
+Distributed under the MIT License.

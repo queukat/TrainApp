@@ -85,12 +85,12 @@
     <string name="cdesc_select_train">obavještenje</string>
 
     <string name="disclaimer_text">
-        Ova aplikacija nije zvanična niti podržana od bilo koje organizacije.
-        Napravljena je dobrovoljno, besplatno, iz ličnog entuzijazma.
+        TrainMe je nezavisan proizvod i nije zvaničan niti odobren od bilo koje organizacije.
+        Za zvanične rasporede, karte i servisna obavještenja koristite zvanične izvore.
     </string>
 
     <string name="label_select_language_for_stations">Odaberite jezik stanica</string>
-    <string name="hint_language_for_stations">Ova opcija se koristi samo za preuzimanje naziva stanica na izabranom jeziku</string>
+    <string name="hint_language_for_stations">Kontroliše jezik naziva stanica u pretražnoj površini</string>
     <string name="station_language_english">Engleski</string>
     <string name="station_language_montenegrin_latin">Crnogorski (latinica)</string>
     <string name="station_language_montenegrin_cyrillic">Crnogorski (ćirilica)</string>
@@ -114,19 +114,19 @@
     <string name="unknown_station">Nepoznata stanica</string>
     <string name="open_in_maps">Otvori u mapi</string>
 
-    <string name="toast_failed_load_stops">Neuspješno učitavanje stanica: %1$s</string>
-    <string name="toast_failed_load_routes">Neuspješno učitavanje ruta: %1$s</string>
+    <string name="toast_failed_load_stops">Inteligencija stanica se ne može osvježiti: %1$s</string>
+    <string name="toast_failed_load_routes">Rekonstrukcija rute se ne može dovršiti: %1$s</string>
     <string name="toast_no_results">Nijedna ruta nije pronađena</string>
-    <string name="stops_refresh_using_cache">Prikazuju se keširane stanice. Lista stanica se trenutno ne može osvježiti.</string>
+    <string name="stops_refresh_using_cache">Inteligencija stanica koristi keširane podatke. Osvježavanje trenutno nije dostupno.</string>
     <string name="error_routes_server">Servis reda vožnje vratio je grešku (%1$d).</string>
     <string name="error_routes_network">Nije moguće kontaktirati servis reda vožnje. Provjerite vezu i pokušajte ponovo.</string>
-    <string name="error_routes_invalid_response">Servis reda vožnje vratio je nevažeći odgovor.</string>
-    <string name="error_routes_timeout">Servis reda vožnje predugo odgovara.</string>
+    <string name="error_routes_invalid_response">Servis reda vožnje vratio je signal koji TrainMe ne može rekonstruisati.</string>
+    <string name="error_routes_timeout">Servis reda vožnje nije vratio signal na vrijeme.</string>
 
     <string name="label_does_not_stop">Ne zaustavlja se</string>
     <string name="label_crossing_no_passengers">Nema putničkog stajališta</string>
     <string name="toast_no_map_app">Nema instalirane aplikacije za mape</string>
-    <string name="label_support_dev_on_ko_fi">Podrži developera na Ko-fi</string>
+    <string name="label_support_dev_on_ko_fi">Podrži TrainMe na Ko-fi</string>
 
     <string name="train_reminder_channel_name">Podsjetnici za vozove</string>
     <string name="train_reminder_channel_description">Podsjetnici za predstojeće polaske vozova</string>

@@ -1,0 +1,26 @@
+TrainMe je putnicki komandni centar za zeljeznicka putovanja kroz Crnu Goru. Pretvara nesigurnost reda voznje u kontrolisanu povrsinu: inteligenciju stanica, rekonstrukciju ruta, svijest o polasku i orkestraciju podsjetnika u jednom Android proizvodu.
+
+Sistem mogucnosti:
+
+Signal Acquisition Layer
+Stabilizuje signale stanica i reda voznje prije nego sto postanu putnicka odluka.
+
+Localized Station Intelligence
+Podrzava nazive stanica na engleskom, crnogorskom latinicom i crnogorskom cirilicom, tako da pretraga odgovara kontekstu putnika.
+
+Route Reconstruction Core
+Pretvara direktne i povezane rezultate reda voznje u pregledne kartice ruta sa vremenom putovanja, cjenovnim signalima, prozorima polaska i punom vidljivoscu rute.
+
+Departure Awareness Engine
+Drzi izabrano putovanje operativnim kroz stanje vremena do polaska i opciono automatsko osvjezavanje.
+
+Reminder Orchestration Layer
+Upravlja push podsjetnicima, predajom u kalendar, kombinovanim putanjama podsjetnika i vidljivim ishodima dozvola.
+
+Continuity Vault
+Cuva omiljene rute, ponovljene rute i nedavne pretrage, tako da redovna putovanja ostaju blizu povrsine.
+
+Operational Telemetry Surface
+Prikazuje stanje kesiranih stanica, greske ruta, dostupnost azuriranja i ishode podsjetnika, bez pogadjanja za putnika.
+
+TrainMe je nezavisan i nije zvanicni red voznje, proizvod za karte ili servisni kanal ZPCG AD Podgorica. Za zvanicne rasporede, karte, servisna obavjestenja i informacije kompanije koristite zvanicni ZPCG sajt.

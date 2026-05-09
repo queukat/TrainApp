@@ -26,7 +26,7 @@
     <string name="dialog_reminder_cancel">Откажи</string>
     <string name="radio_push">Само обавјештење (Push)</string>
     <string name="radio_calendar">Само календар</string>
-    <string name="radio_both">Обавјештење + Kалендар</string>
+    <string name="radio_both">Обавјештење + Календар</string>
     <string name="radio_none">Без подсјетника</string>
     <string name="hint_reminder_minutes">Минута прије поласка</string>
     <string name="checkbox_remember_choice">Запамти мој избор</string>
@@ -85,12 +85,12 @@
     <string name="cdesc_select_train">обавјештење</string>
 
     <string name="disclaimer_text">
-        Ова апликација није званична нити подржана од било које организације.
-        Направљена је добровољно, бесплатно, из личног ентузијазма.
+        TrainMe је независан производ и није званичан нити одобрен од било које организације.
+        За званичне распореде, карте и сервисна обавјештења користите званичне изворе.
     </string>
 
     <string name="label_select_language_for_stations">Изаберите језик станица</string>
-    <string name="hint_language_for_stations">Ова опција се користи само за преузимање назива станица на изабраном језику</string>
+    <string name="hint_language_for_stations">Контролише језик назива станица у претражној површини</string>
     <string name="station_language_english">Енглески</string>
     <string name="station_language_montenegrin_latin">Црногорски (латиница)</string>
     <string name="station_language_montenegrin_cyrillic">Црногорски (ћирилица)</string>
@@ -114,19 +114,19 @@
     <string name="unknown_station">Непозната станица</string>
     <string name="open_in_maps">Отвори у мапи</string>
 
-    <string name="toast_failed_load_stops">Неуспјешно учитавање станица: %1$s</string>
-    <string name="toast_failed_load_routes">Неуспјешно учитавање рута: %1$s</string>
+    <string name="toast_failed_load_stops">Интелигенција станица се не може освјежити: %1$s</string>
+    <string name="toast_failed_load_routes">Реконструкција руте се не може довршити: %1$s</string>
     <string name="toast_no_results">Ниједна рута није пронађена</string>
-    <string name="stops_refresh_using_cache">Приказују се кеширане станице. Листа станица се тренутно не може освјежити.</string>
+    <string name="stops_refresh_using_cache">Интелигенција станица користи кеширане податке. Освјежавање тренутно није доступно.</string>
     <string name="error_routes_server">Сервис реда вожње вратио је грешку (%1$d).</string>
     <string name="error_routes_network">Није могуће контактирати сервис реда вожње. Провјерите везу и покушајте поново.</string>
-    <string name="error_routes_invalid_response">Сервис реда вожње вратио је неважећи одговор.</string>
-    <string name="error_routes_timeout">Сервис реда вожње предуго одговара.</string>
+    <string name="error_routes_invalid_response">Сервис реда вожње вратио је сигнал који TrainMe не може реконструисати.</string>
+    <string name="error_routes_timeout">Сервис реда вожње није вратио сигнал на вријеме.</string>
 
     <string name="label_does_not_stop">Не зауставља се</string>
     <string name="label_crossing_no_passengers">Нема путничког стајалишта</string>
     <string name="toast_no_map_app">Нема инсталиране апликације за мапе</string>
-    <string name="label_support_dev_on_ko_fi">Подржи девелопера на Ko-fi</string>
+    <string name="label_support_dev_on_ko_fi">Подржи TrainMe на Ko-fi</string>
 
     <string name="train_reminder_channel_name">Подсјетници за возове</string>
     <string name="train_reminder_channel_description">Подсјетници за предстојеће поласке возова</string>

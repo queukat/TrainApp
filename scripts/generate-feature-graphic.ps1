@@ -184,9 +184,9 @@ $textFormat.Trimming = [System.Drawing.StringTrimming]::Word
 $textFormat.FormatFlags = [System.Drawing.StringFormatFlags]::LineLimit
 
 $appName = Get-AppName
-$headline = "Montenegro train schedules"
-$bodyText = "Search routes, inspect every stop, and set reminders before departure."
-$footerText = "Preview built from the current en-US screens"
+$headline = "Command center"
+$bodyText = "Routes, stops, and reminders under control."
+$footerText = "Current en-US command surfaces"
 
 $titleFont = New-FittedFont $graphics "Segoe UI Semibold" 37 ([System.Drawing.FontStyle]::Bold) $appName 300 56
 $headlineFont = New-FittedFont $graphics "Segoe UI Semibold" 27 ([System.Drawing.FontStyle]::Bold) $headline 310 84

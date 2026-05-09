@@ -1,0 +1,3 @@
+Smaller install footprint.
+The Distribution Rail now keeps unused icon payload out of the public build, reducing download and install weight.
+Release Governance also received stability cleanup for a cleaner delivery path.

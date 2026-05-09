@@ -20,14 +20,14 @@
     <string name="toast_no_reminder_set">No reminder set</string>
     <string name="toast_reminder_set">Reminder set for train %1$s (%2$d min before)</string>
 
-    <string name="toast_failed_load_stops">Failed to load stops: %1$s</string>
-    <string name="toast_failed_load_routes">Failed to load routes: %1$s</string>
+    <string name="toast_failed_load_stops">Station intelligence could not refresh: %1$s</string>
+    <string name="toast_failed_load_routes">Route reconstruction could not complete: %1$s</string>
     <string name="toast_no_results">No routes found</string>
-    <string name="stops_refresh_using_cache">Showing cached stations. The station list could not be refreshed right now.</string>
+    <string name="stops_refresh_using_cache">Station intelligence is using cached data. Refresh is unavailable right now.</string>
     <string name="error_routes_server">The timetable service returned an error (%1$d).</string>
     <string name="error_routes_network">Couldn\'t reach the timetable service. Check your connection and try again.</string>
-    <string name="error_routes_invalid_response">The timetable service returned an invalid response.</string>
-    <string name="error_routes_timeout">The timetable service took too long to respond.</string>
+    <string name="error_routes_invalid_response">The timetable service returned a signal TrainMe could not reconstruct.</string>
+    <string name="error_routes_timeout">The timetable service did not return a signal in time.</string>
 
     <string name="dialog_reminder_title">Select reminder type</string>
     <string name="dialog_reminder_ok">OK</string>
@@ -93,12 +93,12 @@
     <string name="cdesc_select_train">notification</string>
 
     <string name="disclaimer_text">
-        This application is not official or endorsed by any organization.
-        It was created voluntarily, free of charge, out of personal enthusiasm.
+        TrainMe is an independent product and is not official or endorsed by any organization.
+        Use official sources for official schedules, tickets, and service notices.
     </string>
 
     <string name="label_select_language_for_stations">Select station language</string>
-    <string name="hint_language_for_stations">This option is used only to fetch station names in the chosen language</string>
+    <string name="hint_language_for_stations">Controls the station-name language used by the search surface</string>
     <string name="station_language_english">English</string>
     <string name="station_language_montenegrin_latin">Montenegrin (Latin)</string>
     <string name="station_language_montenegrin_cyrillic">Montenegrin (Cyrillic)</string>
@@ -128,7 +128,7 @@
     <string name="label_does_not_stop">Does not stop</string>
     <string name="label_crossing_no_passengers">No passenger stop</string>
     <string name="toast_no_map_app">No maps application installed</string>
-    <string name="label_support_dev_on_ko_fi">Support Dev on Ko-fi</string>
+    <string name="label_support_dev_on_ko_fi">Support TrainMe on Ko-fi</string>
 
     <string name="train_reminder_channel_name">Train Reminders</string>
     <string name="train_reminder_channel_description">Reminders for upcoming train departures</string>

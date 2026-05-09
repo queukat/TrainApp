@@ -86,12 +86,12 @@
     <string name="cdesc_select_train">уведомление</string>
 
     <string name="disclaimer_text">
-        Это приложение не является официальным и не поддерживается никакой организацией.
-        Оно создано добровольно, бесплатно, из личного энтузиазма.
+        TrainMe - независимый продукт и не является официальным или одобренным какой-либо организацией.
+        Для официальных расписаний, билетов и сервисных уведомлений используйте официальные источники.
     </string>
 
     <string name="label_select_language_for_stations">Выбрать язык станций</string>
-    <string name="hint_language_for_stations">Этот параметр используется только для загрузки названий станций на выбранном языке</string>
+    <string name="hint_language_for_stations">Управляет языком названий станций в поисковом контуре</string>
     <string name="station_language_english">Английский</string>
     <string name="station_language_montenegrin_latin">Черногорский (латиница)</string>
     <string name="station_language_montenegrin_cyrillic">Черногорский (кириллица)</string>
@@ -115,19 +115,19 @@
     <string name="unknown_station">Неизвестная станция</string>
     <string name="open_in_maps">Открыть в Картах</string>
 
-    <string name="toast_failed_load_stops">Не удалось загрузить остановки: %1$s</string>
-    <string name="toast_failed_load_routes">Не удалось загрузить маршруты: %1$s</string>
+    <string name="toast_failed_load_stops">Интеллект станций не смог обновиться: %1$s</string>
+    <string name="toast_failed_load_routes">Реконструкция маршрута не завершилась: %1$s</string>
     <string name="toast_no_results">Маршруты не найдены</string>
-    <string name="stops_refresh_using_cache">Показываются кэшированные станции. Сейчас не удалось обновить список станций.</string>
+    <string name="stops_refresh_using_cache">Интеллект станций использует кэшированные данные. Обновление сейчас недоступно.</string>
     <string name="error_routes_server">Сервис расписаний вернул ошибку (%1$d).</string>
     <string name="error_routes_network">Не удалось связаться с сервисом расписаний. Проверьте соединение и попробуйте снова.</string>
-    <string name="error_routes_invalid_response">Сервис расписаний вернул некорректный ответ.</string>
-    <string name="error_routes_timeout">Сервис расписаний отвечает слишком долго.</string>
+    <string name="error_routes_invalid_response">Сервис расписаний вернул сигнал, который TrainMe не смог реконструировать.</string>
+    <string name="error_routes_timeout">Сервис расписаний не вернул сигнал вовремя.</string>
 
     <string name="label_does_not_stop">Не останавливается</string>
     <string name="label_crossing_no_passengers">Нет пассажирской остановки</string>
     <string name="toast_no_map_app">Приложение для карт не установлено</string>
-    <string name="label_support_dev_on_ko_fi">Поддержать разработчика на Ko-fi</string>
+    <string name="label_support_dev_on_ko_fi">Поддержать TrainMe на Ko-fi</string>
 
     <string name="train_reminder_channel_name">Напоминания о поездах</string>
     <string name="train_reminder_channel_description">Напоминания о предстоящих рейсах поезда</string>

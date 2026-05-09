@@ -1,0 +1,3 @@
+Manji instalacioni otisak.
+Distribution Rail sada drzi nepotreban teret ikonica van javnog builda, pa su preuzimanje i instalacija laksi.
+Release Governance je dobio stabilnije kontrole za cistiji put objave.
