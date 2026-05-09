@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Gson reads these DTO and preference classes by their JSON field names.
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.queukat.train.data.model.** { *; }
+-keep interface com.queukat.train.data.api.ApiService { *; }

@@ -30,21 +30,22 @@ fun SavedRoutesBlock(
     recentSearches: List<Pair<RecentSearchPreference, String>>,
     onSelectRoute: (SavedRoutePreference) -> Unit,
     onSelectRecentSearch: (RecentSearchPreference) -> Unit,
-    onSaveRoute: () -> Unit
+    onSaveRoute: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.label_repeat_routes),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -58,14 +59,14 @@ fun SavedRoutesBlock(
             Text(
                 text = stringResource(R.string.label_favorite_routes),
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(top = 12.dp)
+                modifier = Modifier.padding(top = 12.dp),
             )
 
             savedRoutes.forEach { (route, label) ->
                 RouteShortcutCard(
                     label = label,
                     supportingText = stringResource(R.string.label_favorite_route_shortcut),
-                    onClick = { onSelectRoute(route) }
+                    onClick = { onSelectRoute(route) },
                 )
             }
         }
@@ -74,22 +75,23 @@ fun SavedRoutesBlock(
             Text(
                 text = stringResource(R.string.label_recent_searches),
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(top = 12.dp)
+                modifier = Modifier.padding(top = 12.dp),
             )
 
             recentSearches.forEach { (route, label) ->
                 RouteShortcutCard(
                     label = label,
-                    supportingText = stringResource(
-                        R.string.label_recent_search_last_used,
-                        DateUtils.getRelativeTimeSpanString(
-                            route.lastSearchedAtMs,
-                            System.currentTimeMillis(),
-                            DateUtils.MINUTE_IN_MILLIS,
-                            DateUtils.FORMAT_ABBREV_RELATIVE
-                        )
-                    ),
-                    onClick = { onSelectRecentSearch(route) }
+                    supportingText =
+                        stringResource(
+                            R.string.label_recent_search_last_used,
+                            DateUtils.getRelativeTimeSpanString(
+                                route.lastSearchedAtMs,
+                                System.currentTimeMillis(),
+                                DateUtils.MINUTE_IN_MILLIS,
+                                DateUtils.FORMAT_ABBREV_RELATIVE,
+                            ),
+                        ),
+                    onClick = { onSelectRecentSearch(route) },
                 )
             }
         }
@@ -100,35 +102,37 @@ fun SavedRoutesBlock(
 private fun RouteShortcutCard(
     label: String,
     supportingText: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     OutlinedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp)
-            .clickable(onClick = onClick)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .clickable(onClick = onClick),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = supportingText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
 
@@ -137,7 +141,7 @@ private fun RouteShortcutCard(
             Text(
                 text = stringResource(R.string.btn_search),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         }
     }
@@ -146,19 +150,21 @@ private fun RouteShortcutCard(
 @Preview(showBackground = true)
 @Composable
 fun SavedRoutesBlockPreview() {
-    val savedRoutes = listOf(
-        SavedRoutePreference(1, 8, "Bar", "Podgorica") to "Bar - Podgorica",
-        SavedRoutePreference(8, 22, "Podgorica", "Bijelo Polje") to "Podgorica - Bijelo Polje"
-    )
-    val recentSearches = listOf(
-        RecentSearchPreference(1, 8, "Bar", "Podgorica", 1_711_780_000_000L) to "Bar - Podgorica"
-    )
+    val savedRoutes =
+        listOf(
+            SavedRoutePreference(1, 8, "Bar", "Podgorica") to "Bar - Podgorica",
+            SavedRoutePreference(8, 22, "Podgorica", "Bijelo Polje") to "Podgorica - Bijelo Polje",
+        )
+    val recentSearches =
+        listOf(
+            RecentSearchPreference(1, 8, "Bar", "Podgorica", 1_711_780_000_000L) to "Bar - Podgorica",
+        )
 
     SavedRoutesBlock(
         savedRoutes = savedRoutes,
         recentSearches = recentSearches,
         onSelectRoute = {},
         onSelectRecentSearch = {},
-        onSaveRoute = {}
+        onSaveRoute = {},
     )
 }

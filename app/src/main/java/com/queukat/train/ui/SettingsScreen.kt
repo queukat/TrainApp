@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
@@ -36,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -44,8 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.queukat.train.R
 import com.queukat.train.ui.theme.TrainAppTheme
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +56,7 @@ fun SettingsScreen(
     onApply: (chosenLang: String, chosenReminder: String, minutes: Int, autoRefresh: Boolean) -> Unit,
     onTestPushNow: () -> Unit,
     onTestPushLater: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     var selectedLanguage by remember { mutableStateOf(initialLanguage) }
     var selectedReminder by remember { mutableStateOf(initialReminder) }
@@ -76,28 +73,29 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.btn_back)
+                            painter = painterResource(R.drawable.ic_arrow_back),
+                            contentDescription = stringResource(R.string.btn_back),
                         )
                     }
                 },
-                modifier = Modifier.height(74.dp)
+                modifier = Modifier.height(74.dp),
             )
-        }
+        },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(8.dp)
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(8.dp),
         ) {
             Text(text = stringResource(R.string.label_select_language_for_stations))
 
             ExposedDropdownMenuBox(
                 expanded = langMenuExpanded,
                 onExpandedChange = { langMenuExpanded = !langMenuExpanded },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 OutlinedTextField(
                     value = stationLanguageLabel(selectedLanguage),
@@ -107,16 +105,17 @@ fun SettingsScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = langMenuExpanded)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(
-                            type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        )
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(
+                                type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                                enabled = true,
+                            ),
                 )
                 ExposedDropdownMenu(
                     expanded = langMenuExpanded,
-                    onDismissRequest = { langMenuExpanded = false }
+                    onDismissRequest = { langMenuExpanded = false },
                 ) {
                     languages.forEach { lang ->
                         DropdownMenuItem(
@@ -124,7 +123,7 @@ fun SettingsScreen(
                             onClick = {
                                 selectedLanguage = lang
                                 langMenuExpanded = false
-                            }
+                            },
                         )
                     }
                 }
@@ -133,7 +132,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.hint_language_for_stations),
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier.padding(horizontal = 4.dp),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -142,7 +141,7 @@ fun SettingsScreen(
             ExposedDropdownMenuBox(
                 expanded = reminderMenuExpanded,
                 onExpandedChange = { reminderMenuExpanded = !reminderMenuExpanded },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 OutlinedTextField(
                     value = reminderOptionLabel(selectedReminder),
@@ -152,16 +151,17 @@ fun SettingsScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = reminderMenuExpanded)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(
-                            type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        )
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(
+                                type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                                enabled = true,
+                            ),
                 )
                 ExposedDropdownMenu(
                     expanded = reminderMenuExpanded,
-                    onDismissRequest = { reminderMenuExpanded = false }
+                    onDismissRequest = { reminderMenuExpanded = false },
                 ) {
                     reminderOptions.forEach { rem ->
                         DropdownMenuItem(
@@ -169,7 +169,7 @@ fun SettingsScreen(
                             onClick = {
                                 selectedReminder = rem
                                 reminderMenuExpanded = false
-                            }
+                            },
                         )
                     }
                 }
@@ -181,14 +181,14 @@ fun SettingsScreen(
                 value = minutesText,
                 onValueChange = { minutesText = it },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = autoRefreshChecked,
-                    onCheckedChange = { autoRefreshChecked = it }
+                    onCheckedChange = { autoRefreshChecked = it },
                 )
                 Text(text = stringResource(R.string.label_auto_refresh))
             }
@@ -198,14 +198,14 @@ fun SettingsScreen(
                 Button(
                     onClick = onTestPushNow,
                     modifier = Modifier.wrapContentWidth(),
-                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp)
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
                 ) {
                     Text(stringResource(R.string.btn_test_push_now))
                 }
                 Button(
                     onClick = onTestPushLater,
                     modifier = Modifier.wrapContentWidth(),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(stringResource(R.string.btn_test_push_later))
                 }
@@ -217,7 +217,7 @@ fun SettingsScreen(
                     val mins = minutesText.toIntOrNull() ?: 15
                     onApply(selectedLanguage, selectedReminder, mins, autoRefreshChecked)
                 },
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.align(Alignment.End),
             ) {
                 Text(text = stringResource(R.string.btn_apply))
             }
@@ -226,7 +226,7 @@ fun SettingsScreen(
             Text(
                 text = stringResource(R.string.disclaimer_text),
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -239,7 +239,7 @@ fun SettingsScreen(
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     context.startActivity(intent)
                 },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             ) {
                 Text(text = stringResource(R.string.label_support_dev_on_ko_fi))
             }
@@ -250,25 +250,23 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun stationLanguageLabel(option: String): String {
-    return when (option) {
+private fun stationLanguageLabel(option: String): String =
+    when (option) {
         "en" -> stringResource(R.string.station_language_english)
         "me" -> stringResource(R.string.station_language_montenegrin_latin)
         "meCyr" -> stringResource(R.string.station_language_montenegrin_cyrillic)
         else -> option
     }
-}
 
 @Composable
-private fun reminderOptionLabel(option: String): String {
-    return when (option) {
+private fun reminderOptionLabel(option: String): String =
+    when (option) {
         "push" -> stringResource(R.string.radio_push)
         "calendar" -> stringResource(R.string.radio_calendar)
         "both" -> stringResource(R.string.radio_both)
         "none" -> stringResource(R.string.radio_none)
         else -> option
     }
-}
 
 @Composable
 @Preview(name = "Settings Light Theme", showBackground = true)
@@ -284,7 +282,7 @@ fun PreviewSettingsScreenLight() {
             onApply = { _, _, _, _ -> },
             onTestPushNow = {},
             onTestPushLater = {},
-            onBackClick = {}
+            onBackClick = {},
         )
     }
 }
@@ -303,8 +301,7 @@ fun PreviewSettingsScreenDark() {
             onApply = { _, _, _, _ -> },
             onTestPushNow = {},
             onTestPushLater = {},
-            onBackClick = {}
+            onBackClick = {},
         )
     }
 }
-

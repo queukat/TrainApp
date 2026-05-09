@@ -6,21 +6,30 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.CalendarContract
-import android.provider.Settings
 import android.widget.Toast
 import androidx.core.net.toUri
 import com.queukat.train.R
 
+private const val MILLIS_PER_MINUTE = 60_000L
+private const val MIN_TRIGGER_LEAD_TIME_MS = 2_000L
+private const val MISSING_COORDINATES_LATITUDE = 42.0
+private const val MISSING_COORDINATES_LONGITUDE = 19.0
+
 sealed interface PushReminderScheduleResult {
     data object Scheduled : PushReminderScheduleResult
+
     data object NotificationPermissionMissing : PushReminderScheduleResult
+
     data object ExactAlarmPermissionMissing : PushReminderScheduleResult
+
     data object TriggerTimeTooSoon : PushReminderScheduleResult
-    data class Failed(val reason: String? = null) : PushReminderScheduleResult
+
+    data class Failed(
+        val reason: String? = null,
+    ) : PushReminderScheduleResult
 }
 
 object ReminderUtils {
-
     /**
      * Push reminder через AlarmManager.
      * Теперь:
@@ -33,7 +42,7 @@ object ReminderUtils {
         trainNumber: String,
         departureTimeMs: Long,
         minutesBefore: Int,
-        stationName: String
+        stationName: String,
     ): PushReminderScheduleResult {
         if (!NotificationHelper.canPostNotifications(context)) {
             return PushReminderScheduleResult.NotificationPermissionMissing
@@ -47,30 +56,32 @@ object ReminderUtils {
             }
         }
 
-        val triggerTime = departureTimeMs - minutesBefore * 60_000L
+        val triggerTime = departureTimeMs - minutesBefore * MILLIS_PER_MINUTE
         val now = System.currentTimeMillis()
-        if (triggerTime <= now + 2_000L) {
+        if (triggerTime <= now + MIN_TRIGGER_LEAD_TIME_MS) {
             return PushReminderScheduleResult.TriggerTimeTooSoon
         }
 
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            putExtra("trainNumber", trainNumber)
-            putExtra("minutesBefore", minutesBefore)
-            putExtra("stationName", stationName)
-        }
+        val intent =
+            Intent(context, ReminderReceiver::class.java).apply {
+                putExtra("trainNumber", trainNumber)
+                putExtra("minutesBefore", minutesBefore)
+                putExtra("stationName", stationName)
+            }
 
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            (trainNumber + triggerTime).hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                (trainNumber + triggerTime).hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
 
         return try {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerTime,
-                pendingIntent
+                pendingIntent,
             )
             PushReminderScheduleResult.Scheduled
         } catch (e: SecurityException) {
@@ -86,20 +97,21 @@ object ReminderUtils {
         description: String,
         beginTimeMs: Long,
         endTimeMs: Long,
-        locationUri: String? = null
+        locationUri: String? = null,
     ): Boolean {
-        val intent = Intent(Intent.ACTION_INSERT).apply {
-            data = CalendarContract.Events.CONTENT_URI
-            putExtra(CalendarContract.Events.TITLE, title)
-            putExtra(CalendarContract.Events.DESCRIPTION, description)
-            putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTimeMs)
-            putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTimeMs)
-            if (!locationUri.isNullOrEmpty()) {
-                putExtra(CalendarContract.Events.EVENT_LOCATION, locationUri)
+        val intent =
+            Intent(Intent.ACTION_INSERT).apply {
+                data = CalendarContract.Events.CONTENT_URI
+                putExtra(CalendarContract.Events.TITLE, title)
+                putExtra(CalendarContract.Events.DESCRIPTION, description)
+                putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTimeMs)
+                putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTimeMs)
+                if (!locationUri.isNullOrEmpty()) {
+                    putExtra(CalendarContract.Events.EVENT_LOCATION, locationUri)
+                }
+                putExtra(CalendarContract.Events.HAS_ALARM, true)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            putExtra(CalendarContract.Events.HAS_ALARM, true)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
 
         return if (intent.resolveActivity(context.packageManager) != null) {
             runCatching {
@@ -110,21 +122,28 @@ object ReminderUtils {
         }
     }
 
-    fun openLocationInMaps(context: Context, lat: Double, lng: Double, stationName: String) {
-        if (lat == 42.0 && lng == 19.0) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.toast_no_coords, stationName),
-                Toast.LENGTH_SHORT
-            ).show()
+    fun openLocationInMaps(
+        context: Context,
+        lat: Double,
+        lng: Double,
+        stationName: String,
+    ) {
+        if (lat == MISSING_COORDINATES_LATITUDE && lng == MISSING_COORDINATES_LONGITUDE) {
+            Toast
+                .makeText(
+                    context,
+                    context.getString(R.string.toast_no_coords, stationName),
+                    Toast.LENGTH_SHORT,
+                ).show()
             return
         }
 
         val encoded = Uri.encode(stationName)
         val uri = "geo:$lat,$lng?q=$lat,$lng($encoded)"
-        val mapIntent = Intent(Intent.ACTION_VIEW, uri.toUri()).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val mapIntent =
+            Intent(Intent.ACTION_VIEW, uri.toUri()).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
 
         if (mapIntent.resolveActivity(context.packageManager) != null) {
             context.startActivity(mapIntent)

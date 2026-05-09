@@ -12,7 +12,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +34,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
+private const val SELECTION_LOCK_MS = 500L
+private const val DEBUG_TEXT_PREVIEW_LENGTH = 30
+private const val SUGGESTION_FILTER_DELAY_MS = 80L
+private const val MAX_SUGGESTIONS = 30
+private val suggestionsMaxHeight = 260.dp
+
 @Composable
 fun AutoCompleteTextField(
     value: TextFieldValue,
@@ -37,7 +49,7 @@ fun AutoCompleteTextField(
     onSuggestionSelected: (StopEntity) -> Unit = {},
     label: String = "Station",
     language: String = "en",
-    debugKey: String = label
+    debugKey: String = label,
 ) {
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -53,8 +65,8 @@ fun AutoCompleteTextField(
 
     fun lockSelection(text: String) {
         lockedText = text
-        lockUntilMs = System.currentTimeMillis() + 500L
-        if (dbgEnabled) Dbg.d(context, "AC/$debugKey", "LOCK '$text' for 500ms")
+        lockUntilMs = System.currentTimeMillis() + SELECTION_LOCK_MS
+        if (dbgEnabled) Dbg.d(context, "AC/$debugKey", "LOCK '$text' for ${SELECTION_LOCK_MS}ms")
     }
 
     fun clearLock(reason: String) {
@@ -73,25 +85,44 @@ fun AutoCompleteTextField(
 
         if (!focused || text.isBlank() || stops.isEmpty()) {
             suggestions = emptyList()
-            if (dbgEnabled) Dbg.d(context, "AC/$debugKey", "skip filter: focused=$focused text='${text.take(30)}' stops=${stops.size}")
+            if (dbgEnabled) {
+                Dbg.d(
+                    context,
+                    "AC/$debugKey",
+                    "skip filter: focused=$focused text='${text.take(DEBUG_TEXT_PREVIEW_LENGTH)}' stops=${stops.size}",
+                )
+            }
             return@LaunchedEffect
         }
 
-        delay(80)
+        delay(SUGGESTION_FILTER_DELAY_MS)
 
         val query = text.trim()
-        val result = withContext(Dispatchers.Default) {
-            stops.asSequence()
-                .filter { stop -> matchesAnyLanguage(stop, language, query) }
-                .take(30)
-                .toList()
-        }
+        val result =
+            withContext(Dispatchers.Default) {
+                stops
+                    .asSequence()
+                    .filter { stop -> matchesAnyLanguage(stop, language, query) }
+                    .take(MAX_SUGGESTIONS)
+                    .toList()
+            }
 
         suggestions = result
 
         if (dbgEnabled) {
-            Dbg.d(context, "AC/$debugKey", "filter done: query='${query.take(30)}' suggestions=${result.size} stops=${stops.size}")
-            if (result.isNotEmpty()) Dbg.d(context, "AC/$debugKey", "example(show): '${result.first().getNameForLanguage(language)}'")
+            Dbg.d(
+                context,
+                "AC/$debugKey",
+                "filter done: query='${query.take(DEBUG_TEXT_PREVIEW_LENGTH)}' " +
+                    "suggestions=${result.size} stops=${stops.size}",
+            )
+            if (result.isNotEmpty()) {
+                Dbg.d(
+                    context,
+                    "AC/$debugKey",
+                    "example(show): '${result.first().getNameForLanguage(language)}'",
+                )
+            }
         }
     }
 
@@ -106,7 +137,11 @@ fun AutoCompleteTextField(
                 if (lt != null && now <= lockUntilMs) {
                     if (newVal.text != lt) {
                         if (dbgEnabled) {
-                            Dbg.d(context, "AC/$debugKey", "IGNORED IME change '${newVal.text.take(30)}' (locked='$lt')")
+                            Dbg.d(
+                                context,
+                                "AC/$debugKey",
+                                "IGNORED IME change '${newVal.text.take(DEBUG_TEXT_PREVIEW_LENGTH)}' (locked='$lt')",
+                            )
                         }
                         return@OutlinedTextField
                     } else {
@@ -117,58 +152,66 @@ fun AutoCompleteTextField(
                 }
 
                 onValueChange(newVal)
-                if (dbgEnabled) Dbg.d(context, "AC/$debugKey", "onValueChange: '${newVal.text.take(30)}'")
+                if (dbgEnabled) {
+                    Dbg.d(
+                        context,
+                        "AC/$debugKey",
+                        "onValueChange: '${newVal.text.take(DEBUG_TEXT_PREVIEW_LENGTH)}'",
+                    )
+                }
             },
             label = { Text(label) },
             singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged { fs ->
-                    focused = fs.isFocused
-                    if (!focused) suggestions = emptyList()
-                }
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { fs ->
+                        focused = fs.isFocused
+                        if (!focused) suggestions = emptyList()
+                    },
         )
 
         if (focused && suggestions.isNotEmpty()) {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-                    .heightIn(max = 260.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .heightIn(max = suggestionsMaxHeight),
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             ) {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(suggestions) { stop ->
                         val stationName = stop.getNameForLanguage(language)
                         Text(
                             text = stationName,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (dbgEnabled) Dbg.d(context, "AC/$debugKey", "pick: '$stationName'")
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        if (dbgEnabled) Dbg.d(context, "AC/$debugKey", "pick: '$stationName'")
 
-                                    // 1) Ставим lock
-                                    lockSelection(stationName)
+                                        // 1) Ставим lock
+                                        lockSelection(stationName)
 
-                                    // 2) Пушим выбранное значение
-                                    onValueChange(
-                                        TextFieldValue(
-                                            text = stationName,
-                                            selection = TextRange(stationName.length)
+                                        // 2) Пушим выбранное значение
+                                        onValueChange(
+                                            TextFieldValue(
+                                                text = stationName,
+                                                selection = TextRange(stationName.length),
+                                            ),
                                         )
-                                    )
-                                    onSuggestionSelected(stop)
+                                        onSuggestionSelected(stop)
 
-                                    // 3) Закрываем подсказки и убираем IME
-                                    suggestions = emptyList()
-                                    keyboard?.hide()
-                                    focusManager.clearFocus()
-                                }
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        // 3) Закрываем подсказки и убираем IME
+                                        suggestions = emptyList()
+                                        keyboard?.hide()
+                                        focusManager.clearFocus()
+                                    }.padding(horizontal = 12.dp, vertical = 10.dp),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -177,17 +220,21 @@ fun AutoCompleteTextField(
     }
 }
 
-private fun matchesAnyLanguage(stop: StopEntity, displayLang: String, query: String): Boolean {
+private fun matchesAnyLanguage(
+    stop: StopEntity,
+    displayLang: String,
+    query: String,
+): Boolean {
     val q = query.trim()
     if (q.isEmpty()) return false
 
     val displayName = stop.getNameForLanguage(displayLang)
-    if (displayName.contains(q, ignoreCase = true)) return true
-
-    if (stop.nameEn.contains(q, ignoreCase = true)) return true
-    if (stop.nameMe.contains(q, ignoreCase = true)) return true
-    val cyr = stop.nameMeCyr
-    if (!cyr.isNullOrBlank() && cyr.contains(q, ignoreCase = true)) return true
-
-    return false
+    val searchableNames =
+        listOfNotNull(
+            displayName,
+            stop.nameEn,
+            stop.nameMe,
+            stop.nameMeCyr,
+        )
+    return searchableNames.any { name -> name.contains(q, ignoreCase = true) }
 }

@@ -1,21 +1,28 @@
 package com.queukat.train.ui
 
 import android.content.SharedPreferences
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import com.queukat.train.R
 import com.queukat.train.data.model.DirectRoute
-import androidx.core.content.edit
 
 /**
  *     (Push / Calendar / Both / None)  - .
@@ -25,12 +32,14 @@ fun ReminderChoiceDialog(
     route: DirectRoute,
     prefs: SharedPreferences,
     onDismiss: () -> Unit,
-    onActionChosen: (String, Int) -> Unit
+    onActionChosen: (String, Int) -> Unit,
 ) {
     val trainNumber = route.TrainNumber ?: "Unknown"
-    val storedAction = prefs.getString("defaultReminderAction", "push")
-        ?.takeIf { it in setOf("push", "calendar", "both", "none") }
-        ?: "push"
+    val storedAction =
+        prefs
+            .getString("defaultReminderAction", "push")
+            ?.takeIf { it in setOf("push", "calendar", "both", "none") }
+            ?: "push"
     val storedMinutes = prefs.getInt("defaultMinutesBefore", 15)
 
     var selectedAction by remember { mutableStateOf(storedAction) }
@@ -45,28 +54,28 @@ fun ReminderChoiceDialog(
                 Text("Train: $trainNumber")
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 
+                //
                 RadioItem(
                     label = stringResource(R.string.radio_push),
-                    selected = (selectedAction == "push")
+                    selected = (selectedAction == "push"),
                 ) {
                     selectedAction = "push"
                 }
                 RadioItem(
                     label = stringResource(R.string.radio_calendar),
-                    selected = (selectedAction == "calendar")
+                    selected = (selectedAction == "calendar"),
                 ) {
                     selectedAction = "calendar"
                 }
                 RadioItem(
                     label = stringResource(R.string.radio_both),
-                    selected = (selectedAction == "both")
+                    selected = (selectedAction == "both"),
                 ) {
                     selectedAction = "both"
                 }
                 RadioItem(
                     label = stringResource(R.string.radio_none),
-                    selected = (selectedAction == "none")
+                    selected = (selectedAction == "none"),
                 ) {
                     selectedAction = "none"
                 }
@@ -76,14 +85,14 @@ fun ReminderChoiceDialog(
                 OutlinedTextField(
                     value = minutesInput,
                     onValueChange = { minutesInput = it },
-                    label = { Text(stringResource(R.string.hint_reminder_minutes)) }
+                    label = { Text(stringResource(R.string.hint_reminder_minutes)) },
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         checked = rememberChoice,
-                        onCheckedChange = { rememberChoice = it }
+                        onCheckedChange = { rememberChoice = it },
                     )
                     Text(text = stringResource(R.string.checkbox_remember_choice))
                 }
@@ -101,7 +110,7 @@ fun ReminderChoiceDialog(
                         }
                     }
                     onActionChosen(selectedAction, mins)
-                }
+                },
             ) {
                 Text(text = stringResource(R.string.dialog_reminder_ok))
             }
@@ -110,7 +119,7 @@ fun ReminderChoiceDialog(
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(R.string.dialog_reminder_cancel))
             }
-        }
+        },
     )
 }
 
@@ -119,7 +128,7 @@ fun ReminderChoiceDialog(
 private fun RadioItem(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         RadioButton(selected = selected, onClick = onClick)

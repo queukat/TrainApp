@@ -4,5 +4,5 @@ data class SavedRoutePreference(
     val fromStopId: Int,
     val toStopId: Int,
     val fromFallbackName: String = "",
-    val toFallbackName: String = ""
+    val toFallbackName: String = "",
 )

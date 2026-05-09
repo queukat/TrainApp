@@ -21,17 +21,16 @@ import com.queukat.train.ui.theme.TrainAppTheme
 import com.queukat.train.util.DateTimeUtils
 import com.queukat.train.util.NotificationHelper
 import com.queukat.train.util.UpdateCheck
-import com.queukat.train.util.UpdateResult
 import com.queukat.train.util.applyForcedAppLocale
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
-    private val settingsLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { if (it.resultCode == RESULT_OK) recreate() }
+    private val settingsLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+        ) { if (it.resultCode == RESULT_OK) recreate() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,7 +67,7 @@ class MainActivity : ComponentActivity() {
                             NotificationHelper.showUpdateNotification(
                                 this@MainActivity,
                                 result.latestVersion,
-                                result.releaseNotes
+                                result.releaseNotes,
                             )
                             markUpdateNotified(result.latestVersion)
                         }
@@ -91,12 +90,15 @@ class MainActivity : ComponentActivity() {
 
         if (initialFrom.isNotBlank() || initialTo.isNotBlank() || autoSearch) {
             lifecycleScope.launch {
-                val resolvedStops = mainVM.stops
-                    .filter { it.isNotEmpty() }
-                    .first()
-                val stationLanguage = prefs.getString("appLanguage", "en")
-                    ?.takeIf { it in setOf("en", "me", "meCyr") }
-                    ?: "en"
+                val resolvedStops =
+                    mainVM.stops
+                        .filter { it.isNotEmpty() }
+                        .first()
+                val stationLanguage =
+                    prefs
+                        .getString("appLanguage", "en")
+                        ?.takeIf { it in setOf("en", "me", "meCyr") }
+                        ?: "en"
 
                 val fromStop = findStopByAnyName(resolvedStops, initialFrom)
                 if (fromStop != null) {
@@ -118,7 +120,7 @@ class MainActivity : ComponentActivity() {
                     mainVM.loadRoutes(
                         from = mainVM.fromStation.value,
                         to = mainVM.toStation.value,
-                        date = searchDate
+                        date = searchDate,
                     )
                 }
             }
@@ -131,7 +133,7 @@ class MainActivity : ComponentActivity() {
                     onOpenSettings = {
                         val intent = Intent(this, SettingsActivity::class.java)
                         settingsLauncher.launch(intent)
-                    }
+                    },
                 )
             }
         }

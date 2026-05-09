@@ -8,16 +8,16 @@ import com.queukat.train.data.repository.FakeTrainRepository
  * ё VM,    "fake" ,
  *   -    .
  */
-class PreviewTrainViewModel(application: Application) :
-    TrainViewModel(application, FakeTrainRepository(application)) {
-
+class PreviewTrainViewModel(
+    application: Application,
+) : TrainViewModel(application, FakeTrainRepository(application)) {
     init {
-        // :   
-        _fromStation.value = "Bar"
-        _toStation.value = "Podgorica"
-        _selectedDate.value = "2025-12-31"
+        // :
+        setFromStation("Bar")
+        setToStation("Podgorica")
+        setSelectedDate("2025-12-31")
 
-        //  ,  -  
-        // _routes.value = ... 
+        //  ,  -
+        // _routes.value = ...
     }
 }

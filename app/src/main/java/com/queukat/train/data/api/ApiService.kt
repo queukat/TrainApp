@@ -9,7 +9,6 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface ApiService {
-
     @GET("api/stops")
     fun getStops(): Call<List<StopDto>>
 
@@ -17,11 +16,11 @@ interface ApiService {
     fun getRoutes(
         @Query("start") start: String,
         @Query("finish") finish: String,
-        @Query("date") date: String
+        @Query("date") date: String,
     ): Call<RoutesResponse>
 
     /**
-     *   – ё «cumulative» JSON   
+     *   – ё «cumulative» JSON
      */
     @GET("api/routes/cumulative")
     fun getCumulativeRoutes(): Call<ResponseBody>

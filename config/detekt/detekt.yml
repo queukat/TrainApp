@@ -1,0 +1,48 @@
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  CyclomaticComplexMethod:
+    threshold: 22
+    ignoreAnnotated:
+      - Composable
+  LargeClass:
+    threshold: 900
+  LongMethod:
+    threshold: 100
+    ignoreAnnotated:
+      - Composable
+  LongParameterList:
+    functionThreshold: 7
+    ignoreDefaultParameters: true
+    ignoreAnnotated:
+      - Composable
+  NestedBlockDepth:
+    threshold: 6
+  TooManyFunctions:
+    thresholdInClasses: 20
+    ignorePrivate: true
+    ignoreAnnotatedFunctions:
+      - Preview
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+
+naming:
+  ConstructorParameterNaming:
+    excludes:
+      - '**/data/model/**'
+  FunctionNaming:
+    ignoreAnnotated:
+      - Composable
+
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreLocalVariableDeclaration: true
+    ignoreAnnotation: true
+  ReturnCount:
+    max: 4
+    excludeGuardClauses: true

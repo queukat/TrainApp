@@ -192,13 +192,9 @@ For signing and Play delivery, use [docs/release_setup.md](docs/release_setup.md
 
 ## Release Governance
 
-The Play delivery path is intentionally governed. Production releases should pass through the repository release rail:
+The Play delivery path is intentionally governed. Production releases should pass through the private release rail or CI path that implements the checks documented in [docs/release_setup.md](docs/release_setup.md) and [docs/play_release.md](docs/play_release.md).
 
-```powershell
-.\tools\play-release.ps1 -Track production -ReleaseStatus completed -Upload
-```
-
-That path builds or accepts the artifact, verifies signing, targets the expected package, stages localized changelogs, validates against Play, and uploads only when publishing is explicitly requested.
+That path should build or accept the artifact, verify signing, target the expected package, stage localized changelogs, validate against Play, and upload only when publishing is explicitly requested.
 
 ## Contribution Standard
 

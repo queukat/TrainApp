@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TrainMe</string>
+
+    <string name="toast_route_saved">Ruta sačuvana</string>
+    <string name="toast_select_stations_first">Molimo vas, najprije izaberite obje stanice</string>
+    <string name="toast_pick_date">Molimo vas, odaberite datum</string>
+    <string name="toast_no_routes_found">Nijedna ruta nije pronađena</string>
+    <string name="toast_settings_applied">Postavke primijenjene</string>
+    <plurals name="toast_test_push_scheduled">
+        <item quantity="one">Test obavještenje zakazano za %1$d sekundu</item>
+        <item quantity="few">Test obavještenje zakazano za %1$d sekunde</item>
+        <item quantity="other">Test obavještenje zakazano za %1$d sekundi</item>
+    </plurals>
+    <string name="toast_enable_notifications_settings">Uključite obavještenja za TrainMe u sistemskim postavkama</string>
+    <string name="toast_enable_exact_alarms_settings">Tačni alarmi nijesu dozvoljeni. Uključite ih u sistemskim postavkama.</string>
+    <string name="toast_cannot_schedule_exact_alarm">Nije moguće zakazati tačan alarm: %1$s</string>
+    <string name="toast_no_coords">Nema koordinata za %1$s</string>
+    <string name="toast_no_departure_time">Nije pronađeno vrijeme polaska</string>
+    <string name="toast_cant_parse_departure">Ne mogu da protumačim vrijeme polaska</string>
+    <string name="toast_no_reminder_set">Podsjetnik nije postavljen</string>
+    <string name="toast_reminder_set">Podsjetnik postavljen za voz %1$s (%2$d min prije)</string>
+
+    <string name="dialog_reminder_title">Izaberite tip podsjetnika</string>
+    <string name="dialog_reminder_ok">U redu</string>
+    <string name="dialog_reminder_cancel">Otkaži</string>
+    <string name="radio_push">Samo obavještenje (Push)</string>
+    <string name="radio_calendar">Samo kalendar</string>
+    <string name="radio_both">Obavještenje + Kalendar</string>
+    <string name="radio_none">Bez podsjetnika</string>
+    <string name="hint_reminder_minutes">Minuta prije polaska</string>
+    <string name="checkbox_remember_choice">Zapamti moj izbor</string>
+
+    <string name="select_date_title">Odaberite datum</string>
+
+    <string name="connected_routes_label">Povezane rute:</string>
+
+    <string name="full_route_title">Cjelovita ruta voza %1$s</string>
+
+    <string name="train_label">Voz %1$s (%2$s - %3$s)</string>
+    <string name="price_format">%.2f €</string>
+    <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
+
+    <string name="reminder_notification_title">Podsjetnik za voz %1$s</string>
+    <string name="reminder_notification_message">Vrijeme je da krenete do stanice: %1$s (za %2$d min).</string>
+    <string name="reminder_status_notification_permission_missing">Za push podsjetnik potrebno je odobrenje za obavještenja.</string>
+    <string name="reminder_status_exact_alarm_missing">Za push podsjetnik na ovoj verziji Androida potrebno je odobrenje za tačne alarme.</string>
+    <string name="reminder_status_too_late">Podsjetnik nije kreiran jer je polazak preblizu.</string>
+    <string name="reminder_status_push_failed">Push podsjetnik nije moguće zakazati.</string>
+    <string name="reminder_status_calendar_opened">Kalendar je otvoren za voz %1$s.</string>
+    <string name="reminder_status_calendar_failed">Kalendar nije moguće otvoriti za voz %1$s.</string>
+    <string name="reminder_status_push_created">Podsjetnik kreiran za voz %1$s (%2$d min prije polaska).</string>
+    <string name="reminder_status_push_and_calendar_created">Podsjetnik je kreiran i kalendar je otvoren za voz %1$s (%2$d min prije polaska).</string>
+    <string name="reminder_status_push_created_calendar_failed">Podsjetnik je kreiran za voz %1$s (%2$d min prije polaska), ali kalendar nije moguće otvoriti.</string>
+    <string name="reminder_status_calendar_opened_push_notification_missing">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije kreiran jer obavještenja nijesu dozvoljena.</string>
+    <string name="reminder_status_calendar_opened_push_exact_alarm_missing">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije kreiran jer tačni alarmi nijesu dozvoljeni.</string>
+    <string name="reminder_status_calendar_opened_push_too_late">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije kreiran jer je polazak preblizu.</string>
+    <string name="reminder_status_calendar_opened_push_failed">Kalendar je otvoren za voz %1$s, ali push podsjetnik nije moguće zakazati.</string>
+
+    <string name="label_default_reminder">Podrazumijevana radnja podsjetnika:</string>
+    <string name="label_minutes_before">Minuta prije polaska (podrazumijevano):</string>
+    <string name="label_auto_refresh">Automatsko osvježavanje \'vrijeme do polaska\'</string>
+    <string name="btn_test_push_now">Test obavještenja sada</string>
+    <string name="btn_test_push_later">Test obavještenja za 1 minut</string>
+    <string name="btn_apply">Primijeni</string>
+
+    <string name="btn_settings">Postavke</string>
+    <string name="btn_search">Pretraga</string>
+    <string name="btn_save_route">Sačuvaj rutu</string>
+    <string name="label_repeat_routes">Brze rute</string>
+    <string name="label_favorite_routes">Omiljene</string>
+    <string name="label_recent_searches">Nedavne pretrage</string>
+    <string name="label_favorite_route_shortcut">Sačuvana ruta</string>
+    <string name="label_recent_search_last_used">Posljednja pretraga %1$s</string>
+
+    <string name="hint_from_station">Polazna stanica</string>
+    <string name="hint_to_station">Dolazna stanica</string>
+
+    <string name="cdesc_select_departure_station">Izaberi polaznu stanicu</string>
+    <string name="cdesc_select_arrival_station">Izaberi dolaznu stanicu</string>
+    <string name="cdesc_clear_date">Obriši datum</string>
+    <string name="cdesc_pick_date">Odaberi datum</string>
+
+    <string name="label_date">Datum:</string>
+    <string name="cdesc_select_train">obavještenje</string>
+
+    <string name="disclaimer_text">
+        TrainMe je nezavisan proizvod i nije zvaničan niti odobren od bilo koje organizacije.
+        Za zvanične rasporede, karte i servisna obavještenja koristite zvanične izvore.
+    </string>
+
+    <string name="label_select_language_for_stations">Odaberite jezik stanica</string>
+    <string name="hint_language_for_stations">Kontroliše jezik naziva stanica u pretražnoj površini</string>
+    <string name="station_language_english">Engleski</string>
+    <string name="station_language_montenegrin_latin">Crnogorski (latinica)</string>
+    <string name="station_language_montenegrin_cyrillic">Crnogorski (ćirilica)</string>
+    <string name="btn_back">Nazad</string>
+    <string name="direct_routes_label">Direktne rute:</string>
+    <string name="unknown_label">Nepoznato</string>
+    <string name="train_departed">Voz je krenuo</string>
+    <string name="label_travel_time">Vrijeme putovanja: %1$s</string>
+
+    <string name="time_in_h_and_m">%1$d h %2$d min</string>
+    <string name="time_in_m">%1$d min</string>
+    <string name="time_in_d_and_h">%1$d d %2$d h</string>
+    <string name="time_until_prefix">Za %1$s</string>
+
+    <string name="label_reminder">Podsjetnik</string>
+    <string name="two_class_prices_format">Klasa1: %1$s / Klasa2: %2$s</string>
+    <string name="one_class_price_format">Cijena: %1$s</string>
+    <string name="two_class_only_price_format">Klasa2: %1$s</string>
+    <string name="stop_arr_dep_with_dwell">Dol.: %1$s, zadržavanje %2$d min, pol.: %3$s</string>
+    <string name="stop_arr_dep">Dol.: %1$s, pol.: %2$s</string>
+    <string name="unknown_station">Nepoznata stanica</string>
+    <string name="open_in_maps">Otvori u mapi</string>
+
+    <string name="toast_failed_load_stops">Inteligencija stanica se ne može osvježiti: %1$s</string>
+    <string name="toast_failed_load_routes">Rekonstrukcija rute se ne može dovršiti: %1$s</string>
+    <string name="toast_no_results">Nijedna ruta nije pronađena</string>
+    <string name="stops_refresh_using_cache">Inteligencija stanica koristi keširane podatke. Osvježavanje trenutno nije dostupno.</string>
+    <string name="error_routes_server">Servis reda vožnje vratio je grešku (%1$d).</string>
+    <string name="error_routes_network">Nije moguće kontaktirati servis reda vožnje. Provjerite vezu i pokušajte ponovo.</string>
+    <string name="error_routes_invalid_response">Servis reda vožnje vratio je signal koji TrainMe ne može rekonstruisati.</string>
+    <string name="error_routes_timeout">Servis reda vožnje nije vratio signal na vrijeme.</string>
+
+    <string name="label_does_not_stop">Ne zaustavlja se</string>
+    <string name="label_crossing_no_passengers">Nema putničkog stajališta</string>
+    <string name="toast_no_map_app">Nema instalirane aplikacije za mape</string>
+    <string name="label_support_dev_on_ko_fi">Podrži TrainMe na Ko-fi</string>
+
+    <string name="train_reminder_channel_name">Podsjetnici za vozove</string>
+    <string name="train_reminder_channel_description">Podsjetnici za predstojeće polaske vozova</string>
+
+    <string name="update_channel_name">Ažuriranja</string>
+    <string name="update_channel_description">Nove verzije TrainMe</string>
+
+    <string name="update_notification_title">Dostupno ažuriranje: v%1$s</string>
+    <string name="update_notification_message">Dodirnite da preuzmete novu verziju</string>
+    <string name="update_notification_bigtext">%1$s</string>
+</resources>

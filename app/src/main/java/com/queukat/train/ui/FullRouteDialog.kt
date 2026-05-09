@@ -1,12 +1,12 @@
 package com.queukat.train.ui
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -22,7 +22,7 @@ fun FullRouteDialog(
     route: List<TimetableItem>,
     trainNumber: String,
     stationLanguage: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -44,6 +44,6 @@ fun FullRouteDialog(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
             }
-        }
+        },
     )
 }

@@ -12,15 +12,14 @@ data class StopEntity(
     val stopTypeId: Int?,
     val latitude: Double?,
     val longitude: Double?,
-    val local: Int?
+    val local: Int?,
 )
 
-//       
-fun StopEntity.getNameForLanguage(lang: String): String {
-    return when (lang) {
+//
+fun StopEntity.getNameForLanguage(lang: String): String =
+    when (lang) {
         "en" -> this.nameEn
         "me" -> this.nameMe
         "ru", "meCyr" -> this.nameMeCyr ?: this.nameMe
         else -> if (this.nameMe.isNotEmpty()) this.nameMe else this.nameEn
     }
-}

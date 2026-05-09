@@ -14,7 +14,6 @@ import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.RecentSearchPreference
 import com.queukat.train.data.model.SavedRoutePreference
 import com.queukat.train.data.model.getNameForLanguage
-import com.queukat.train.data.repository.RouteLookupResult
 import com.queukat.train.data.repository.StopsSyncResult
 import com.queukat.train.data.repository.TrainRepository
 import com.queukat.train.util.DateTimeUtils
@@ -32,12 +31,12 @@ private const val PREFS_NAME = "train_prefs"
 private const val SAVED_ROUTES_KEY = "saved_routes_v2"
 private const val LEGACY_SAVED_ROUTES_KEY = "saved_routes"
 private const val RECENT_SEARCHES_KEY = "recent_searches_v1"
+private const val ROUTE_LOOKUP_TIMEOUT_MS = 10_000L
 
 open class TrainViewModel(
     application: Application,
-    private val repo: TrainRepository
+    private val repo: TrainRepository,
 ) : AndroidViewModel(application) {
-
     private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
 
@@ -47,17 +46,17 @@ open class TrainViewModel(
     private val _recentSearches = MutableStateFlow<List<RecentSearchPreference>>(emptyList())
     val recentSearches = _recentSearches.asStateFlow()
 
-    val _fromStation = MutableStateFlow("")
+    private val _fromStation = MutableStateFlow("")
     val fromStation = _fromStation.asStateFlow()
 
-    val _toStation = MutableStateFlow("")
+    private val _toStation = MutableStateFlow("")
     val toStation = _toStation.asStateFlow()
 
-    val _selectedDate = MutableStateFlow("")
+    private val _selectedDate = MutableStateFlow("")
     val selectedDate = _selectedDate.asStateFlow()
 
-    private val _fromStopId = MutableStateFlow<Int?>(null)
-    private val _toStopId = MutableStateFlow<Int?>(null)
+    private val fromStopIdState = MutableStateFlow<Int?>(null)
+    private val toStopIdState = MutableStateFlow<Int?>(null)
 
     private val _stops = MutableStateFlow<List<StopEntity>>(emptyList())
     val stops = _stops.asStateFlow()
@@ -83,54 +82,69 @@ open class TrainViewModel(
     }
 
     fun loadSavedRoutes() {
-        _savedRoutes.value = readSavedRoutesFromPrefs()
-            .sortedBy { route ->
-                val fromName = findStopById(route.fromStopId)?.nameEn ?: route.fromFallbackName
-                val toName = findStopById(route.toStopId)?.nameEn ?: route.toFallbackName
-                "$fromName-$toName"
-            }
+        _savedRoutes.value =
+            readSavedRoutesFromPrefs()
+                .sortedBy { route ->
+                    val fromName = findStopById(route.fromStopId)?.nameEn ?: route.fromFallbackName
+                    val toName = findStopById(route.toStopId)?.nameEn ?: route.toFallbackName
+                    "$fromName-$toName"
+                }
     }
 
     fun loadRecentSearches() {
-        _recentSearches.value = readRecentSearchesFromPrefs()
-            .sortedByDescending { it.lastSearchedAtMs }
+        _recentSearches.value =
+            readRecentSearchesFromPrefs()
+                .sortedByDescending { it.lastSearchedAtMs }
     }
 
     fun setFromStation(text: String) {
         _fromStation.value = text
-        if (!selectedStopStillMatches(_fromStopId.value, text)) {
-            _fromStopId.value = null
+        if (!selectedStopStillMatches(fromStopIdState.value, text)) {
+            fromStopIdState.value = null
         }
     }
 
     fun setToStation(text: String) {
         _toStation.value = text
-        if (!selectedStopStillMatches(_toStopId.value, text)) {
-            _toStopId.value = null
+        if (!selectedStopStillMatches(toStopIdState.value, text)) {
+            toStopIdState.value = null
         }
     }
 
-    fun selectFromStop(stop: StopEntity, displayName: String) {
-        _fromStopId.value = stop.stopId
+    fun selectFromStop(
+        stop: StopEntity,
+        displayName: String,
+    ) {
+        fromStopIdState.value = stop.stopId
         _fromStation.value = displayName
     }
 
-    fun selectToStop(stop: StopEntity, displayName: String) {
-        _toStopId.value = stop.stopId
+    fun selectToStop(
+        stop: StopEntity,
+        displayName: String,
+    ) {
+        toStopIdState.value = stop.stopId
         _toStation.value = displayName
     }
 
-    fun applySavedRoute(route: SavedRoutePreference, language: String) {
+    fun applySavedRoute(
+        route: SavedRoutePreference,
+        language: String,
+    ) {
         applyRouteSelection(
             fromStopId = route.fromStopId,
             toStopId = route.toStopId,
             fromFallbackName = route.fromFallbackName,
             toFallbackName = route.toFallbackName,
-            language = language
+            language = language,
         )
     }
 
-    fun repeatSavedRoute(route: SavedRoutePreference, language: String, preferredDate: String) {
+    fun repeatSavedRoute(
+        route: SavedRoutePreference,
+        language: String,
+        preferredDate: String,
+    ) {
         applySavedRoute(route, language)
         launchSearchForCurrentSelection(preferredDate)
     }
@@ -138,14 +152,14 @@ open class TrainViewModel(
     fun repeatRecentSearch(
         route: RecentSearchPreference,
         language: String,
-        preferredDate: String
+        preferredDate: String,
     ) {
         applyRouteSelection(
             fromStopId = route.fromStopId,
             toStopId = route.toStopId,
             fromFallbackName = route.fromFallbackName,
             toFallbackName = route.toFallbackName,
-            language = language
+            language = language,
         )
         launchSearchForCurrentSelection(preferredDate)
     }
@@ -171,7 +185,8 @@ open class TrainViewModel(
             try {
                 when (val syncResult = repo.ensureStopsUpToDate(force)) {
                     is StopsSyncResult.Refreshed,
-                    StopsSyncResult.UpToDate -> {
+                    StopsSyncResult.UpToDate,
+                    -> {
                         _stops.value = repo.getAllStopsFromDb()
                         migrateLegacySavedRoutesIfNeeded()
                         loadSavedRoutes()
@@ -179,43 +194,50 @@ open class TrainViewModel(
                     }
 
                     is StopsSyncResult.Failed -> {
-                        _stopsNotice.value = if (cachedStops.isNotEmpty()) {
-                            UiNotice(
-                                message = app.getString(R.string.stops_refresh_using_cache),
-                                tone = UiNoticeTone.Warning
-                            )
-                        } else {
-                            UiNotice(
-                                message = app.getString(
-                                    R.string.toast_failed_load_stops,
-                                    syncResult.message ?: ""
-                                ),
-                                tone = UiNoticeTone.Error
-                            )
-                        }
+                        _stopsNotice.value =
+                            if (cachedStops.isNotEmpty()) {
+                                UiNotice(
+                                    message = app.getString(R.string.stops_refresh_using_cache),
+                                    tone = UiNoticeTone.Warning,
+                                )
+                            } else {
+                                UiNotice(
+                                    message =
+                                        app.getString(
+                                            R.string.toast_failed_load_stops,
+                                            syncResult.message ?: "",
+                                        ),
+                                    tone = UiNoticeTone.Error,
+                                )
+                            }
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load stops: ${e.message}", e)
-                _stopsNotice.value = UiNotice(
-                    message = app.getString(
-                        R.string.toast_failed_load_stops,
-                        e.localizedMessage ?: ""
-                    ),
-                    tone = UiNoticeTone.Error
-                )
+                _stopsNotice.value =
+                    UiNotice(
+                        message =
+                            app.getString(
+                                R.string.toast_failed_load_stops,
+                                e.localizedMessage ?: "",
+                            ),
+                        tone = UiNoticeTone.Error,
+                    )
             } finally {
                 _loading.value = false
             }
         }
     }
 
-    fun saveRoute(from: String, to: String): Boolean {
-        val fromStop = resolveStopForUserInput(from, _fromStopId.value) ?: return false
-        val toStop = resolveStopForUserInput(to, _toStopId.value) ?: return false
+    fun saveRoute(
+        from: String,
+        to: String,
+    ): Boolean {
+        val fromStop = resolveStopForUserInput(from, fromStopIdState.value) ?: return false
+        val toStop = resolveStopForUserInput(to, toStopIdState.value) ?: return false
 
-        _fromStopId.value = fromStop.stopId
-        _toStopId.value = toStop.stopId
+        fromStopIdState.value = fromStop.stopId
+        toStopIdState.value = toStop.stopId
 
         val current = readSavedRoutesFromPrefs().toMutableSet()
         current.add(
@@ -223,44 +245,55 @@ open class TrainViewModel(
                 fromStopId = fromStop.stopId,
                 toStopId = toStop.stopId,
                 fromFallbackName = fromStop.nameEn,
-                toFallbackName = toStop.nameEn
-            )
+                toFallbackName = toStop.nameEn,
+            ),
         )
         writeSavedRoutes(current)
         return true
     }
 
-    fun loadRoutes(from: String, to: String, date: String) {
+    fun loadRoutes(
+        from: String,
+        to: String,
+        date: String,
+    ) {
         viewModelScope.launch {
             val app = getApplication<Application>()
-            val fromStop = resolveStopForUserInput(from, _fromStopId.value)
-            val toStop = resolveStopForUserInput(to, _toStopId.value)
+            val fromStop = resolveStopForUserInput(from, fromStopIdState.value)
+            val toStop = resolveStopForUserInput(to, toStopIdState.value)
 
             if (fromStop == null || toStop == null) {
-                _routeSearchState.value = RouteSearchUiState.Error(
-                    kind = RouteErrorKind.StationSelection,
-                    notice = UiNotice(
-                        message = app.getString(R.string.toast_select_stations_first),
-                        tone = UiNoticeTone.Warning
+                _routeSearchState.value =
+                    RouteSearchUiState.Error(
+                        kind = RouteErrorKind.StationSelection,
+                        notice =
+                            UiNotice(
+                                message = app.getString(R.string.toast_select_stations_first),
+                                tone = UiNoticeTone.Warning,
+                            ),
                     )
-                )
                 return@launch
             }
 
-            _fromStopId.value = fromStop.stopId
-            _toStopId.value = toStop.stopId
+            fromStopIdState.value = fromStop.stopId
+            toStopIdState.value = toStop.stopId
             _loading.value = true
             _routeSearchState.value = RouteSearchUiState.Loading
 
             try {
-                withTimeout(10_000) {
-                    when (val presentation = repo.getRoutes(fromStop.nameMe, toStop.nameMe, date)
-                        .toRouteLookupPresentation()) {
+                withTimeout(ROUTE_LOOKUP_TIMEOUT_MS) {
+                    when (
+                        val presentation =
+                            repo
+                                .getRoutes(fromStop.nameMe, toStop.nameMe, date)
+                                .toRouteLookupPresentation()
+                    ) {
                         is RouteLookupPresentation.Results -> {
                             recordRecentSearch(fromStop, toStop)
-                            _routeSearchState.value = RouteSearchUiState.Results(
-                                presentation.response
-                            )
+                            _routeSearchState.value =
+                                RouteSearchUiState.Results(
+                                    presentation.response,
+                                )
                         }
 
                         RouteLookupPresentation.Empty -> {
@@ -269,49 +302,59 @@ open class TrainViewModel(
                         }
 
                         is RouteLookupPresentation.Error -> {
-                            val messageRes = when (presentation.kind) {
-                                RouteErrorKind.Server -> R.string.error_routes_server
-                                RouteErrorKind.Network -> R.string.error_routes_network
-                                RouteErrorKind.InvalidResponse -> R.string.error_routes_invalid_response
-                                RouteErrorKind.StationSelection -> R.string.toast_select_stations_first
-                            }
+                            val messageRes =
+                                when (presentation.kind) {
+                                    RouteErrorKind.Server -> R.string.error_routes_server
+                                    RouteErrorKind.Network -> R.string.error_routes_network
+                                    RouteErrorKind.InvalidResponse -> R.string.error_routes_invalid_response
+                                    RouteErrorKind.StationSelection -> R.string.toast_select_stations_first
+                                }
 
-                            val message = if (presentation.kind == RouteErrorKind.Server) {
-                                app.getString(messageRes, presentation.httpCode ?: -1)
-                            } else {
-                                app.getString(messageRes)
-                            }
+                            val message =
+                                if (presentation.kind == RouteErrorKind.Server) {
+                                    app.getString(messageRes, presentation.httpCode ?: -1)
+                                } else {
+                                    app.getString(messageRes)
+                                }
 
-                            _routeSearchState.value = RouteSearchUiState.Error(
-                                kind = presentation.kind,
-                                notice = UiNotice(
-                                    message = message,
-                                    tone = UiNoticeTone.Error
+                            _routeSearchState.value =
+                                RouteSearchUiState.Error(
+                                    kind = presentation.kind,
+                                    notice =
+                                        UiNotice(
+                                            message = message,
+                                            tone = UiNoticeTone.Error,
+                                        ),
                                 )
-                            )
                         }
                     }
                 }
             } catch (e: TimeoutCancellationException) {
-                _routeSearchState.value = RouteSearchUiState.Error(
-                    kind = RouteErrorKind.Network,
-                    notice = UiNotice(
-                        message = app.getString(R.string.error_routes_timeout),
-                        tone = UiNoticeTone.Error
+                Log.w(TAG, "Timed out loading routes", e)
+                _routeSearchState.value =
+                    RouteSearchUiState.Error(
+                        kind = RouteErrorKind.Network,
+                        notice =
+                            UiNotice(
+                                message = app.getString(R.string.error_routes_timeout),
+                                tone = UiNoticeTone.Error,
+                            ),
                     )
-                )
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load routes: ${e.message}", e)
-                _routeSearchState.value = RouteSearchUiState.Error(
-                    kind = RouteErrorKind.InvalidResponse,
-                    notice = UiNotice(
-                        message = app.getString(
-                            R.string.toast_failed_load_routes,
-                            e.localizedMessage ?: ""
-                        ),
-                        tone = UiNoticeTone.Error
+                _routeSearchState.value =
+                    RouteSearchUiState.Error(
+                        kind = RouteErrorKind.InvalidResponse,
+                        notice =
+                            UiNotice(
+                                message =
+                                    app.getString(
+                                        R.string.toast_failed_load_routes,
+                                        e.localizedMessage ?: "",
+                                    ),
+                                tone = UiNoticeTone.Error,
+                            ),
                     )
-                )
             } finally {
                 _loading.value = false
             }
@@ -329,15 +372,18 @@ open class TrainViewModel(
     }
 
     fun reportNotificationPermissionDenied() {
-        _reminderUiState.value = ReminderUiState.PermissionMissing(
-            permission = ReminderPermissionKind.Notification,
-            notice = UiNotice(
-                message = getApplication<Application>().getString(
-                    R.string.reminder_status_notification_permission_missing
-                ),
-                tone = UiNoticeTone.Warning
+        _reminderUiState.value =
+            ReminderUiState.PermissionMissing(
+                permission = ReminderPermissionKind.Notification,
+                notice =
+                    UiNotice(
+                        message =
+                            getApplication<Application>().getString(
+                                R.string.reminder_status_notification_permission_missing,
+                            ),
+                        tone = UiNoticeTone.Warning,
+                    ),
             )
-        )
     }
 
     fun clearReminderStatus() {
@@ -348,7 +394,7 @@ open class TrainViewModel(
         route: DirectRoute,
         context: Context,
         action: String,
-        minutesBefore: Int
+        minutesBefore: Int,
     ) {
         viewModelScope.launch {
             clearReminderStatus()
@@ -359,59 +405,70 @@ open class TrainViewModel(
 
             val depTime = route.timetable_items?.firstOrNull()?.DepartureTime ?: ""
             if (depTime.isBlank()) {
-                _reminderUiState.value = ReminderUiState.Failure(
-                    UiNotice(
-                        message = context.getString(R.string.toast_no_departure_time),
-                        tone = UiNoticeTone.Error
+                _reminderUiState.value =
+                    ReminderUiState.Failure(
+                        UiNotice(
+                            message = context.getString(R.string.toast_no_departure_time),
+                            tone = UiNoticeTone.Error,
+                        ),
                     )
-                )
                 return@launch
             }
 
             val dateStr = selectedDate.value.ifBlank { return@launch }
-            val depDateTime = DateTimeUtils.parseDateTime("$dateStr $depTime") ?: run {
-                _reminderUiState.value = ReminderUiState.Failure(
-                    UiNotice(
-                        message = context.getString(R.string.toast_cant_parse_departure),
-                        tone = UiNoticeTone.Error
-                    )
-                )
-                return@launch
-            }
+            val depDateTime =
+                DateTimeUtils.parseDateTime("$dateStr $depTime") ?: run {
+                    _reminderUiState.value =
+                        ReminderUiState.Failure(
+                            UiNotice(
+                                message = context.getString(R.string.toast_cant_parse_departure),
+                                tone = UiNoticeTone.Error,
+                            ),
+                        )
+                    return@launch
+                }
 
             val depMillis = depDateTime.time
             val trainNum = route.TrainNumber ?: context.getString(R.string.unknown_label)
             val stationLanguage = stationLanguage()
-            val stationName = route.timetable_items?.firstOrNull()?.routestop?.stop?.getNameForLanguage(stationLanguage)
-                ?: route.startStation
-                ?: context.getString(R.string.unknown_station)
+            val stationName =
+                route.timetable_items
+                    ?.firstOrNull()
+                    ?.routestop
+                    ?.stop
+                    ?.getNameForLanguage(stationLanguage)
+                    ?: route.startStation
+                    ?: context.getString(R.string.unknown_station)
 
-            val pushResult = if (action == "push" || action == "both") {
-                ReminderUtils.schedulePushNotification(
+            val pushResult =
+                if (action == "push" || action == "both") {
+                    ReminderUtils.schedulePushNotification(
+                        context = context,
+                        trainNumber = trainNum,
+                        departureTimeMs = depMillis,
+                        minutesBefore = minutesBefore,
+                        stationName = stationName,
+                    )
+                } else {
+                    null
+                }
+
+            val calendarOpened =
+                if (action == "calendar" || action == "both") {
+                    addEventToCalendar(context, route, depMillis)
+                } else {
+                    false
+                }
+
+            _reminderUiState.value =
+                buildReminderState(
                     context = context,
+                    action = action,
                     trainNumber = trainNum,
-                    departureTimeMs = depMillis,
                     minutesBefore = minutesBefore,
-                    stationName = stationName
+                    pushResult = pushResult,
+                    calendarOpened = calendarOpened,
                 )
-            } else {
-                null
-            }
-
-            val calendarOpened = if (action == "calendar" || action == "both") {
-                addEventToCalendar(context, route, depMillis)
-            } else {
-                false
-            }
-
-            _reminderUiState.value = buildReminderState(
-                context = context,
-                action = action,
-                trainNumber = trainNum,
-                minutesBefore = minutesBefore,
-                pushResult = pushResult,
-                calendarOpened = calendarOpened
-            )
         }
     }
 
@@ -421,213 +478,250 @@ open class TrainViewModel(
         trainNumber: String,
         minutesBefore: Int,
         pushResult: PushReminderScheduleResult?,
-        calendarOpened: Boolean
-    ): ReminderUiState {
-        return when (action) {
+        calendarOpened: Boolean,
+    ): ReminderUiState =
+        when (action) {
             "calendar" -> {
                 if (calendarOpened) {
                     ReminderUiState.Success(
                         UiNotice(
-                            message = context.getString(
-                                R.string.reminder_status_calendar_opened,
-                                trainNumber
-                            ),
-                            tone = UiNoticeTone.Success
-                        )
+                            message =
+                                context.getString(
+                                    R.string.reminder_status_calendar_opened,
+                                    trainNumber,
+                                ),
+                            tone = UiNoticeTone.Success,
+                        ),
                     )
                 } else {
                     ReminderUiState.Failure(
                         UiNotice(
-                            message = context.getString(
-                                R.string.reminder_status_calendar_failed,
-                                trainNumber
-                            ),
-                            tone = UiNoticeTone.Error
-                        )
+                            message =
+                                context.getString(
+                                    R.string.reminder_status_calendar_failed,
+                                    trainNumber,
+                                ),
+                            tone = UiNoticeTone.Error,
+                        ),
                     )
                 }
             }
 
             "push" -> pushOnlyState(context, trainNumber, minutesBefore, pushResult)
 
-            "both" -> pushAndCalendarState(
-                context = context,
-                trainNumber = trainNumber,
-                minutesBefore = minutesBefore,
-                pushResult = pushResult,
-                calendarOpened = calendarOpened
-            )
+            "both" ->
+                pushAndCalendarState(
+                    context = context,
+                    trainNumber = trainNumber,
+                    minutesBefore = minutesBefore,
+                    pushResult = pushResult,
+                    calendarOpened = calendarOpened,
+                )
 
             else -> ReminderUiState.Idle
         }
-    }
 
     private fun pushOnlyState(
         context: Context,
         trainNumber: String,
         minutesBefore: Int,
-        pushResult: PushReminderScheduleResult?
-    ): ReminderUiState {
-        return when (pushResult) {
-            PushReminderScheduleResult.Scheduled -> ReminderUiState.Success(
-                UiNotice(
-                    message = context.getString(
-                        R.string.reminder_status_push_created,
-                        trainNumber,
-                        minutesBefore
+        pushResult: PushReminderScheduleResult?,
+    ): ReminderUiState =
+        when (pushResult) {
+            PushReminderScheduleResult.Scheduled ->
+                ReminderUiState.Success(
+                    UiNotice(
+                        message =
+                            context.getString(
+                                R.string.reminder_status_push_created,
+                                trainNumber,
+                                minutesBefore,
+                            ),
+                        tone = UiNoticeTone.Success,
                     ),
-                    tone = UiNoticeTone.Success
                 )
-            )
 
-            PushReminderScheduleResult.NotificationPermissionMissing -> ReminderUiState.PermissionMissing(
-                permission = ReminderPermissionKind.Notification,
-                notice = UiNotice(
-                    message = context.getString(
-                        R.string.reminder_status_notification_permission_missing
+            PushReminderScheduleResult.NotificationPermissionMissing ->
+                ReminderUiState.PermissionMissing(
+                    permission = ReminderPermissionKind.Notification,
+                    notice =
+                        UiNotice(
+                            message =
+                                context.getString(
+                                    R.string.reminder_status_notification_permission_missing,
+                                ),
+                            tone = UiNoticeTone.Warning,
+                        ),
+                )
+
+            PushReminderScheduleResult.ExactAlarmPermissionMissing ->
+                ReminderUiState.PermissionMissing(
+                    permission = ReminderPermissionKind.ExactAlarm,
+                    notice =
+                        UiNotice(
+                            message = context.getString(R.string.reminder_status_exact_alarm_missing),
+                            tone = UiNoticeTone.Warning,
+                        ),
+                )
+
+            PushReminderScheduleResult.TriggerTimeTooSoon ->
+                ReminderUiState.Failure(
+                    UiNotice(
+                        message = context.getString(R.string.reminder_status_too_late),
+                        tone = UiNoticeTone.Warning,
                     ),
-                    tone = UiNoticeTone.Warning
                 )
-            )
 
-            PushReminderScheduleResult.ExactAlarmPermissionMissing -> ReminderUiState.PermissionMissing(
-                permission = ReminderPermissionKind.ExactAlarm,
-                notice = UiNotice(
-                    message = context.getString(R.string.reminder_status_exact_alarm_missing),
-                    tone = UiNoticeTone.Warning
+            is PushReminderScheduleResult.Failed ->
+                ReminderUiState.Failure(
+                    UiNotice(
+                        message = context.getString(R.string.reminder_status_push_failed),
+                        tone = UiNoticeTone.Error,
+                    ),
                 )
-            )
 
-            PushReminderScheduleResult.TriggerTimeTooSoon -> ReminderUiState.Failure(
-                UiNotice(
-                    message = context.getString(R.string.reminder_status_too_late),
-                    tone = UiNoticeTone.Warning
+            null ->
+                ReminderUiState.Failure(
+                    UiNotice(
+                        message = context.getString(R.string.reminder_status_push_failed),
+                        tone = UiNoticeTone.Error,
+                    ),
                 )
-            )
-
-            is PushReminderScheduleResult.Failed -> ReminderUiState.Failure(
-                UiNotice(
-                    message = context.getString(R.string.reminder_status_push_failed),
-                    tone = UiNoticeTone.Error
-                )
-            )
-
-            null -> ReminderUiState.Failure(
-                UiNotice(
-                    message = context.getString(R.string.reminder_status_push_failed),
-                    tone = UiNoticeTone.Error
-                )
-            )
         }
-    }
 
     private fun pushAndCalendarState(
         context: Context,
         trainNumber: String,
         minutesBefore: Int,
         pushResult: PushReminderScheduleResult?,
-        calendarOpened: Boolean
-    ): ReminderUiState {
-        return when (pushResult) {
+        calendarOpened: Boolean,
+    ): ReminderUiState =
+        when (pushResult) {
             PushReminderScheduleResult.Scheduled -> {
                 if (calendarOpened) {
                     ReminderUiState.Success(
                         UiNotice(
-                            message = context.getString(
-                                R.string.reminder_status_push_and_calendar_created,
-                                trainNumber,
-                                minutesBefore
-                            ),
-                            tone = UiNoticeTone.Success
-                        )
+                            message =
+                                context.getString(
+                                    R.string.reminder_status_push_and_calendar_created,
+                                    trainNumber,
+                                    minutesBefore,
+                                ),
+                            tone = UiNoticeTone.Success,
+                        ),
                     )
                 } else {
                     ReminderUiState.Failure(
                         UiNotice(
-                            message = context.getString(
-                                R.string.reminder_status_push_created_calendar_failed,
-                                trainNumber,
-                                minutesBefore
-                            ),
-                            tone = UiNoticeTone.Warning
-                        )
+                            message =
+                                context.getString(
+                                    R.string.reminder_status_push_created_calendar_failed,
+                                    trainNumber,
+                                    minutesBefore,
+                                ),
+                            tone = UiNoticeTone.Warning,
+                        ),
                     )
                 }
             }
 
-            PushReminderScheduleResult.NotificationPermissionMissing -> ReminderUiState.PermissionMissing(
-                permission = ReminderPermissionKind.Notification,
-                notice = UiNotice(
-                    message = if (calendarOpened) {
-                        context.getString(
-                            R.string.reminder_status_calendar_opened_push_notification_missing,
-                            trainNumber
-                        )
-                    } else {
-                        context.getString(
-                            R.string.reminder_status_notification_permission_missing
-                        )
-                    },
-                    tone = UiNoticeTone.Warning
+            PushReminderScheduleResult.NotificationPermissionMissing ->
+                ReminderUiState.PermissionMissing(
+                    permission = ReminderPermissionKind.Notification,
+                    notice =
+                        UiNotice(
+                            message =
+                                if (calendarOpened) {
+                                    context.getString(
+                                        R.string.reminder_status_calendar_opened_push_notification_missing,
+                                        trainNumber,
+                                    )
+                                } else {
+                                    context.getString(
+                                        R.string.reminder_status_notification_permission_missing,
+                                    )
+                                },
+                            tone = UiNoticeTone.Warning,
+                        ),
                 )
-            )
 
-            PushReminderScheduleResult.ExactAlarmPermissionMissing -> ReminderUiState.PermissionMissing(
-                permission = ReminderPermissionKind.ExactAlarm,
-                notice = UiNotice(
-                    message = if (calendarOpened) {
-                        context.getString(
-                            R.string.reminder_status_calendar_opened_push_exact_alarm_missing,
-                            trainNumber
-                        )
-                    } else {
-                        context.getString(R.string.reminder_status_exact_alarm_missing)
-                    },
-                    tone = UiNoticeTone.Warning
+            PushReminderScheduleResult.ExactAlarmPermissionMissing ->
+                ReminderUiState.PermissionMissing(
+                    permission = ReminderPermissionKind.ExactAlarm,
+                    notice =
+                        UiNotice(
+                            message =
+                                if (calendarOpened) {
+                                    context.getString(
+                                        R.string.reminder_status_calendar_opened_push_exact_alarm_missing,
+                                        trainNumber,
+                                    )
+                                } else {
+                                    context.getString(R.string.reminder_status_exact_alarm_missing)
+                                },
+                            tone = UiNoticeTone.Warning,
+                        ),
                 )
-            )
 
-            PushReminderScheduleResult.TriggerTimeTooSoon -> ReminderUiState.Failure(
-                UiNotice(
-                    message = if (calendarOpened) {
-                        context.getString(
-                            R.string.reminder_status_calendar_opened_push_too_late,
-                            trainNumber
-                        )
-                    } else {
-                        context.getString(R.string.reminder_status_too_late)
-                    },
-                    tone = UiNoticeTone.Warning
+            PushReminderScheduleResult.TriggerTimeTooSoon ->
+                ReminderUiState.Failure(
+                    UiNotice(
+                        message =
+                            if (calendarOpened) {
+                                context.getString(
+                                    R.string.reminder_status_calendar_opened_push_too_late,
+                                    trainNumber,
+                                )
+                            } else {
+                                context.getString(R.string.reminder_status_too_late)
+                            },
+                        tone = UiNoticeTone.Warning,
+                    ),
                 )
-            )
 
             is PushReminderScheduleResult.Failed,
-            null -> ReminderUiState.Failure(
-                UiNotice(
-                    message = if (calendarOpened) {
-                        context.getString(
-                            R.string.reminder_status_calendar_opened_push_failed,
-                            trainNumber
-                        )
-                    } else {
-                        context.getString(R.string.reminder_status_push_failed)
-                    },
-                    tone = UiNoticeTone.Error
+            null,
+            ->
+                ReminderUiState.Failure(
+                    UiNotice(
+                        message =
+                            if (calendarOpened) {
+                                context.getString(
+                                    R.string.reminder_status_calendar_opened_push_failed,
+                                    trainNumber,
+                                )
+                            } else {
+                                context.getString(R.string.reminder_status_push_failed)
+                            },
+                        tone = UiNoticeTone.Error,
+                    ),
                 )
-            )
         }
-    }
 
-    private fun addEventToCalendar(context: Context, route: DirectRoute, departureTimeMs: Long): Boolean {
+    private fun addEventToCalendar(
+        context: Context,
+        route: DirectRoute,
+        departureTimeMs: Long,
+    ): Boolean {
         val endTimeMs = departureTimeMs + 60L * 60_000
         val trainNum = route.TrainNumber ?: context.getString(R.string.unknown_label)
         val stationLanguage = stationLanguage()
-        val fromSt = route.timetable_items?.firstOrNull()?.routestop?.stop?.getNameForLanguage(stationLanguage)
-            ?: route.startStation
-            ?: "From"
-        val toSt = route.timetable_items?.lastOrNull()?.routestop?.stop?.getNameForLanguage(stationLanguage)
-            ?: route.endStation
-            ?: "To"
+        val fromSt =
+            route.timetable_items
+                ?.firstOrNull()
+                ?.routestop
+                ?.stop
+                ?.getNameForLanguage(stationLanguage)
+                ?: route.startStation
+                ?: "From"
+        val toSt =
+            route.timetable_items
+                ?.lastOrNull()
+                ?.routestop
+                ?.stop
+                ?.getNameForLanguage(stationLanguage)
+                ?: route.endStation
+                ?: "To"
 
         val title = "Train $trainNum: $fromSt → $toSt"
         val desc = "Generated from reminder action"
@@ -638,7 +732,7 @@ open class TrainViewModel(
             description = desc,
             beginTimeMs = departureTimeMs,
             endTimeMs = endTimeMs,
-            locationUri = null
+            locationUri = null,
         )
     }
 
@@ -649,22 +743,25 @@ open class TrainViewModel(
         }
     }
 
-    private fun selectedStopStillMatches(stopId: Int?, inputText: String): Boolean {
+    private fun selectedStopStillMatches(
+        stopId: Int?,
+        inputText: String,
+    ): Boolean {
         if (inputText.isBlank()) return false
         val selectedStop = findStopById(stopId) ?: return true
         return stopMatchesText(selectedStop, inputText)
     }
 
-    private fun resolveStopForUserInput(inputText: String, selectedStopId: Int?): StopEntity? {
-        return findStopById(selectedStopId) ?: findStopByAnyName(_stops.value, inputText)
-    }
+    private fun resolveStopForUserInput(
+        inputText: String,
+        selectedStopId: Int?,
+    ): StopEntity? = findStopById(selectedStopId) ?: findStopByAnyName(_stops.value, inputText)
 
-    private fun findStopById(stopId: Int?): StopEntity? {
-        return _stops.value.firstOrNull { it.stopId == stopId }
-    }
+    private fun findStopById(stopId: Int?): StopEntity? = _stops.value.firstOrNull { it.stopId == stopId }
 
-    private fun readSavedRoutesFromPrefs(): List<SavedRoutePreference> {
-        return prefs.getStringSet(SAVED_ROUTES_KEY, emptySet())
+    private fun readSavedRoutesFromPrefs(): List<SavedRoutePreference> =
+        prefs
+            .getStringSet(SAVED_ROUTES_KEY, emptySet())
             .orEmpty()
             .mapNotNull { raw ->
                 runCatching {
@@ -673,12 +770,12 @@ open class TrainViewModel(
                     it.fromStopId > 0 && it.toStopId > 0
                 }
             }
-    }
 
     private fun readRecentSearchesFromPrefs(): List<RecentSearchPreference> {
         val raw = prefs.getString(RECENT_SEARCHES_KEY, null) ?: return emptyList()
         return runCatching {
-            gson.fromJson(raw, Array<RecentSearchPreference>::class.java)
+            gson
+                .fromJson(raw, Array<RecentSearchPreference>::class.java)
                 ?.toList()
                 .orEmpty()
         }.getOrDefault(emptyList()).filter {
@@ -690,7 +787,7 @@ open class TrainViewModel(
         prefs.edit {
             putStringSet(
                 SAVED_ROUTES_KEY,
-                routes.map { gson.toJson(it) }.toSet()
+                routes.map { gson.toJson(it) }.toSet(),
             )
         }
         loadSavedRoutes()
@@ -727,10 +824,10 @@ open class TrainViewModel(
         toStopId: Int,
         fromFallbackName: String,
         toFallbackName: String,
-        language: String
+        language: String,
     ) {
-        _fromStopId.value = fromStopId
-        _toStopId.value = toStopId
+        fromStopIdState.value = fromStopId
+        toStopIdState.value = toStopId
         _fromStation.value = findStopById(fromStopId)?.getNameForLanguage(language)
             ?: fromFallbackName
         _toStation.value = findStopById(toStopId)?.getNameForLanguage(language)
@@ -743,14 +840,17 @@ open class TrainViewModel(
         loadRoutes(_fromStation.value, _toStation.value, finalDate)
     }
 
-    private fun recordRecentSearch(fromStop: StopEntity, toStop: StopEntity) {
+    private fun recordRecentSearch(
+        fromStop: StopEntity,
+        toStop: StopEntity,
+    ) {
         writeRecentSearches(
             upsertRecentSearch(
                 existing = readRecentSearchesFromPrefs(),
                 fromStop = fromStop,
                 toStop = toStop,
-                searchedAtMs = System.currentTimeMillis()
-            )
+                searchedAtMs = System.currentTimeMillis(),
+            ),
         )
     }
 }

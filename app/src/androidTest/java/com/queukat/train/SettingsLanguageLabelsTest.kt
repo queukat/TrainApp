@@ -18,7 +18,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SettingsLanguageLabelsTest {
-
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
     private val device = UiDevice.getInstance(instrumentation)
@@ -45,8 +44,8 @@ class SettingsLanguageLabelsTest {
         assertNotNull(
             waitForObject(
                 By.text(context.getString(R.string.station_language_montenegrin_cyrillic)),
-                5_000
-            )
+                5_000,
+            ),
         )
 
         val languageField = waitForEditTexts(count = 1, timeoutMs = 5_000).first()
@@ -56,8 +55,8 @@ class SettingsLanguageLabelsTest {
         assertNotNull(
             waitForObject(
                 By.text(context.getString(R.string.station_language_montenegrin_latin)),
-                5_000
-            )
+                5_000,
+            ),
         )
         assertNull(device.findObject(By.text("en")))
         assertNull(device.findObject(By.text("me")))
@@ -75,31 +74,36 @@ class SettingsLanguageLabelsTest {
         assertNotNull(
             waitForObject(
                 By.text(context.getString(R.string.station_language_english)),
-                5_000
-            )
+                5_000,
+            ),
         )
     }
 
     private fun launchSettings() {
         device.wakeAndUnlock()
-        val intent = Intent(context, SettingsActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val intent =
+            Intent(context, SettingsActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
         context.startActivity(intent)
 
         assertNotNull(
             waitForObject(
                 By.text(context.getString(R.string.label_select_language_for_stations)),
-                10_000
-            )
+                10_000,
+            ),
         )
     }
 
-    private fun waitForObject(selector: androidx.test.uiautomator.BySelector, timeoutMs: Long): UiObject2? {
-        return device.wait(Until.findObject(selector), timeoutMs)
-    }
+    private fun waitForObject(
+        selector: androidx.test.uiautomator.BySelector,
+        timeoutMs: Long,
+    ): UiObject2? = device.wait(Until.findObject(selector), timeoutMs)
 
-    private fun waitForEditTexts(count: Int, timeoutMs: Long): List<UiObject2> {
+    private fun waitForEditTexts(
+        count: Int,
+        timeoutMs: Long,
+    ): List<UiObject2> {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
             val fields = device.findObjects(By.clazz("android.widget.EditText"))
@@ -111,11 +115,16 @@ class SettingsLanguageLabelsTest {
         error("Expected at least $count EditText fields")
     }
 
-    private fun waitForEditTextWithText(expectedText: String, timeoutMs: Long): UiObject2? {
+    private fun waitForEditTextWithText(
+        expectedText: String,
+        timeoutMs: Long,
+    ): UiObject2? {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
-            val field = device.findObjects(By.clazz("android.widget.EditText"))
-                .firstOrNull { it.text == expectedText }
+            val field =
+                device
+                    .findObjects(By.clazz("android.widget.EditText"))
+                    .firstOrNull { it.text == expectedText }
             if (field != null) {
                 return field
             }
@@ -124,7 +133,11 @@ class SettingsLanguageLabelsTest {
         return null
     }
 
-    private fun waitForPreference(key: String, expectedValue: String, timeoutMs: Long): String? {
+    private fun waitForPreference(
+        key: String,
+        expectedValue: String,
+        timeoutMs: Long,
+    ): String? {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
             val value = prefs.getString(key, null)

@@ -9,31 +9,30 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [
         StopEntity::class,
-        RouteInfoEntity::class
+        RouteInfoEntity::class,
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun appDao(): AppDao
+
     abstract fun routeInfoDao(): RouteInfoDao
 
     companion object {
         @Volatile
         private var instance: AppDatabase? = null
 
-        fun getInstance(context: Context): AppDatabase {
-            return instance ?: synchronized(this) {
-                instance ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "zpcg.db"
-                )
-                    .fallbackToDestructiveMigration(dropAllTables = true)
+        fun getInstance(context: Context): AppDatabase =
+            instance ?: synchronized(this) {
+                instance ?: Room
+                    .databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        "zpcg.db",
+                    ).fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                     .also { instance = it }
             }
-        }
     }
 }

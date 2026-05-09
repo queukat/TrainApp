@@ -7,7 +7,6 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
 object DateTimeUtils {
-
     // Таймзона расписания (Черногория). IANA TZ, с DST.
     private const val TRAIN_TZ_ID = "Europe/Podgorica"
 
@@ -16,7 +15,9 @@ object DateTimeUtils {
         val tz = TimeZone.getTimeZone(TRAIN_TZ_ID)
         if (tz.id == "GMT" && TRAIN_TZ_ID != "GMT") {
             TimeZone.getTimeZone("Europe/Belgrade")
-        } else tz
+        } else {
+            tz
+        }
     }
 
     // Парсер даты/времени расписания в TZ Черногории
@@ -27,27 +28,32 @@ object DateTimeUtils {
         }
     }
 
-    fun parseDateTime(dateTimeString: String): Date? {
-        return try {
+    fun parseDateTime(dateTimeString: String): Date? =
+        try {
             dateTimeParser.parse(dateTimeString)
         } catch (_: Exception) {
             null
         }
-    }
 
     /** "Сегодня" в TZ расписания (Черногория) */
     fun todayTrainDateString(): String {
-        val df = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TRAIN_TIME_ZONE
-        }
+        val df =
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+                timeZone = TRAIN_TIME_ZONE
+            }
         return df.format(Date(System.currentTimeMillis()))
     }
 
     /** Форматировать миллисекунды в строку по TZ расписания */
-    fun formatTimeInTrainTz(timeMs: Long, pattern: String, locale: Locale = Locale.getDefault()): String {
-        val df = SimpleDateFormat(pattern, locale).apply {
-            timeZone = TRAIN_TIME_ZONE
-        }
+    fun formatTimeInTrainTz(
+        timeMs: Long,
+        pattern: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        val df =
+            SimpleDateFormat(pattern, locale).apply {
+                timeZone = TRAIN_TIME_ZONE
+            }
         return df.format(Date(timeMs))
     }
 
@@ -61,26 +67,27 @@ object DateTimeUtils {
         formatHourMin: String,
         formatMin: String,
         formatDayHour: String,
-        prefixFormat: String
+        prefixFormat: String,
     ): String {
         val diffMinutes = TimeUnit.MILLISECONDS.toMinutes(departureTimeMs - nowMs)
         if (diffMinutes < 0) return ""
 
         val locale = Locale.getDefault()
 
-        val base = if (diffMinutes >= 24L * 60L) {
-            val days = diffMinutes / (24L * 60L)
-            val hours = (diffMinutes % (24L * 60L)) / 60L
-            String.format(locale, formatDayHour, days, hours)
-        } else {
-            val hours = diffMinutes / 60L
-            val minutes = diffMinutes % 60L
-            if (hours > 0) {
-                String.format(locale, formatHourMin, hours, minutes)
+        val base =
+            if (diffMinutes >= 24L * 60L) {
+                val days = diffMinutes / (24L * 60L)
+                val hours = (diffMinutes % (24L * 60L)) / 60L
+                String.format(locale, formatDayHour, days, hours)
             } else {
-                String.format(locale, formatMin, diffMinutes)
+                val hours = diffMinutes / 60L
+                val minutes = diffMinutes % 60L
+                if (hours > 0) {
+                    String.format(locale, formatHourMin, hours, minutes)
+                } else {
+                    String.format(locale, formatMin, diffMinutes)
+                }
             }
-        }
 
         return String.format(locale, prefixFormat, base)
     }
@@ -90,11 +97,12 @@ object DateTimeUtils {
         endMs: Long,
         timeFormat: String,
         durationFormatHourMin: String,
-        durationFormatMin: String
+        durationFormatMin: String,
     ): String {
-        val dateFormat = SimpleDateFormat(timeFormat, Locale.getDefault()).apply {
-            timeZone = TRAIN_TIME_ZONE
-        }
+        val dateFormat =
+            SimpleDateFormat(timeFormat, Locale.getDefault()).apply {
+                timeZone = TRAIN_TIME_ZONE
+            }
         val startTimeStr = dateFormat.format(Date(startMs))
         val endTimeStr = dateFormat.format(Date(endMs))
 
@@ -102,11 +110,12 @@ object DateTimeUtils {
         val hours = diffMinutes / 60
         val minutes = diffMinutes % 60
 
-        val durationStr = if (hours > 0) {
-            String.format(Locale.getDefault(), durationFormatHourMin, hours, minutes)
-        } else {
-            String.format(Locale.getDefault(), durationFormatMin, minutes)
-        }
+        val durationStr =
+            if (hours > 0) {
+                String.format(Locale.getDefault(), durationFormatHourMin, hours, minutes)
+            } else {
+                String.format(Locale.getDefault(), durationFormatMin, minutes)
+            }
 
         return "$startTimeStr - $endTimeStr ($durationStr)"
     }

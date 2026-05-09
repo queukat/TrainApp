@@ -11,13 +11,7 @@ Supported release paths:
 - signed release build from local non-tracked config or CI secrets
 - Play delivery through the governed release rail
 
-For production Play delivery, run:
-
-```powershell
-.\tools\play-release.ps1 -Track production -ReleaseStatus completed -Upload
-```
-
-The release rail builds the bundle, verifies that the final `.aab` is signed, and only then uploads to Google Play. Keep this signing gate in the delivery path.
+For production Play delivery, use the private release rail or CI path that builds the bundle, verifies that the final `.aab` is signed, and only then uploads to Google Play. Keep this signing gate in the delivery path.
 
 Before production upload, fill the Play "What's new" changelog for the release version code under `app/fastlane/metadata/android/<locale>/changelogs/`. The changelog is the public value surface for the update.
 

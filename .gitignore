@@ -36,7 +36,11 @@ gradlew.bat
 
 #    Gradle
 **/build/
-/gradle/
+/gradle/*
+!/gradle/wrapper/
+!/gradle/wrapper/**
+!/gradle/libs.versions.toml
+!/gradle/gradle-daemon-jvm.properties
 /out/
 #  
 .gradle/
@@ -91,3 +95,4 @@ app/fastlane/metadata/android/screenshots.html
 tools/train_ping_kv/
 __pycache__/
 *.pyc
+tools/

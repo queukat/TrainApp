@@ -13,19 +13,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -37,6 +40,9 @@ import com.queukat.train.data.db.getNameForLanguage
 import com.queukat.train.ui.theme.CustomSurface
 import com.queukat.train.util.Dbg
 import java.util.Calendar
+
+private const val CALENDAR_MONTH_OFFSET = 1
+private const val DATE_PART_COUNT = 3
 
 @Composable
 fun SearchPanel(
@@ -50,10 +56,9 @@ fun SearchPanel(
     onFromStopSelected: (StopEntity, String) -> Unit,
     onToStopSelected: (StopEntity, String) -> Unit,
     onDatePicked: (String) -> Unit,
-    onSearchClicked: () -> Unit
+    onSearchClicked: () -> Unit,
 ) {
     val context = LocalContext.current
-    val dbgEnabled = remember { Dbg.isEnabled(context) }
 
     var fromField by remember { mutableStateOf(TextFieldValue(fromStation)) }
     var toField by remember { mutableStateOf(TextFieldValue(toStation)) }
@@ -64,18 +69,20 @@ fun SearchPanel(
 
     LaunchedEffect(fromStation) {
         if (fromStation != fromField.text) {
-            fromField = TextFieldValue(
-                text = fromStation,
-                selection = TextRange(fromStation.length)
-            )
+            fromField =
+                TextFieldValue(
+                    text = fromStation,
+                    selection = TextRange(fromStation.length),
+                )
         }
     }
     LaunchedEffect(toStation) {
         if (toStation != toField.text) {
-            toField = TextFieldValue(
-                text = toStation,
-                selection = TextRange(toStation.length)
-            )
+            toField =
+                TextFieldValue(
+                    text = toStation,
+                    selection = TextRange(toStation.length),
+                )
         }
     }
 
@@ -93,7 +100,7 @@ fun SearchPanel(
             label = stringResource(R.string.hint_from_station),
             language = language,
             modifier = Modifier.fillMaxWidth(),
-            debugKey = "FROM"
+            debugKey = "FROM",
         )
 
         Spacer(Modifier.height(6.dp))
@@ -111,7 +118,7 @@ fun SearchPanel(
             label = stringResource(R.string.hint_to_station),
             language = language,
             modifier = Modifier.fillMaxWidth(),
-            debugKey = "TO"
+            debugKey = "TO",
         )
 
         Spacer(Modifier.height(6.dp))
@@ -122,19 +129,20 @@ fun SearchPanel(
             Modifier
                 .fillMaxWidth()
                 .padding(top = 6.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             FilledIconButton(
                 onClick = onSearchClicked,
                 modifier = Modifier.size(48.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors =
+                    IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ),
             ) {
                 Icon(
-                    Icons.Filled.Search,
+                    painter = painterResource(R.drawable.ic_search),
                     contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }
@@ -144,58 +152,61 @@ fun SearchPanel(
 @Composable
 fun DatePickerField(
     dateString: String,
-    onDatePicked: (String) -> Unit
+    onDatePicked: (String) -> Unit,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
 
     val calendar = Calendar.getInstance()
-    val defaultDateString = String.format(
-        locale,
-        "%04d-%02d-%02d",
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH) + 1,
-        calendar.get(Calendar.DAY_OF_MONTH)
-    )
+    val defaultDateString =
+        String.format(
+            locale,
+            "%04d-%02d-%02d",
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH) + CALENDAR_MONTH_OFFSET,
+            calendar.get(Calendar.DAY_OF_MONTH),
+        )
     val displayedDate = dateString.ifBlank { defaultDateString }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(4.dp)
-            )
-            .background(CustomSurface)
-            .clickable { showDatePicker = true }
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(4.dp),
+                ).background(CustomSurface)
+                .clickable { showDatePicker = true }
+                .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = displayedDate,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
 
         Icon(
-            imageVector = Icons.Outlined.DateRange,
+            painter = painterResource(R.drawable.ic_calendar),
             contentDescription = stringResource(R.string.label_date),
             tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp),
         )
     }
 
     if (showDatePicker) {
         val initCal = Calendar.getInstance()
         val parts = dateString.split("-")
-        if (parts.size == 3) {
+        if (parts.size == DATE_PART_COUNT) {
             val y = parts[0].toIntOrNull() ?: initCal.get(Calendar.YEAR)
-            val m = (parts[1].toIntOrNull() ?: (initCal.get(Calendar.MONTH) + 1)) - 1
+            val m =
+                (parts[1].toIntOrNull() ?: (initCal.get(Calendar.MONTH) + CALENDAR_MONTH_OFFSET)) -
+                    CALENDAR_MONTH_OFFSET
             val d = parts[2].toIntOrNull() ?: initCal.get(Calendar.DAY_OF_MONTH)
             initCal.set(y, m, d)
         }
@@ -203,20 +214,21 @@ fun DatePickerField(
         DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                val realMonth = month + 1
-                val newDateString = String.format(
-                    locale,
-                    "%04d-%02d-%02d",
-                    year,
-                    realMonth,
-                    dayOfMonth
-                )
+                val realMonth = month + CALENDAR_MONTH_OFFSET
+                val newDateString =
+                    String.format(
+                        locale,
+                        "%04d-%02d-%02d",
+                        year,
+                        realMonth,
+                        dayOfMonth,
+                    )
                 onDatePicked(newDateString)
                 showDatePicker = false
             },
             initCal.get(Calendar.YEAR),
             initCal.get(Calendar.MONTH),
-            initCal.get(Calendar.DAY_OF_MONTH)
+            initCal.get(Calendar.DAY_OF_MONTH),
         ).show()
     }
 }

@@ -11,8 +11,8 @@ internal fun UiDevice.wakeAndUnlock() {
     waitForIdle()
 }
 
-internal fun liveApiReachable(): Boolean {
-    return runCatching {
+internal fun liveApiReachable(): Boolean =
+    runCatching {
         (URL("https://api.zpcg.me/api/stops").openConnection() as HttpURLConnection).run {
             connectTimeout = 5_000
             readTimeout = 5_000
@@ -26,4 +26,3 @@ internal fun liveApiReachable(): Boolean {
             }
         }
     }.getOrDefault(false)
-}

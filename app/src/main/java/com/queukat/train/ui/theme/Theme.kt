@@ -13,40 +13,46 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val LightColorScheme = lightColorScheme(
-    primary = CustomPrimary,
-    onPrimary = CustomSurface,
-    secondary = CustomAccentYellow,
-    onSecondary = CustomTextPrimary,
-    background = CustomSurface,
-    surface = CustomSurface,
-    onSurface = CustomTextPrimary,
-    surfaceVariant = CustomBackground
-)
+private val LightColorScheme =
+    lightColorScheme(
+        primary = CustomPrimary,
+        onPrimary = CustomSurface,
+        secondary = CustomAccentYellow,
+        onSecondary = CustomTextPrimary,
+        background = CustomSurface,
+        surface = CustomSurface,
+        onSurface = CustomTextPrimary,
+        surfaceVariant = CustomBackground,
+    )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = CustomPrimary,
-    onPrimary = CustomSurface,
-    secondary = CustomAccentYellow,
-    onSecondary = CustomTextPrimary,
-    background = CustomTextPrimary,
-    surface = CustomTextPrimary,
-)
+private val DarkColorScheme =
+    darkColorScheme(
+        primary = CustomPrimary,
+        onPrimary = CustomSurface,
+        secondary = CustomAccentYellow,
+        onSecondary = CustomTextPrimary,
+        background = CustomTextPrimary,
+        surface = CustomTextPrimary,
+    )
 
 @Composable
 fun TrainAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) dynamicDarkColorScheme(LocalView.current.context)
-            else dynamicLightColorScheme(LocalView.current.context)
+    val colorScheme =
+        when {
+            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                if (darkTheme) {
+                    dynamicDarkColorScheme(LocalView.current.context)
+                } else {
+                    dynamicLightColorScheme(LocalView.current.context)
+                }
+            }
+            darkTheme -> DarkColorScheme
+            else -> LightColorScheme
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
 
     val view = LocalView.current
     SideEffect {
@@ -75,6 +81,6 @@ fun TrainAppTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }

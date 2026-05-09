@@ -8,25 +8,26 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RouteSearchMappingTest {
-
     @Test
     fun successWithRoutes_mapsToResults() {
-        val result = RouteLookupResult.Success(
-            RoutesResponse(
-                price = null,
-                direct = listOf(
-                    DirectRoute(
-                        TimetableID = 1,
-                        RouteID = 10,
-                        TrainNumber = "6100",
-                        TrainTypeID = 0,
-                        International = 0,
-                        timetable_items = emptyList()
-                    )
+        val result =
+            RouteLookupResult.Success(
+                RoutesResponse(
+                    price = null,
+                    direct =
+                        listOf(
+                            DirectRoute(
+                                TimetableID = 1,
+                                RouteID = 10,
+                                TrainNumber = "6100",
+                                TrainTypeID = 0,
+                                International = 0,
+                                timetable_items = emptyList(),
+                            ),
+                        ),
+                    connected = emptyList(),
                 ),
-                connected = emptyList()
             )
-        )
 
         val presentation = result.toRouteLookupPresentation()
 
@@ -35,13 +36,14 @@ class RouteSearchMappingTest {
 
     @Test
     fun successWithEmptyResult_mapsToEmpty() {
-        val result = RouteLookupResult.Success(
-            RoutesResponse(
-                price = null,
-                direct = emptyList(),
-                connected = emptyList()
+        val result =
+            RouteLookupResult.Success(
+                RoutesResponse(
+                    price = null,
+                    direct = emptyList(),
+                    connected = emptyList(),
+                ),
             )
-        )
 
         val presentation = result.toRouteLookupPresentation()
 
@@ -57,9 +59,9 @@ class RouteSearchMappingTest {
         assertEquals(
             RouteLookupPresentation.Error(
                 kind = RouteErrorKind.Server,
-                httpCode = 404
+                httpCode = 404,
             ),
-            presentation
+            presentation,
         )
     }
 
@@ -71,7 +73,7 @@ class RouteSearchMappingTest {
 
         assertEquals(
             RouteLookupPresentation.Error(RouteErrorKind.InvalidResponse),
-            presentation
+            presentation,
         )
     }
 
@@ -83,7 +85,7 @@ class RouteSearchMappingTest {
 
         assertEquals(
             RouteLookupPresentation.Error(RouteErrorKind.Network),
-            presentation
+            presentation,
         )
     }
 }

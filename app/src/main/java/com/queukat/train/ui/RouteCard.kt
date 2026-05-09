@@ -4,17 +4,28 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,7 +38,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.queukat.train.R
-import com.queukat.train.data.model.*
+import com.queukat.train.data.model.DirectRoute
+import com.queukat.train.data.model.PriceInfo
+import com.queukat.train.data.model.RouteStop
+import com.queukat.train.data.model.StopDto
+import com.queukat.train.data.model.TimetableItem
 import com.queukat.train.data.model.getNameForLanguage
 import com.queukat.train.ui.theme.CustomGreen
 import com.queukat.train.ui.theme.TrainAppTheme
@@ -37,58 +52,71 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+private const val STOP_TYPE_CROSSING_NO_PASSENGERS = 3
+private const val MILLIS_PER_MINUTE = 60_000L
+private const val MISSING_COORDINATES_LATITUDE = 42.0
+private const val MISSING_COORDINATES_LONGITUDE = 19.0
+
 @Composable
 fun RouteCard(
     route: DirectRoute,
     selectedDate: String,
     stationLanguage: String,
     priceInfo: PriceInfo? = null,
-    onTrainSelected: (DirectRoute) -> Unit,
-    onFullRouteNeeded: (Int) -> Unit,
-    onReminderClick: (DirectRoute) -> Unit = {}
+    onReminderClick: (DirectRoute) -> Unit = {},
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
 
-    val fallbackFirst = route.timetable_items
-        ?.firstOrNull()
-        ?.routestop
-        ?.stop
-        ?.getNameForLanguage(stationLanguage)
-        ?: stringResource(R.string.unknown_label)
+    val fallbackFirst =
+        route.timetable_items
+            ?.firstOrNull()
+            ?.routestop
+            ?.stop
+            ?.getNameForLanguage(stationLanguage)
+            ?: stringResource(R.string.unknown_label)
 
-    val fallbackLast = route.timetable_items
-        ?.lastOrNull()
-        ?.routestop
-        ?.stop
-        ?.getNameForLanguage(stationLanguage)
-        ?: stringResource(R.string.unknown_label)
+    val fallbackLast =
+        route.timetable_items
+            ?.lastOrNull()
+            ?.routestop
+            ?.stop
+            ?.getNameForLanguage(stationLanguage)
+            ?: stringResource(R.string.unknown_label)
 
     val startName = fallbackFirst.ifBlank { route.startStation ?: stringResource(R.string.unknown_label) }
     val endName = fallbackLast.ifBlank { route.endStation ?: stringResource(R.string.unknown_label) }
     val trainNum = route.TrainNumber ?: stringResource(R.string.unknown_label)
 
-    val departureRaw = route.timetable_items
-        ?.firstOrNull()
-        ?.DepartureTime
-        .orEmpty()
-
-    val arrivalRaw = route.timetable_items
-        ?.lastOrNull()
-        ?.ArrivalTime
-        ?.takeIf { it.isNotBlank() }
-        ?: route.timetable_items
-            ?.lastOrNull()
+    val departureRaw =
+        route.timetable_items
+            ?.firstOrNull()
             ?.DepartureTime
             .orEmpty()
 
-    val departureDateTime = if (selectedDate.isNotBlank()) {
-        DateTimeUtils.parseDateTime("$selectedDate $departureRaw")
-    } else null
+    val arrivalRaw =
+        route.timetable_items
+            ?.lastOrNull()
+            ?.ArrivalTime
+            ?.takeIf { it.isNotBlank() }
+            ?: route.timetable_items
+                ?.lastOrNull()
+                ?.DepartureTime
+                .orEmpty()
 
-    var arrivalDateTime = if (selectedDate.isNotBlank()) {
-        DateTimeUtils.parseDateTime("$selectedDate $arrivalRaw")
-    } else null
+    val departureDateTime =
+        if (selectedDate.isNotBlank()) {
+            DateTimeUtils.parseDateTime("$selectedDate $departureRaw")
+        } else {
+            null
+        }
+
+    var arrivalDateTime =
+        if (selectedDate.isNotBlank()) {
+            DateTimeUtils.parseDateTime("$selectedDate $arrivalRaw")
+        } else {
+            null
+        }
 
     if (departureDateTime != null && arrivalDateTime != null) {
         if (arrivalDateTime.before(departureDateTime)) {
@@ -109,70 +137,76 @@ fun RouteCard(
     var expanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(8.dp))
-            .clickable { expanded = !expanded },
+        modifier =
+            Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+                .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(8.dp))
+                .clickable { expanded = !expanded },
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = cardBackgroundColor)
+        colors = CardDefaults.cardColors(containerColor = cardBackgroundColor),
     ) {
         Column(
-            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 10.dp)
+            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 10.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.train_label, trainNum, startName, endName),
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
 
                     // Time range display (в TZ Черногории)
-                    val timeRange = if (departureMs != null && arrivalMs != null) {
-                        val fmt = SimpleDateFormat("HH:mm", locale).apply {
-                            timeZone = DateTimeUtils.TRAIN_TIME_ZONE
+                    val timeRange =
+                        if (departureMs != null && arrivalMs != null) {
+                            val fmt =
+                                SimpleDateFormat("HH:mm", locale).apply {
+                                    timeZone = DateTimeUtils.TRAIN_TIME_ZONE
+                                }
+                            "${fmt.format(departureMs)} - ${fmt.format(arrivalMs)}"
+                        } else {
+                            ""
                         }
-                        "${fmt.format(departureMs)} - ${fmt.format(arrivalMs)}"
-                    } else ""
 
                     if (timeRange.isNotEmpty()) {
                         Text(
                             text = timeRange,
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                         )
                     }
 
                     if (!isPast && departureMs != null) {
-                        val timeString = DateTimeUtils.getTimeUntilDepartureString(
-                            departureTimeMs = departureMs,
-                            nowMs = System.currentTimeMillis(),
-                            formatHourMin = stringResource(R.string.time_in_h_and_m),
-                            formatMin = stringResource(R.string.time_in_m),
-                            formatDayHour = stringResource(R.string.time_in_d_and_h),
-                            prefixFormat = stringResource(R.string.time_until_prefix)
-                        )
+                        val timeString =
+                            DateTimeUtils.getTimeUntilDepartureString(
+                                departureTimeMs = departureMs,
+                                nowMs = System.currentTimeMillis(),
+                                formatHourMin = stringResource(R.string.time_in_h_and_m),
+                                formatMin = stringResource(R.string.time_in_m),
+                                formatDayHour = stringResource(R.string.time_in_d_and_h),
+                                prefixFormat = stringResource(R.string.time_until_prefix),
+                            )
                         if (timeString.isNotEmpty()) {
                             Text(
                                 text = timeString,
                                 fontSize = 14.sp,
-                                color = CustomGreen
+                                color = CustomGreen,
                             )
                         }
                     } else {
                         Text(
                             text = stringResource(R.string.train_departed),
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         )
                     }
 
@@ -181,15 +215,16 @@ fun RouteCard(
                         if (diffMin > 0) {
                             val hours = diffMin / 60
                             val mins = diffMin % 60
-                            val durationStr = if (hours > 0) {
-                                stringResource(R.string.time_in_h_and_m, hours, mins)
-                            } else {
-                                stringResource(R.string.time_in_m, diffMin)
-                            }
+                            val durationStr =
+                                if (hours > 0) {
+                                    stringResource(R.string.time_in_h_and_m, hours, mins)
+                                } else {
+                                    stringResource(R.string.time_in_m, diffMin)
+                                }
                             Text(
                                 text = stringResource(R.string.label_travel_time, durationStr),
                                 fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             )
                         }
                     }
@@ -198,9 +233,9 @@ fun RouteCard(
                 Column(horizontalAlignment = Alignment.End) {
                     IconButton(onClick = { onReminderClick(route) }) {
                         Icon(
-                            imageVector = Icons.Default.Notifications,
+                            painter = painterResource(R.drawable.ic_bell),
                             contentDescription = stringResource(R.string.label_reminder),
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
 
@@ -216,21 +251,21 @@ fun RouteCard(
                                 Text(
                                     text = stringResource(R.string.two_class_prices_format, s1, s2),
                                     fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                             } else if (c1 != null) {
                                 val s1 = String.format(locale, "%.2f€", c1)
                                 Text(
                                     text = stringResource(R.string.one_class_price_format, s1),
                                     fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                             } else if (c2 != null) {
                                 val s2 = String.format(locale, "%.2f€", c2)
                                 Text(
                                     text = stringResource(R.string.two_class_only_price_format, s2),
                                     fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -243,7 +278,7 @@ fun RouteCard(
                 val stopsList = route.timetable_items.orEmpty()
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     stopsList.forEachIndexed { index, item ->
                         val arrRaw = item.ArrivalTime ?: ""
@@ -252,23 +287,25 @@ fun RouteCard(
                         val shortDeparture = if (depRaw.length >= 5) depRaw.substring(0, 5) else depRaw
                         val dwellMin = getDwellMinutes(arrRaw, depRaw, locale)
 
-                        val stationName = item.routestop?.stop?.getNameForLanguage(stationLanguage)
-                            ?: stringResource(R.string.unknown_station)
+                        val stationName =
+                            item.routestop?.stop?.getNameForLanguage(stationLanguage)
+                                ?: stringResource(R.string.unknown_station)
                         val stopTypeId = item.routestop?.stop?.StopTypeID
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 val circleColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 Canvas(modifier = Modifier.size(8.dp)) { drawCircle(color = circleColor) }
                                 if (index < stopsList.size - 1) {
                                     Box(
-                                        modifier = Modifier
-                                            .width(2.dp)
-                                            .height(30.dp)
-                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                                        modifier =
+                                            Modifier
+                                                .width(2.dp)
+                                                .height(30.dp)
+                                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)),
                                     )
                                 }
                             }
@@ -278,51 +315,52 @@ fun RouteCard(
                                 Text(
                                     text = stationName,
                                     fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
 
                                 if (shortArrival.isNotEmpty() || shortDeparture.isNotEmpty()) {
-                                    val lineText = if (dwellMin >= 5) {
-                                        stringResource(
-                                            R.string.stop_arr_dep_with_dwell,
-                                            shortArrival,
-                                            dwellMin,
-                                            shortDeparture
-                                        )
-                                    } else {
-                                        stringResource(
-                                            R.string.stop_arr_dep,
-                                            shortArrival,
-                                            shortDeparture
-                                        )
-                                    }
+                                    val lineText =
+                                        if (dwellMin >= 5) {
+                                            stringResource(
+                                                R.string.stop_arr_dep_with_dwell,
+                                                shortArrival,
+                                                dwellMin,
+                                                shortDeparture,
+                                            )
+                                        } else {
+                                            stringResource(
+                                                R.string.stop_arr_dep,
+                                                shortArrival,
+                                                shortDeparture,
+                                            )
+                                        }
                                     Text(
                                         text = lineText,
                                         fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                                     )
                                 }
 
-                                if (stopTypeId == 3) {
+                                if (stopTypeId == STOP_TYPE_CROSSING_NO_PASSENGERS) {
                                     Text(
                                         text = stringResource(R.string.label_crossing_no_passengers),
                                         fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.error
+                                        color = MaterialTheme.colorScheme.error,
                                     )
                                 }
                             }
 
                             IconButton(
                                 onClick = {
-                                    val lat = item.routestop?.stop?.Latitude ?: 42.0
-                                    val lng = item.routestop?.stop?.Longitude ?: 19.0
+                                    val lat = item.routestop?.stop?.Latitude ?: MISSING_COORDINATES_LATITUDE
+                                    val lng = item.routestop?.stop?.Longitude ?: MISSING_COORDINATES_LONGITUDE
                                     ReminderUtils.openLocationInMaps(context, lat, lng, stationName)
-                                }
+                                },
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_google_map),
                                     contentDescription = stringResource(R.string.open_in_maps),
-                                    tint = MaterialTheme.colorScheme.onSurface
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -333,7 +371,11 @@ fun RouteCard(
     }
 }
 
-private fun getDwellMinutes(arrivalTime: String, departureTime: String, locale: Locale): Long {
+private fun getDwellMinutes(
+    arrivalTime: String,
+    departureTime: String,
+    locale: Locale,
+): Long {
     if (arrivalTime.isBlank() || departureTime.isBlank()) return 0
     val sdf = SimpleDateFormat("HH:mm:ss", locale)
     return try {
@@ -341,8 +383,10 @@ private fun getDwellMinutes(arrivalTime: String, departureTime: String, locale: 
         val depDate = sdf.parse(departureTime)
         if (arrDate != null && depDate != null) {
             val diff = depDate.time - arrDate.time
-            if (diff > 0) diff / 60000 else 0
-        } else 0
+            if (diff > 0) diff / MILLIS_PER_MINUTE else 0
+        } else {
+            0
+        }
     } catch (_: Exception) {
         0
     }
@@ -352,47 +396,49 @@ private fun getDwellMinutes(arrivalTime: String, departureTime: String, locale: 
 @Preview(showBackground = true)
 fun PreviewRouteCardLight() {
     TrainAppTheme(darkTheme = false) {
-        val sampleRoute = DirectRoute(
-            TimetableID = 1,
-            RouteID = 101,
-            TrainNumber = "Local 745",
-            TrainTypeID = 0,
-            International = 0,
-            timetable_items = listOf(
-                TimetableItem(
-                    TimetableItemID = 1,
-                    TimetableID = 1,
-                    RouteStopID = 100,
-                    ArrivalTime = "20:10:00",
-                    DepartureTime = "20:15:00",
-                    routestop = RouteStop(
-                        RouteStopID = 777,
-                        Order = 1,
-                        StopID = 777,
-                        stop = StopDto(
-                            StopID = 777,
-                            Name_me = "Bar",
-                            Name_en = "Bar",
-                            Name_me_cyr = "",
-                            StopTypeID = 4,
-                            Latitude = 42.0876,
-                            Longitude = 19.1052,
-                            local = 1,
-                            stop_type = null
-                        )
-                    )
-                )
+        val sampleRoute =
+            DirectRoute(
+                TimetableID = 1,
+                RouteID = 101,
+                TrainNumber = "Local 745",
+                TrainTypeID = 0,
+                International = 0,
+                timetable_items =
+                    listOf(
+                        TimetableItem(
+                            TimetableItemID = 1,
+                            TimetableID = 1,
+                            RouteStopID = 100,
+                            ArrivalTime = "20:10:00",
+                            DepartureTime = "20:15:00",
+                            routestop =
+                                RouteStop(
+                                    RouteStopID = 777,
+                                    Order = 1,
+                                    StopID = 777,
+                                    stop =
+                                        StopDto(
+                                            StopID = 777,
+                                            Name_me = "Bar",
+                                            Name_en = "Bar",
+                                            Name_me_cyr = "",
+                                            StopTypeID = 4,
+                                            Latitude = 42.0876,
+                                            Longitude = 19.1052,
+                                            local = 1,
+                                            stop_type = null,
+                                        ),
+                                ),
+                        ),
+                    ),
             )
-        )
 
         RouteCard(
             route = sampleRoute,
             selectedDate = "2025-04-06",
             stationLanguage = "en",
             priceInfo = null,
-            onTrainSelected = {},
-            onFullRouteNeeded = {},
-            onReminderClick = {}
+            onReminderClick = {},
         )
     }
 }

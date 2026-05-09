@@ -2,7 +2,10 @@
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <locale android:name="en" />       <!-- English -->
     <locale android:name="ru" />       <!-- Russian -->
-    <!-- Serbian — both scripts to replace deprecated Montenegrin codes -->
-    <locale android:name="sr-Cyrl" />  <!-- Serbian (Cyrillic) -->
-    <locale android:name="sr-Latn" />  <!-- Serbian (Latin) -->
+    <!-- Montenegrin — primary app locale for Montenegro -->
+    <locale android:name="cnr-Cyrl-ME" />  <!-- Montenegrin (Cyrillic) -->
+    <locale android:name="cnr-Latn-ME" />  <!-- Montenegrin (Latin) -->
+    <!-- Serbian aliases kept for compatibility with older captures/devices -->
+    <locale android:name="sr-Cyrl" />      <!-- Serbian (Cyrillic) -->
+    <locale android:name="sr-Latn" />      <!-- Serbian (Latin) -->
 </locale-config>

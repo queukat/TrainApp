@@ -7,7 +7,6 @@ import androidx.room.Query
 
 @Dao
 interface AppDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllStops(stops: List<StopEntity>)
 

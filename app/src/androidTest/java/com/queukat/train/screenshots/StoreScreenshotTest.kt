@@ -33,7 +33,6 @@ import java.util.TimeZone
 
 @RunWith(AndroidJUnit4::class)
 class StoreScreenshotTest {
-
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
     private val device = UiDevice.getInstance(instrumentation)
@@ -66,17 +65,18 @@ class StoreScreenshotTest {
 
         captureHome(localeTag)
 
-        val searchDate = findNextDateWithResults(
-            start = "Podgorica",
-            finish = "Bar"
-        )
+        val searchDate =
+            findNextDateWithResults(
+                start = "Podgorica",
+                finish = "Bar",
+            )
 
         captureSearchResults(
             localeTag = localeTag,
             searchDate = searchDate,
             fromInput = "Podgorica",
             toInput = "Bar",
-            routeLabelFragment = "${routeLabels.first} - ${routeLabels.second}"
+            routeLabelFragment = "${routeLabels.first} - ${routeLabels.second}",
         )
 
         captureExpandedCard(
@@ -84,7 +84,7 @@ class StoreScreenshotTest {
             searchDate = searchDate,
             fromInput = "Podgorica",
             toInput = "Bar",
-            routeLabelFragment = "${routeLabels.first} - ${routeLabels.second}"
+            routeLabelFragment = "${routeLabels.first} - ${routeLabels.second}",
         )
 
         captureSettings(localeTag)
@@ -101,17 +101,17 @@ class StoreScreenshotTest {
         searchDate: String,
         fromInput: String,
         toInput: String,
-        routeLabelFragment: String
+        routeLabelFragment: String,
     ) {
         launchMainActivity(
             initialDate = searchDate,
             initialFrom = fromInput,
             initialTo = toInput,
-            autoSearch = true
+            autoSearch = true,
         )
         assertNotNull(
             "Expected route card for '$routeLabelFragment'",
-            waitForObject(By.textContains(routeLabelFragment), 20_000)
+            waitForObject(By.textContains(routeLabelFragment), 20_000),
         )
         captureScreenshot(localeTag, "02-search-results.png")
     }
@@ -121,13 +121,13 @@ class StoreScreenshotTest {
         searchDate: String,
         fromInput: String,
         toInput: String,
-        routeLabelFragment: String
+        routeLabelFragment: String,
     ) {
         launchMainActivity(
             initialDate = searchDate,
             initialFrom = fromInput,
             initialTo = toInput,
-            autoSearch = true
+            autoSearch = true,
         )
 
         val cardTitle = waitForObject(By.textContains(routeLabelFragment), 20_000)
@@ -138,8 +138,8 @@ class StoreScreenshotTest {
             "Expanded route content did not appear",
             waitForAnyObject(
                 timeoutMs = 10_000,
-                selectors = detailSelectorsFor(localeTag)
-            )
+                selectors = detailSelectorsFor(localeTag),
+            ),
         )
 
         captureScreenshot(localeTag, "03-expanded-card.png")
@@ -149,13 +149,14 @@ class StoreScreenshotTest {
         launchSettingsActivity()
         assertTrue(
             "Settings screen did not render",
-            waitForEditTexts(count = 3, timeoutMs = 15_000).size >= 3
+            waitForEditTexts(count = 3, timeoutMs = 15_000).size >= 3,
         )
         captureScreenshot(localeTag, "04-settings.png")
     }
 
     private fun resetAppState(stationLanguage: String) {
-        prefs.edit()
+        prefs
+            .edit()
             .putString("appLanguage", stationLanguage)
             .putString("defaultReminderAction", "push")
             .putInt("defaultMinutesBefore", 15)
@@ -178,27 +179,29 @@ class StoreScreenshotTest {
         initialDate: String? = null,
         initialFrom: String? = null,
         initialTo: String? = null,
-        autoSearch: Boolean = false
+        autoSearch: Boolean = false,
     ) {
         device.wakeAndUnlock()
         device.pressHome()
 
-        val intent = context.packageManager.getLaunchIntentForPackage(PACKAGE_NAME)
-            ?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                putExtra(MainActivity.EXTRA_SKIP_UPDATE_CHECK, true)
-                if (!initialDate.isNullOrBlank()) {
-                    putExtra(MainActivity.EXTRA_INITIAL_DATE, initialDate)
+        val intent =
+            context.packageManager
+                .getLaunchIntentForPackage(PACKAGE_NAME)
+                ?.apply {
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    putExtra(MainActivity.EXTRA_SKIP_UPDATE_CHECK, true)
+                    if (!initialDate.isNullOrBlank()) {
+                        putExtra(MainActivity.EXTRA_INITIAL_DATE, initialDate)
+                    }
+                    if (!initialFrom.isNullOrBlank()) {
+                        putExtra(MainActivity.EXTRA_INITIAL_FROM, initialFrom)
+                    }
+                    if (!initialTo.isNullOrBlank()) {
+                        putExtra(MainActivity.EXTRA_INITIAL_TO, initialTo)
+                    }
+                    putExtra(MainActivity.EXTRA_AUTO_SEARCH, autoSearch)
                 }
-                if (!initialFrom.isNullOrBlank()) {
-                    putExtra(MainActivity.EXTRA_INITIAL_FROM, initialFrom)
-                }
-                if (!initialTo.isNullOrBlank()) {
-                    putExtra(MainActivity.EXTRA_INITIAL_TO, initialTo)
-                }
-                putExtra(MainActivity.EXTRA_AUTO_SEARCH, autoSearch)
-            }
-            ?: error("Launch intent not found")
+                ?: error("Launch intent not found")
 
         context.startActivity(intent)
         waitForEditTexts(count = 2, timeoutMs = 20_000)
@@ -208,16 +211,21 @@ class StoreScreenshotTest {
         device.wakeAndUnlock()
         device.pressHome()
 
-        val intent = Intent(context, SettingsActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val intent =
+            Intent(context, SettingsActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
         context.startActivity(intent)
     }
 
-    private fun findNextDateWithResults(start: String, finish: String): String {
-        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("Europe/Podgorica")
-        }
+    private fun findNextDateWithResults(
+        start: String,
+        finish: String,
+    ): String {
+        val formatter =
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("Europe/Podgorica")
+            }
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Podgorica"), Locale.US)
 
         repeat(7) {
@@ -236,14 +244,18 @@ class StoreScreenshotTest {
         error("No live routes found for $start -> $finish in the next 7 days")
     }
 
-    private fun captureScreenshot(localeTag: String, fileName: String) {
+    private fun captureScreenshot(
+        localeTag: String,
+        fileName: String,
+    ) {
         SystemClock.sleep(800)
         device.waitForIdle()
 
-        val outputDir = File(
-            context.getExternalFilesDir(null),
-            "store_screenshots/$localeTag"
-        )
+        val outputDir =
+            File(
+                context.getExternalFilesDir(null),
+                "store_screenshots/$localeTag",
+            )
         outputDir.mkdirs()
 
         val outputFile = File(outputDir, fileName)
@@ -252,11 +264,15 @@ class StoreScreenshotTest {
         assertTrue("Screenshot file was not created: ${outputFile.absolutePath}", outputFile.exists())
     }
 
-    private fun waitForObject(selector: BySelector, timeoutMs: Long): UiObject2? {
-        return device.wait(Until.findObject(selector), timeoutMs)
-    }
+    private fun waitForObject(
+        selector: BySelector,
+        timeoutMs: Long,
+    ): UiObject2? = device.wait(Until.findObject(selector), timeoutMs)
 
-    private fun waitForAnyObject(timeoutMs: Long, selectors: List<BySelector>): UiObject2? {
+    private fun waitForAnyObject(
+        timeoutMs: Long,
+        selectors: List<BySelector>,
+    ): UiObject2? {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
         while (SystemClock.uptimeMillis() < deadline) {
             selectors.forEach { selector ->
@@ -267,7 +283,10 @@ class StoreScreenshotTest {
         return null
     }
 
-    private fun waitForEditTexts(count: Int, timeoutMs: Long): List<UiObject2> {
+    private fun waitForEditTexts(
+        count: Int,
+        timeoutMs: Long,
+    ): List<UiObject2> {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
         while (SystemClock.uptimeMillis() < deadline) {
             val fields = device.findObjects(By.clazz("android.widget.EditText"))
@@ -279,27 +298,28 @@ class StoreScreenshotTest {
         error("Expected at least $count EditText fields")
     }
 
-    private fun defaultStationLanguage(localeTag: String): String {
-        return when {
+    private fun defaultStationLanguage(localeTag: String): String =
+        when {
             localeTag.startsWith("ru", ignoreCase = true) -> "meCyr"
+            localeTag.startsWith("cnr", ignoreCase = true) -> "me"
             localeTag.startsWith("sr", ignoreCase = true) -> "me"
             else -> "en"
         }
-    }
 
-    private fun routeLabelsFor(stationLanguage: String): Pair<String, String> {
-        return when (stationLanguage) {
+    private fun routeLabelsFor(stationLanguage: String): Pair<String, String> =
+        when (stationLanguage) {
             "meCyr" -> "Подгорица" to "Бар"
             else -> "Podgorica" to "Bar"
         }
-    }
 
     private fun detailSelectorsFor(localeTag: String): List<BySelector> {
-        val tokens = when {
-            localeTag.startsWith("ru", ignoreCase = true) -> listOf("Приб.:", "отпр.:")
-            localeTag.startsWith("sr", ignoreCase = true) -> listOf("Dol.:", "pol.:", "Дол.:", "пол.:")
-            else -> listOf("Arr:", "dep:")
-        }
+        val tokens =
+            when {
+                localeTag.startsWith("ru", ignoreCase = true) -> listOf("Приб.:", "отпр.:")
+                localeTag.startsWith("cnr", ignoreCase = true) -> listOf("Dol.:", "pol.:", "Дол.:", "пол.:")
+                localeTag.startsWith("sr", ignoreCase = true) -> listOf("Dol.:", "pol.:", "Дол.:", "пол.:")
+                else -> listOf("Arr:", "dep:")
+            }
         return tokens.map { By.textContains(it) }
     }
 

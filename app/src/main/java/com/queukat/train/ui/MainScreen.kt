@@ -1,8 +1,8 @@
 package com.queukat.train.ui
 
+import android.Manifest
 import android.app.Activity
 import android.app.Application
-import android.Manifest
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -47,10 +45,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.queukat.train.R
-import com.queukat.train.data.db.getNameForLanguage
 import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.SavedRoutePreference
 import com.queukat.train.ui.theme.TrainAppTheme
@@ -58,11 +55,13 @@ import com.queukat.train.util.DateTimeUtils
 import com.queukat.train.util.NotificationHelper
 import kotlinx.coroutines.delay
 
+private const val AUTO_REFRESH_INTERVAL_MS = 60_000L
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     mainViewModel: TrainViewModel,
-    onOpenSettings: () -> Unit = {}
+    onOpenSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -87,35 +86,39 @@ fun MainScreen(
     // --- FIX: язык станций не должен зависеть от языка интерфейса ---
     // Если pref отсутствует/битый — ставим EN и сохраняем, чтобы дальше не “скакало”.
     val allowedLangs = setOf("en", "me", "meCyr")
-    val lang = remember {
-        val raw = prefs.getString("appLanguage", null)
-        val normalized = if (raw in allowedLangs) raw!! else "en"
-        if (raw == null || raw !in allowedLangs) {
-            prefs.edit { putString("appLanguage", normalized) }
+    val lang =
+        remember {
+            val raw = prefs.getString("appLanguage", null)
+            val normalized = if (raw in allowedLangs) raw!! else "en"
+            if (raw == null || raw !in allowedLangs) {
+                prefs.edit { putString("appLanguage", normalized) }
+            }
+            normalized
         }
-        normalized
-    }
 
     val autoRefreshTime = remember { mutableStateOf(prefs.getBoolean("autoRefreshTime", true)) }
     val routesResponse = (routeSearchState as? RouteSearchUiState.Results)?.response
-    val routeNotice = when (val state = routeSearchState) {
-        is RouteSearchUiState.Error -> state.notice
-        RouteSearchUiState.Empty -> UiNotice(
-            message = stringResource(R.string.toast_no_results),
-            tone = UiNoticeTone.Info
-        )
-        else -> null
-    }
-    val reminderNotice = when (val state = reminderUiState) {
-        is ReminderUiState.Success -> state.notice
-        is ReminderUiState.PermissionMissing -> state.notice
-        is ReminderUiState.Failure -> state.notice
-        ReminderUiState.Idle -> null
-    }
+    val routeNotice =
+        when (val state = routeSearchState) {
+            is RouteSearchUiState.Error -> state.notice
+            RouteSearchUiState.Empty ->
+                UiNotice(
+                    message = stringResource(R.string.toast_no_results),
+                    tone = UiNoticeTone.Info,
+                )
+            else -> null
+        }
+    val reminderNotice =
+        when (val state = reminderUiState) {
+            is ReminderUiState.Success -> state.notice
+            is ReminderUiState.PermissionMissing -> state.notice
+            is ReminderUiState.Failure -> state.notice
+            ReminderUiState.Idle -> null
+        }
 
     LaunchedEffect(autoRefreshTime.value) {
         while (true) {
-            delay(60_000)
+            delay(AUTO_REFRESH_INTERVAL_MS)
             if (autoRefreshTime.value) {
                 mainViewModel.refreshTimeToDeparture()
             }
@@ -130,23 +133,24 @@ fun MainScreen(
     var reminderDialogRoute by remember { mutableStateOf<DirectRoute?>(null) }
     var pendingReminderRequest by remember { mutableStateOf<PendingReminderRequest?>(null) }
 
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        val pending = pendingReminderRequest
-        pendingReminderRequest = null
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            val pending = pendingReminderRequest
+            pendingReminderRequest = null
 
-        if (granted && pending != null) {
-            mainViewModel.handleReminderAction(
-                route = pending.route,
-                context = context,
-                action = pending.action,
-                minutesBefore = pending.minutesBefore
-            )
-        } else {
-            mainViewModel.reportNotificationPermissionDenied()
+            if (granted && pending != null) {
+                mainViewModel.handleReminderAction(
+                    route = pending.route,
+                    context = context,
+                    action = pending.action,
+                    minutesBefore = pending.minutesBefore,
+                )
+            } else {
+                mainViewModel.reportNotificationPermissionDenied()
+            }
         }
-    }
 
     LaunchedEffect(reminderUiState) {
         val state = reminderUiState
@@ -158,23 +162,25 @@ fun MainScreen(
             context.startActivity(
                 Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
+                },
             )
         }
     }
 
-    val savedRouteLabels = remember(savedRoutes, stops, lang) {
-        val stopMap = stops.associateBy { it.stopId }
-        savedRoutes.map { route ->
-            route to routeLabel(route, stopMap, lang)
+    val savedRouteLabels =
+        remember(savedRoutes, stops, lang) {
+            val stopMap = stops.associateBy { it.stopId }
+            savedRoutes.map { route ->
+                route to routeLabel(route, stopMap, lang)
+            }
         }
-    }
-    val recentSearchLabels = remember(recentSearches, stops, lang) {
-        val stopMap = stops.associateBy { it.stopId }
-        recentSearches.map { route ->
-            route to recentSearchLabel(route, stopMap, lang)
+    val recentSearchLabels =
+        remember(recentSearches, stops, lang) {
+            val stopMap = stops.associateBy { it.stopId }
+            recentSearches.map { route ->
+                route to recentSearchLabel(route, stopMap, lang)
+            }
         }
-    }
 
     Scaffold(
         topBar = {
@@ -183,7 +189,7 @@ fun MainScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         FilledIconButton(
                             onClick = {
@@ -192,37 +198,40 @@ fun MainScreen(
                                 context.startActivity(intent)
                             },
                             modifier = Modifier.size(26.dp),
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                            colors =
+                                IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                ),
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_donut_2),
                                 contentDescription = stringResource(R.string.label_support_dev_on_ko_fi),
-                                tint = MaterialTheme.colorScheme.onPrimary
+                                tint = MaterialTheme.colorScheme.onPrimary,
                             )
                         }
 
                         IconButton(onClick = onOpenSettings) {
                             Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.btn_settings)
+                                painter = painterResource(R.drawable.ic_settings),
+                                contentDescription = stringResource(R.string.btn_settings),
                             )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
             )
-        }
+        },
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.background),
         ) {
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -264,21 +273,23 @@ fun MainScreen(
                             onDatePicked = { dateStr -> mainViewModel.setSelectedDate(dateStr) },
                             onSearchClicked = {
                                 if (fromStation.isBlank() || toStation.isBlank()) {
-                                    Toast.makeText(
-                                        context,
-                                        R.string.toast_select_stations_first,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            R.string.toast_select_stations_first,
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
                                     return@SearchPanel
                                 }
 
-                                val finalDate = selectedDate.ifBlank {
-                                    DateTimeUtils.todayTrainDateString()
-                                }
+                                val finalDate =
+                                    selectedDate.ifBlank {
+                                        DateTimeUtils.todayTrainDateString()
+                                    }
 
                                 mainViewModel.setSelectedDate(finalDate)
                                 mainViewModel.loadRoutes(fromStation, toStation, finalDate)
-                            }
+                            },
                         )
                     }
 
@@ -295,24 +306,27 @@ fun MainScreen(
                             onSaveRoute = {
                                 if (fromStation.isNotBlank() && toStation.isNotBlank()) {
                                     val saved = mainViewModel.saveRoute(fromStation, toStation)
-                                    val messageRes = if (saved) {
-                                        R.string.toast_route_saved
-                                    } else {
-                                        R.string.toast_select_stations_first
-                                    }
-                                    Toast.makeText(
-                                        context,
-                                        messageRes,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    val messageRes =
+                                        if (saved) {
+                                            R.string.toast_route_saved
+                                        } else {
+                                            R.string.toast_select_stations_first
+                                        }
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            messageRes,
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
                                 } else {
-                                    Toast.makeText(
-                                        context,
-                                        R.string.toast_select_stations_first,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            R.string.toast_select_stations_first,
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
                                 }
-                            }
+                            },
                         )
                     }
 
@@ -326,7 +340,7 @@ fun MainScreen(
                                 Text(
                                     text = stringResource(R.string.direct_routes_label),
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(8.dp)
+                                    modifier = Modifier.padding(8.dp),
                                 )
                             }
                             items(directRoutes) { route ->
@@ -335,9 +349,7 @@ fun MainScreen(
                                     selectedDate = selectedDate,
                                     stationLanguage = lang,
                                     priceInfo = priceInfo,
-                                    onTrainSelected = { chosen -> reminderDialogRoute = chosen },
-                                    onFullRouteNeeded = { routeId -> mainViewModel.loadFullRoute(routeId) },
-                                    onReminderClick = { chosen -> reminderDialogRoute = chosen }
+                                    onReminderClick = { chosen -> reminderDialogRoute = chosen },
                                 )
                             }
                         }
@@ -347,7 +359,7 @@ fun MainScreen(
                                 Text(
                                     text = stringResource(R.string.connected_routes_label),
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(8.dp)
+                                    modifier = Modifier.padding(8.dp),
                                 )
                             }
                             items(connectedRoutes) { route ->
@@ -356,9 +368,7 @@ fun MainScreen(
                                     selectedDate = selectedDate,
                                     stationLanguage = lang,
                                     priceInfo = priceInfo,
-                                    onTrainSelected = { chosen -> reminderDialogRoute = chosen },
-                                    onFullRouteNeeded = { routeId -> mainViewModel.loadFullRoute(routeId) },
-                                    onReminderClick = { chosen -> reminderDialogRoute = chosen }
+                                    onReminderClick = { chosen -> reminderDialogRoute = chosen },
                                 )
                             }
                         }
@@ -376,7 +386,7 @@ fun MainScreen(
             onDismiss = {
                 showFullRouteDialog = false
                 mainViewModel.clearFullRoute()
-            }
+            },
         )
     }
 
@@ -390,11 +400,11 @@ fun MainScreen(
             },
             onActionChosen = { action, minutes ->
                 val route = reminderDialogRoute!!
-                if (
+                val requiresNotificationPermission =
                     (action == "push" || action == "both") &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    !NotificationHelper.hasNotificationRuntimePermission(context)
-                ) {
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        !NotificationHelper.hasNotificationRuntimePermission(context)
+                if (requiresNotificationPermission) {
                     pendingReminderRequest = PendingReminderRequest(route, action, minutes)
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 } else {
@@ -402,11 +412,11 @@ fun MainScreen(
                         route = route,
                         context = context,
                         action = action,
-                        minutesBefore = minutes
+                        minutesBefore = minutes,
                     )
                 }
                 reminderDialogRoute = null
-            }
+            },
         )
     }
 }
@@ -416,12 +426,13 @@ fun MainScreen(
 fun MainScreenLightPreview() {
     TrainAppTheme(darkTheme = false) {
         val context = LocalContext.current
-        val previewVM = remember {
-            PreviewTrainViewModel(context.applicationContext as Application)
-        }
+        val previewVM =
+            remember {
+                PreviewTrainViewModel(context.applicationContext as Application)
+            }
         MainScreen(
             mainViewModel = previewVM,
-            onOpenSettings = {}
+            onOpenSettings = {},
         )
     }
 }
@@ -431,12 +442,13 @@ fun MainScreenLightPreview() {
 fun MainScreenDarkPreview() {
     TrainAppTheme(darkTheme = true) {
         val context = LocalContext.current
-        val previewVM = remember {
-            PreviewTrainViewModel(context.applicationContext as Application)
-        }
+        val previewVM =
+            remember {
+                PreviewTrainViewModel(context.applicationContext as Application)
+            }
         MainScreen(
             mainViewModel = previewVM,
-            onOpenSettings = {}
+            onOpenSettings = {},
         )
     }
 }
@@ -444,17 +456,17 @@ fun MainScreenDarkPreview() {
 private data class PendingReminderRequest(
     val route: DirectRoute,
     val action: String,
-    val minutesBefore: Int
+    val minutesBefore: Int,
 )
 
 private fun routeLabel(
     route: SavedRoutePreference,
     stopMap: Map<Int, com.queukat.train.data.db.StopEntity>,
-    language: String
+    language: String,
 ): String = resolveSavedRouteLabel(route, stopMap, language)
 
 private fun recentSearchLabel(
     route: com.queukat.train.data.model.RecentSearchPreference,
     stopMap: Map<Int, com.queukat.train.data.db.StopEntity>,
-    language: String
+    language: String,
 ): String = resolveRecentSearchLabel(route, stopMap, language)

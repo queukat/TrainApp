@@ -2,6 +2,7 @@ package com.queukat.train.data.repository
 
 import android.content.Context
 import android.util.Log
+import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.queukat.train.data.api.RetrofitClient
@@ -10,7 +11,6 @@ import com.queukat.train.data.db.RouteInfoEntity
 import com.queukat.train.data.db.StopEntity
 import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.RoutesResponse
-import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -19,15 +19,15 @@ import java.util.Calendar
 import java.util.Locale
 
 private const val TAG = "TrainRepository"
+private const val ERROR_BODY_PREVIEW_LENGTH = 200
 
 // сколько держим cumulative в памяти прежде чем освежить (без дорогого парса всего JSON)
 private const val CUMULATIVE_TTL_MS = 12L * 60 * 60 * 1000 // 12 часов
 
 open class TrainRepository(
     private val db: AppDatabase,
-    private val context: Context
+    private val context: Context,
 ) {
-
     @Volatile
     private var cachedCumulative: String? = null
 
@@ -37,8 +37,8 @@ open class TrainRepository(
     @Volatile
     private var stopsMapCache: Map<Int, StopEntity>? = null
 
-    suspend fun ensureStopsUpToDate(force: Boolean = false): StopsSyncResult {
-        return withContext(Dispatchers.IO) {
+    suspend fun ensureStopsUpToDate(force: Boolean = false): StopsSyncResult =
+        withContext(Dispatchers.IO) {
             val prefs = context.getSharedPreferences("train_prefs", Context.MODE_PRIVATE)
             val lastUpdate = prefs.getLong("stops_last_update", 0L)
             val now = System.currentTimeMillis()
@@ -53,21 +53,23 @@ open class TrainRepository(
                     val response = RetrofitClient.api.getStops().execute()
                     if (response.isSuccessful) {
                         val stopsDto = response.body().orEmpty()
-                        val entities = stopsDto.mapNotNull { dto ->
-                            if (dto.StopID == null || dto.Name_me == null) null
-                            else {
-                                StopEntity(
-                                    stopId = dto.StopID,
-                                    nameEn = dto.Name_en ?: "",
-                                    nameMe = dto.Name_me,
-                                    nameMeCyr = dto.Name_me_cyr,
-                                    stopTypeId = dto.StopTypeID,
-                                    latitude = dto.Latitude,
-                                    longitude = dto.Longitude,
-                                    local = dto.local
-                                )
+                        val entities =
+                            stopsDto.mapNotNull { dto ->
+                                if (dto.StopID == null || dto.Name_me == null) {
+                                    null
+                                } else {
+                                    StopEntity(
+                                        stopId = dto.StopID,
+                                        nameEn = dto.Name_en ?: "",
+                                        nameMe = dto.Name_me,
+                                        nameMeCyr = dto.Name_me_cyr,
+                                        stopTypeId = dto.StopTypeID,
+                                        latitude = dto.Latitude,
+                                        longitude = dto.Longitude,
+                                        local = dto.local,
+                                    )
+                                }
                             }
-                        }
 
                         db.appDao().insertAllStops(entities)
                         prefs.edit { putLong("stops_last_update", now) }
@@ -88,23 +90,25 @@ open class TrainRepository(
                 StopsSyncResult.UpToDate
             }
         }
-    }
 
-    open suspend fun getAllStopsFromDb(): List<StopEntity> {
-        return withContext(Dispatchers.IO) { db.appDao().getAllStops() }
-    }
+    open suspend fun getAllStopsFromDb(): List<StopEntity> = withContext(Dispatchers.IO) { db.appDao().getAllStops() }
 
     /**
      * ВАЖНО: тут НЕ трогаем cumulative (Android 9 будет лагать).
      * start/end берем из timetable (или fallback на UI).
      */
-    open suspend fun getRoutes(start: String, finish: String, date: String): RouteLookupResult {
+    open suspend fun getRoutes(
+        start: String,
+        finish: String,
+        date: String,
+    ): RouteLookupResult {
         return withContext(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.api.getRoutes(start, finish, date).execute()
                 if (response.isSuccessful) {
-                    val routes = response.body()
-                        ?: return@withContext RouteLookupResult.InvalidResponse("Empty response body")
+                    val routes =
+                        response.body()
+                            ?: return@withContext RouteLookupResult.InvalidResponse("Empty response body")
 
                     routes.let {
                         fixCoordinates(routes)
@@ -116,7 +120,7 @@ open class TrainRepository(
                     RouteLookupResult.HttpError(
                         code = response.code(),
                         message = response.message(),
-                        responsePreview = response.errorBody()?.string()?.take(200)
+                        responsePreview = response.errorBody()?.string()?.take(ERROR_BODY_PREVIEW_LENGTH),
                     )
                 }
             } catch (e: IOException) {
@@ -265,10 +269,21 @@ open class TrainRepository(
         routesResponse.connected?.forEach { fillStartEndStation(it) }
     }
 
-    private fun fillStartEndStation(dr: DirectRoute, full: DirectRoute? = null) {
+    private fun fillStartEndStation(
+        dr: DirectRoute,
+        full: DirectRoute? = null,
+    ) {
         val actual = full ?: dr
-        val firstStop = actual.timetable_items?.firstOrNull()?.routestop?.stop
-        val lastStop = actual.timetable_items?.lastOrNull()?.routestop?.stop
+        val firstStop =
+            actual.timetable_items
+                ?.firstOrNull()
+                ?.routestop
+                ?.stop
+        val lastStop =
+            actual.timetable_items
+                ?.lastOrNull()
+                ?.routestop
+                ?.stop
 
         if (dr.startStation == null) {
             dr.startStation = firstStop?.Name_en ?: "Unknown start"
@@ -327,8 +342,16 @@ open class TrainRepository(
                     directArr.forEach { elem ->
                         val dr = gson.fromJson(elem, DirectRoute::class.java)
                         val routeId = dr.RouteID ?: return@forEach
-                        val firstStop = dr.timetable_items?.firstOrNull()?.routestop?.stop
-                        val lastStop = dr.timetable_items?.lastOrNull()?.routestop?.stop
+                        val firstStop =
+                            dr.timetable_items
+                                ?.firstOrNull()
+                                ?.routestop
+                                ?.stop
+                        val lastStop =
+                            dr.timetable_items
+                                ?.lastOrNull()
+                                ?.routestop
+                                ?.stop
                         if (firstStop == null || lastStop == null) return@forEach
 
                         result.add(
@@ -341,8 +364,8 @@ open class TrainRepository(
                                 endNameMe = lastStop.Name_me ?: "",
                                 endNameMeCyr = lastStop.Name_me_cyr,
                                 validFrom = dr.route?.ValidFrom,
-                                validTo = dr.route?.ValidTo
-                            )
+                                validTo = dr.route?.ValidTo,
+                            ),
                         )
                     }
                 }
@@ -352,8 +375,16 @@ open class TrainRepository(
                     connArr.forEach { elem ->
                         val dr = gson.fromJson(elem, DirectRoute::class.java)
                         val routeId = dr.RouteID ?: return@forEach
-                        val firstStop = dr.timetable_items?.firstOrNull()?.routestop?.stop
-                        val lastStop = dr.timetable_items?.lastOrNull()?.routestop?.stop
+                        val firstStop =
+                            dr.timetable_items
+                                ?.firstOrNull()
+                                ?.routestop
+                                ?.stop
+                        val lastStop =
+                            dr.timetable_items
+                                ?.lastOrNull()
+                                ?.routestop
+                                ?.stop
                         if (firstStop == null || lastStop == null) return@forEach
 
                         result.add(
@@ -366,8 +397,8 @@ open class TrainRepository(
                                 endNameMe = lastStop.Name_me ?: "",
                                 endNameMeCyr = lastStop.Name_me_cyr,
                                 validFrom = dr.route?.ValidFrom,
-                                validTo = dr.route?.ValidTo
-                            )
+                                validTo = dr.route?.ValidTo,
+                            ),
                         )
                     }
                 }
@@ -384,10 +415,11 @@ open class TrainRepository(
         return try {
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
             val date = sdf.parse(dateStr) ?: return true
-            val cal = Calendar.getInstance().apply {
-                time = date
-                add(Calendar.DATE, 1)
-            }
+            val cal =
+                Calendar.getInstance().apply {
+                    time = date
+                    add(Calendar.DATE, 1)
+                }
             System.currentTimeMillis() >= cal.timeInMillis
         } catch (_: Exception) {
             true

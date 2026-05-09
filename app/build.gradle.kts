@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.ktlint)
 //    alias(libs.plugins.google.services)
 }
 
@@ -12,15 +14,17 @@ android {
     namespace = "com.queukat.train"
     compileSdk = 36
 
-    val signingProps = Properties().apply {
-        val file = rootProject.file("keystore.properties")
-        if (file.exists()) {
-            file.inputStream().use(::load)
+    val signingProps =
+        Properties().apply {
+            val file = rootProject.file("keystore.properties")
+            if (file.exists()) {
+                file.inputStream().use(::load)
+            }
         }
-    }
 
     fun signingValue(key: String): String? =
-        System.getenv("TRAINAPP_$key")
+        System
+            .getenv("TRAINAPP_$key")
             ?.takeIf { it.isNotBlank() }
             ?: signingProps.getProperty(key)?.takeIf { it.isNotBlank() }
 
@@ -28,12 +32,13 @@ android {
     val releaseStorePassword = signingValue("KEYSTORE_PASSWORD")
     val releaseKeyAlias = signingValue("KEY_ALIAS")
     val releaseKeyPassword = signingValue("KEY_PASSWORD")
-    val hasReleaseSigning = listOf(
-        releaseKeystoreFile,
-        releaseStorePassword,
-        releaseKeyAlias,
-        releaseKeyPassword
-    ).all { !it.isNullOrBlank() }
+    val hasReleaseSigning =
+        listOf(
+            releaseKeystoreFile,
+            releaseStorePassword,
+            releaseKeyAlias,
+            releaseKeyPassword,
+        ).all { !it.isNullOrBlank() }
 
     defaultConfig {
         applicationId = "com.queukat.train"
@@ -41,7 +46,6 @@ android {
         targetSdk = 35
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 2
         versionName = System.getenv("VERSION_NAME") ?: "1.0.1"
-
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -59,7 +63,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             } else {
@@ -67,7 +72,7 @@ android {
             }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -85,8 +90,19 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
-
 }
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+    basePath = rootDir.absolutePath
+}
+
+ktlint {
+    android.set(true)
+}
+
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.activity.compose)
@@ -96,7 +112,6 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.compose.material.icons.extended)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.retrofit)
@@ -116,5 +131,3 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.uiautomator)
 }
-
-

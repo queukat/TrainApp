@@ -11,15 +11,14 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.After
-import org.junit.Assume.assumeTrue
 import org.junit.Assert.assertNotNull
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CommuterRepeatFlowTest {
-
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
     private val device = UiDevice.getInstance(instrumentation)
@@ -27,7 +26,8 @@ class CommuterRepeatFlowTest {
 
     @Before
     fun setUp() {
-        prefs.edit()
+        prefs
+            .edit()
             .putString("appLanguage", "en")
             .remove("saved_routes_v2")
             .remove("recent_searches_v1")
@@ -38,7 +38,8 @@ class CommuterRepeatFlowTest {
 
     @After
     fun tearDown() {
-        prefs.edit()
+        prefs
+            .edit()
             .putString("appLanguage", "en")
             .remove("saved_routes_v2")
             .remove("recent_searches_v1")
@@ -56,16 +57,16 @@ class CommuterRepeatFlowTest {
         assertNotNull(
             waitForObject(
                 By.text(context.getString(R.string.label_recent_searches)),
-                10_000
-            )
+                10_000,
+            ),
         )
 
         performSearch("Podgorica", "Bar")
         assertNotNull(
             waitForObject(
                 By.text("Podgorica - Bar"),
-                10_000
-            )
+                10_000,
+            ),
         )
 
         launchApp()
@@ -86,18 +87,23 @@ class CommuterRepeatFlowTest {
 
     private fun launchApp() {
         device.wakeAndUnlock()
-        val intent = context.packageManager.getLaunchIntentForPackage(PACKAGE_NAME)
-            ?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            ?: error("Launch intent not found")
+        val intent =
+            context.packageManager
+                .getLaunchIntentForPackage(PACKAGE_NAME)
+                ?.apply {
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                ?: error("Launch intent not found")
 
         context.startActivity(intent)
         assertNotNull(waitForObject(By.desc(context.getString(R.string.btn_settings)), 15_000))
         waitForEditTexts(2, 20_000)
     }
 
-    private fun performSearch(from: String, to: String) {
+    private fun performSearch(
+        from: String,
+        to: String,
+    ) {
         val fields = waitForEditTexts(2, 20_000)
         fields[0].text = from
         fields[1].text = to
@@ -113,12 +119,13 @@ class CommuterRepeatFlowTest {
         assertNotNull(
             waitForAnyObject(
                 timeoutMs = 20_000,
-                selectors = listOf(
-                    By.text(context.getString(R.string.direct_routes_label)),
-                    By.text(context.getString(R.string.connected_routes_label)),
-                    By.desc(context.getString(R.string.label_reminder))
-                )
-            )
+                selectors =
+                    listOf(
+                        By.text(context.getString(R.string.direct_routes_label)),
+                        By.text(context.getString(R.string.connected_routes_label)),
+                        By.desc(context.getString(R.string.label_reminder)),
+                    ),
+            ),
         )
     }
 
@@ -128,7 +135,10 @@ class CommuterRepeatFlowTest {
         target!!.click()
     }
 
-    private fun waitForEditTexts(count: Int, timeoutMs: Long): List<UiObject2> {
+    private fun waitForEditTexts(
+        count: Int,
+        timeoutMs: Long,
+    ): List<UiObject2> {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
         while (SystemClock.uptimeMillis() < deadline) {
             val fields = device.findObjects(By.clazz("android.widget.EditText"))
@@ -140,11 +150,15 @@ class CommuterRepeatFlowTest {
         error("Expected at least $count EditText fields")
     }
 
-    private fun waitForObject(selector: BySelector, timeoutMs: Long): UiObject2? {
-        return device.wait(Until.findObject(selector), timeoutMs)
-    }
+    private fun waitForObject(
+        selector: BySelector,
+        timeoutMs: Long,
+    ): UiObject2? = device.wait(Until.findObject(selector), timeoutMs)
 
-    private fun waitForAnyObject(timeoutMs: Long, selectors: List<BySelector>): UiObject2? {
+    private fun waitForAnyObject(
+        timeoutMs: Long,
+        selectors: List<BySelector>,
+    ): UiObject2? {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
         while (SystemClock.uptimeMillis() < deadline) {
             selectors.forEach { selector ->

@@ -5,5 +5,5 @@ data class RecentSearchPreference(
     val toStopId: Int,
     val fromFallbackName: String = "",
     val toFallbackName: String = "",
-    val lastSearchedAtMs: Long
+    val lastSearchedAtMs: Long,
 )

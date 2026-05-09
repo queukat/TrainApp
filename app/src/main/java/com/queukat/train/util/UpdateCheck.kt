@@ -17,11 +17,10 @@ data class UpdateResult(
     val isUpdateAvailable: Boolean,
     val latestVersion: String,
     val releaseNotes: String? = null,
-    val error: String? = null
+    val error: String? = null,
 )
 
 object UpdateCheck {
-
     private const val TAG = "UpdateCheck"
 
     private const val PREFS = "train_prefs"
@@ -34,7 +33,8 @@ object UpdateCheck {
         "https://api.github.com/repos/queukat/TrainApp/releases/latest"
 
     private val httpClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
+        OkHttpClient
+            .Builder()
             .connectTimeout(3, TimeUnit.SECONDS)
             .readTimeout(5, TimeUnit.SECONDS)
             .build()
@@ -53,7 +53,7 @@ object UpdateCheck {
                 return UpdateResult(
                     isUpdateAvailable = isRemoteNewer(currentVersion, cachedTag),
                     latestVersion = cachedTag,
-                    releaseNotes = cachedNotes
+                    releaseNotes = cachedNotes,
                 )
             }
         }
@@ -78,30 +78,41 @@ object UpdateCheck {
         }
     }
 
-    private fun Context.safeVersionName(): String = try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getPackageInfo(
-                packageName,
-                PackageManager.PackageInfoFlags.of(0)
-            ).versionName ?: "0.0.0"
-        } else {
-            @Suppress("DEPRECATION")
-            packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
+    private fun Context.safeVersionName(): String =
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager
+                    .getPackageInfo(
+                        packageName,
+                        PackageManager.PackageInfoFlags.of(0),
+                    ).versionName ?: "0.0.0"
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
+            }
+        } catch (_: Exception) {
+            "0.0.0"
         }
-    } catch (_: Exception) {
-        "0.0.0"
-    }
 
     private fun parseSemVer(v: String): Triple<Int, Int, Int> {
-        val parts = v.trim().removePrefix("v").removePrefix("V").substringBefore('-').split('.')
+        val parts =
+            v
+                .trim()
+                .removePrefix("v")
+                .removePrefix("V")
+                .substringBefore('-')
+                .split('.')
         return Triple(
             parts.getOrNull(0)?.toIntOrNull() ?: 0,
             parts.getOrNull(1)?.toIntOrNull() ?: 0,
-            parts.getOrNull(2)?.toIntOrNull() ?: 0
+            parts.getOrNull(2)?.toIntOrNull() ?: 0,
         )
     }
 
-    private fun isRemoteNewer(local: String, remote: String): Boolean {
+    private fun isRemoteNewer(
+        local: String,
+        remote: String,
+    ): Boolean {
         val (lMaj, lMin, lPat) = parseSemVer(local)
         val (rMaj, rMin, rPat) = parseSemVer(remote)
         return when {
@@ -112,19 +123,21 @@ object UpdateCheck {
     }
 
     @Throws(IOException::class)
-    private suspend fun httpGet(url: String): String = withContext(Dispatchers.IO) {
-        val req = Request.Builder()
-            .url(url)
-            .header(
-                "User-Agent",
-                "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)"
-            )
-            .header("Accept", "application/vnd.github+json")
-            .build()
+    private suspend fun httpGet(url: String): String =
+        withContext(Dispatchers.IO) {
+            val req =
+                Request
+                    .Builder()
+                    .url(url)
+                    .header(
+                        "User-Agent",
+                        "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)",
+                    ).header("Accept", "application/vnd.github+json")
+                    .build()
 
-        httpClient.newCall(req).execute().use { resp ->
-            if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")
-            resp.body?.string() ?: throw IOException("Empty body")
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")
+                resp.body?.string() ?: throw IOException("Empty body")
+            }
         }
-    }
 }
