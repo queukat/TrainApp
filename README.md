@@ -3,7 +3,6 @@
 <!-- public-repo-status -->
 > Status: Active Android app. Public installation is through Google Play; GitHub Releases are not used as an Android download channel.
 
-
 **Passenger Operations Command Center for Montenegro rail journeys.**
 
 TrainMe turns timetable uncertainty into an operational surface: localized station intelligence, route reconstruction, departure awareness, reminder orchestration, and release-governed Android delivery.
@@ -218,9 +217,6 @@ git commit -m "Strengthen <capability>"
 git push origin capability/<name>
 ```
 
-## License
-
-Distributed under the MIT License.
 ## License
 
 <!-- commercial-license-policy -->
