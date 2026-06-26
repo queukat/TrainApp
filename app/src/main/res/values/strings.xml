@@ -4,8 +4,6 @@
 
     <string name="toast_route_saved">Route saved</string>
     <string name="toast_select_stations_first">Please select both stations first</string>
-    <string name="toast_pick_date">Please pick a date</string>
-    <string name="toast_no_routes_found">No routes found</string>
     <string name="toast_settings_applied">Settings applied</string>
     <plurals name="toast_test_push_scheduled">
         <item quantity="one">Test push scheduled in %1$d second</item>
@@ -17,8 +15,6 @@
     <string name="toast_no_coords">No coordinates for %1$s</string>
     <string name="toast_no_departure_time">No departure time found</string>
     <string name="toast_cant_parse_departure">Can\'t parse departure time</string>
-    <string name="toast_no_reminder_set">No reminder set</string>
-    <string name="toast_reminder_set">Reminder set for train %1$s (%2$d min before)</string>
 
     <string name="toast_failed_load_stops">Station intelligence could not refresh: %1$s</string>
     <string name="toast_failed_load_routes">Route reconstruction could not complete: %1$s</string>
@@ -39,15 +35,20 @@
     <string name="hint_reminder_minutes">Minutes before departure</string>
     <string name="checkbox_remember_choice">Remember my choice</string>
 
-    <string name="select_date_title">Select date</string>
 
     <string name="connected_routes_label">Connected routes:</string>
+    <string name="label_transfer_at">Change at %1$s</string>
+    <string name="connected_leg_format">Train %1$s: %2$s - %3$s (%4$s)</string>
+    <string name="label_transfer_wait">Transfer wait: %1$s</string>
+    <string name="label_transfer_tight">Tight transfer: %1$s</string>
+    <string name="label_transfer_too_short">Very tight transfer: %1$s</string>
 
     <string name="full_route_title">Full route of train %1$s</string>
+    <string name="full_route_stop_format">%1$s | Arr: %2$s, Dep: %3$s</string>
 
     <string name="train_label">Train %1$s (%2$s - %3$s)</string>
-    <string name="price_format">%.2f €</string>
-    <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
+    <string name="label_international_train">International</string>
+    <string name="label_schedule_valid_until">Schedule valid until %1$s</string>
 
     <string name="reminder_notification_title">Train %1$s reminder</string>
     <string name="reminder_notification_message">Time to leave so you can get to station: %1$s (in %2$d min).</string>
@@ -84,13 +85,8 @@
     <string name="hint_from_station">From station</string>
     <string name="hint_to_station">To station</string>
 
-    <string name="cdesc_select_departure_station">Select departure station</string>
-    <string name="cdesc_select_arrival_station">Select arrival station</string>
-    <string name="cdesc_clear_date">Clear date</string>
-    <string name="cdesc_pick_date">Pick date</string>
 
     <string name="label_date">Date:</string>
-    <string name="cdesc_select_train">notification</string>
 
     <string name="disclaimer_text">
         TrainMe is an independent product and is not official or endorsed by any organization.
@@ -117,6 +113,7 @@
     <string name="time_until_prefix">In %1$s</string>
 
     <string name="label_reminder">Reminder</string>
+    <string name="label_fare_unavailable">Fare unavailable</string>
     <string name="two_class_prices_format">Class1: %1$s / Class2: %2$s</string>
     <string name="one_class_price_format">Price: %1$s</string>
     <string name="two_class_only_price_format">Class2: %1$s</string>
@@ -125,8 +122,10 @@
     <string name="unknown_station">Unknown station</string>
     <string name="open_in_maps">Open in Maps</string>
 
-    <string name="label_does_not_stop">Does not stop</string>
     <string name="label_crossing_no_passengers">No passenger stop</string>
+    <string name="label_stop_type_station">Station</string>
+    <string name="label_stop_type_stop">Stop</string>
+    <string name="label_stop_type_main_station">Main station</string>
     <string name="toast_no_map_app">No maps application installed</string>
     <string name="label_support_dev_on_ko_fi">Support TrainMe on Ko-fi</string>
 

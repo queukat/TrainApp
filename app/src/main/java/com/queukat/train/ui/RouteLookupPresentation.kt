@@ -1,6 +1,7 @@
 package com.queukat.train.ui
 
 import com.queukat.train.data.model.RoutesResponse
+import com.queukat.train.data.model.hasRouteResults
 import com.queukat.train.data.repository.RouteLookupResult
 
 sealed interface RouteLookupPresentation {
@@ -20,7 +21,7 @@ internal fun RouteLookupResult.toRouteLookupPresentation(): RouteLookupPresentat
     when (this) {
         is RouteLookupResult.Success -> {
             val routes = response
-            if (routes.direct.isNullOrEmpty() && routes.connected.isNullOrEmpty()) {
+            if (!routes.hasRouteResults()) {
                 RouteLookupPresentation.Empty
             } else {
                 RouteLookupPresentation.Results(routes)

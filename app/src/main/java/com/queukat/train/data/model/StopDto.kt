@@ -1,27 +1,29 @@
 package com.queukat.train.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class StopDto(
-    val StopID: Int?,
-    val Name_me: String?,
-    val Name_en: String?,
-    val Name_me_cyr: String?,
-    val StopTypeID: Int?,
-    var Latitude: Double?, // <-  val,  var
-    var Longitude: Double?, // <-  val,  var
+    @SerializedName("StopID") val stopId: Int?,
+    @SerializedName("Name_me") val nameMe: String?,
+    @SerializedName("Name_en") val nameEn: String?,
+    @SerializedName("Name_me_cyr") val nameMeCyr: String?,
+    @SerializedName("StopTypeID") val stopTypeId: Int?,
+    @SerializedName("Latitude") var latitude: Double?,
+    @SerializedName("Longitude") var longitude: Double?,
     val local: Int?,
-    val stop_type: StopType?,
+    @SerializedName("stop_type") val stopType: StopType?,
 )
 
 data class StopType(
-    val StopTypeID: Int?,
-    val Name_me: String?,
-    val Name_en: String?,
+    @SerializedName("StopTypeID") val stopTypeId: Int?,
+    @SerializedName("Name_me") val nameMe: String?,
+    @SerializedName("Name_en") val nameEn: String?,
 )
 
 fun StopDto.getNameForLanguage(lang: String): String =
     when (lang) {
-        "en" -> this.Name_en
-        "me" -> this.Name_me
-        "ru", "meCyr" -> this.Name_me_cyr ?: this.Name_me
-        else -> this.Name_me ?: this.Name_en
-    } ?: this.Name_en ?: this.Name_me ?: this.Name_me_cyr ?: "Unknown"
+        "en" -> nameEn
+        "me" -> nameMe
+        "ru", "meCyr" -> nameMeCyr ?: nameMe
+        else -> nameMe ?: nameEn
+    } ?: nameEn ?: nameMe ?: nameMeCyr ?: "Unknown"

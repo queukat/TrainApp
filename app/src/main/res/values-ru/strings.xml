@@ -4,8 +4,6 @@
 
     <string name="toast_route_saved">Маршрут сохранён</string>
     <string name="toast_select_stations_first">Сначала выберите обе станции</string>
-    <string name="toast_pick_date">Пожалуйста, выберите дату</string>
-    <string name="toast_no_routes_found">Маршрутов не найдено</string>
     <string name="toast_settings_applied">Настройки применены</string>
     <plurals name="toast_test_push_scheduled">
         <item quantity="one">Тестовое уведомление запланировано через %1$d секунду</item>
@@ -19,8 +17,6 @@
     <string name="toast_no_coords">Нет координат для %1$s</string>
     <string name="toast_no_departure_time">Время отправления не найдено</string>
     <string name="toast_cant_parse_departure">Не удалось определить время отправления</string>
-    <string name="toast_no_reminder_set">Напоминание не установлено</string>
-    <string name="toast_reminder_set">Напоминание установлено для поезда %1$s (за %2$d мин до отправления)</string>
 
     <string name="dialog_reminder_title">Выберите тип напоминания</string>
     <string name="dialog_reminder_ok">ОК</string>
@@ -32,15 +28,20 @@
     <string name="hint_reminder_minutes">Минут до отправления</string>
     <string name="checkbox_remember_choice">Запомнить мой выбор</string>
 
-    <string name="select_date_title">Выберите дату</string>
 
     <string name="connected_routes_label">Пересадочные маршруты:</string>
+    <string name="label_transfer_at">Пересадка в %1$s</string>
+    <string name="connected_leg_format">Поезд %1$s: %2$s - %3$s (%4$s)</string>
+    <string name="label_transfer_wait">Ожидание пересадки: %1$s</string>
+    <string name="label_transfer_tight">Короткая пересадка: %1$s</string>
+    <string name="label_transfer_too_short">Очень короткая пересадка: %1$s</string>
 
     <string name="full_route_title">Полный маршрут поезда %1$s</string>
+    <string name="full_route_stop_format">%1$s | приб.: %2$s, отпр.: %3$s</string>
 
     <string name="train_label">Поезд %1$s (%2$s - %3$s)</string>
-    <string name="price_format">%.2f €</string>
-    <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
+    <string name="label_international_train">Международный</string>
+    <string name="label_schedule_valid_until">Расписание действует до %1$s</string>
 
     <string name="reminder_notification_title">Напоминание о поезде %1$s</string>
     <string name="reminder_notification_message">Пора выходить на станцию: %1$s (через %2$d мин).</string>
@@ -77,13 +78,8 @@
     <string name="hint_from_station">Станция отправления</string>
     <string name="hint_to_station">Станция прибытия</string>
 
-    <string name="cdesc_select_departure_station">Выбрать станцию отправления</string>
-    <string name="cdesc_select_arrival_station">Выбрать станцию прибытия</string>
-    <string name="cdesc_clear_date">Очистить дату</string>
-    <string name="cdesc_pick_date">Выбрать дату</string>
 
     <string name="label_date">Дата:</string>
-    <string name="cdesc_select_train">уведомление</string>
 
     <string name="disclaimer_text">
         TrainMe - независимый продукт и не является официальным или одобренным какой-либо организацией.
@@ -107,6 +103,7 @@
     <string name="time_until_prefix">Через %1$s</string>
 
     <string name="label_reminder">Напоминание</string>
+    <string name="label_fare_unavailable">Тариф недоступен</string>
     <string name="two_class_prices_format">1 класс: %1$s / 2 класс: %2$s</string>
     <string name="one_class_price_format">Цена: %1$s</string>
     <string name="two_class_only_price_format">2 класс: %1$s</string>
@@ -124,8 +121,10 @@
     <string name="error_routes_invalid_response">Сервис расписаний вернул сигнал, который TrainMe не смог реконструировать.</string>
     <string name="error_routes_timeout">Сервис расписаний не вернул сигнал вовремя.</string>
 
-    <string name="label_does_not_stop">Не останавливается</string>
     <string name="label_crossing_no_passengers">Нет пассажирской остановки</string>
+    <string name="label_stop_type_station">Станция</string>
+    <string name="label_stop_type_stop">Остановочный пункт</string>
+    <string name="label_stop_type_main_station">Главная станция</string>
     <string name="toast_no_map_app">Приложение для карт не установлено</string>
     <string name="label_support_dev_on_ko_fi">Поддержать TrainMe на Ko-fi</string>
 

@@ -34,7 +34,7 @@ fun ReminderChoiceDialog(
     onDismiss: () -> Unit,
     onActionChosen: (String, Int) -> Unit,
 ) {
-    val trainNumber = route.TrainNumber ?: "Unknown"
+    val trainNumber = route.trainNumber ?: "Unknown"
     val storedAction =
         prefs
             .getString("defaultReminderAction", "push")

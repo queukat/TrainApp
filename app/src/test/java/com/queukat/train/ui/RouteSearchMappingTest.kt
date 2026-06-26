@@ -2,6 +2,7 @@ package com.queukat.train.ui
 
 import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.RoutesResponse
+import com.queukat.train.data.model.ConnectedRouteGroup
 import com.queukat.train.data.repository.RouteLookupResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -17,15 +18,15 @@ class RouteSearchMappingTest {
                     direct =
                         listOf(
                             DirectRoute(
-                                TimetableID = 1,
-                                RouteID = 10,
-                                TrainNumber = "6100",
-                                TrainTypeID = 0,
-                                International = 0,
-                                timetable_items = emptyList(),
+                                timetableId = 1,
+                                routeId = 10,
+                                trainNumber = "6100",
+                                trainTypeId = 0,
+                                international = 0,
+                                timetableItems = emptyList(),
                             ),
                         ),
-                    connected = emptyList(),
+                    connected = emptyMap(),
                 ),
             )
 
@@ -41,13 +42,47 @@ class RouteSearchMappingTest {
                 RoutesResponse(
                     price = null,
                     direct = emptyList(),
-                    connected = emptyList(),
+                    connected = emptyMap(),
                 ),
             )
 
         val presentation = result.toRouteLookupPresentation()
 
         assertEquals(RouteLookupPresentation.Empty, presentation)
+    }
+
+    @Test
+    fun successWithOnlyConnectedRoutes_mapsToResults() {
+        val result =
+            RouteLookupResult.Success(
+                RoutesResponse(
+                    price = null,
+                    direct = emptyList(),
+                    connected =
+                        mapOf(
+                            "8" to
+                                ConnectedRouteGroup(
+                                    viaStop = null,
+                                    start =
+                                        listOf(
+                                            DirectRoute(
+                                                timetableId = 171,
+                                                routeId = 83,
+                                                trainNumber = "6100",
+                                                trainTypeId = 3,
+                                                international = 0,
+                                                timetableItems = emptyList(),
+                                            ),
+                                        ),
+                                    finish = emptyList(),
+                                ),
+                        ),
+                ),
+            )
+
+        val presentation = result.toRouteLookupPresentation()
+
+        assertTrue(presentation is RouteLookupPresentation.Results)
     }
 
     @Test

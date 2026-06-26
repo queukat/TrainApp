@@ -44,24 +44,32 @@ import androidx.core.net.toUri
 import com.queukat.train.R
 import com.queukat.train.ui.theme.TrainAppTheme
 
+data class SettingsScreenState(
+    val languages: List<String>,
+    val reminderOptions: List<String>,
+    val initialLanguage: String,
+    val initialReminder: String,
+    val initialMinutes: Int,
+    val initialAutoRefresh: Boolean,
+)
+
+data class SettingsScreenActions(
+    val onApply: (chosenLang: String, chosenReminder: String, minutes: Int, autoRefresh: Boolean) -> Unit,
+    val onTestPushNow: () -> Unit,
+    val onTestPushLater: () -> Unit,
+    val onBackClick: () -> Unit,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    languages: List<String>,
-    reminderOptions: List<String>,
-    initialLanguage: String,
-    initialReminder: String,
-    initialMinutes: Int,
-    initialAutoRefresh: Boolean,
-    onApply: (chosenLang: String, chosenReminder: String, minutes: Int, autoRefresh: Boolean) -> Unit,
-    onTestPushNow: () -> Unit,
-    onTestPushLater: () -> Unit,
-    onBackClick: () -> Unit,
+    state: SettingsScreenState,
+    actions: SettingsScreenActions,
 ) {
-    var selectedLanguage by remember { mutableStateOf(initialLanguage) }
-    var selectedReminder by remember { mutableStateOf(initialReminder) }
-    var minutesText by remember { mutableStateOf(initialMinutes.toString()) }
-    var autoRefreshChecked by remember { mutableStateOf(initialAutoRefresh) }
+    var selectedLanguage by remember { mutableStateOf(state.initialLanguage) }
+    var selectedReminder by remember { mutableStateOf(state.initialReminder) }
+    var minutesText by remember { mutableStateOf(state.initialMinutes.toString()) }
+    var autoRefreshChecked by remember { mutableStateOf(state.initialAutoRefresh) }
 
     var langMenuExpanded by remember { mutableStateOf(false) }
     var reminderMenuExpanded by remember { mutableStateOf(false) }
@@ -71,7 +79,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.btn_settings)) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = actions.onBackClick) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_back),
                             contentDescription = stringResource(R.string.btn_back),
@@ -117,7 +125,7 @@ fun SettingsScreen(
                     expanded = langMenuExpanded,
                     onDismissRequest = { langMenuExpanded = false },
                 ) {
-                    languages.forEach { lang ->
+                    state.languages.forEach { lang ->
                         DropdownMenuItem(
                             text = { Text(stationLanguageLabel(lang)) },
                             onClick = {
@@ -163,7 +171,7 @@ fun SettingsScreen(
                     expanded = reminderMenuExpanded,
                     onDismissRequest = { reminderMenuExpanded = false },
                 ) {
-                    reminderOptions.forEach { rem ->
+                    state.reminderOptions.forEach { rem ->
                         DropdownMenuItem(
                             text = { Text(reminderOptionLabel(rem)) },
                             onClick = {
@@ -196,14 +204,14 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = onTestPushNow,
+                    onClick = actions.onTestPushNow,
                     modifier = Modifier.wrapContentWidth(),
                     contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
                 ) {
                     Text(stringResource(R.string.btn_test_push_now))
                 }
                 Button(
-                    onClick = onTestPushLater,
+                    onClick = actions.onTestPushLater,
                     modifier = Modifier.wrapContentWidth(),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                 ) {
@@ -215,7 +223,7 @@ fun SettingsScreen(
             Button(
                 onClick = {
                     val mins = minutesText.toIntOrNull() ?: 15
-                    onApply(selectedLanguage, selectedReminder, mins, autoRefreshChecked)
+                    actions.onApply(selectedLanguage, selectedReminder, mins, autoRefreshChecked)
                 },
                 modifier = Modifier.align(Alignment.End),
             ) {
@@ -273,16 +281,22 @@ private fun reminderOptionLabel(option: String): String =
 fun PreviewSettingsScreenLight() {
     TrainAppTheme(darkTheme = false) {
         SettingsScreen(
-            languages = listOf("me", "en", "meCyr"),
-            reminderOptions = listOf("Push", "Calendar", "Both", "None"),
-            initialLanguage = "en",
-            initialReminder = "push",
-            initialMinutes = 15,
-            initialAutoRefresh = true,
-            onApply = { _, _, _, _ -> },
-            onTestPushNow = {},
-            onTestPushLater = {},
-            onBackClick = {},
+            state =
+                SettingsScreenState(
+                    languages = listOf("me", "en", "meCyr"),
+                    reminderOptions = listOf("Push", "Calendar", "Both", "None"),
+                    initialLanguage = "en",
+                    initialReminder = "push",
+                    initialMinutes = 15,
+                    initialAutoRefresh = true,
+                ),
+            actions =
+                SettingsScreenActions(
+                    onApply = { _, _, _, _ -> },
+                    onTestPushNow = {},
+                    onTestPushLater = {},
+                    onBackClick = {},
+                ),
         )
     }
 }
@@ -292,16 +306,22 @@ fun PreviewSettingsScreenLight() {
 fun PreviewSettingsScreenDark() {
     TrainAppTheme(darkTheme = true) {
         SettingsScreen(
-            languages = listOf("me", "en", "meCyr"),
-            reminderOptions = listOf("Push", "Calendar", "Both", "None"),
-            initialLanguage = "en",
-            initialReminder = "push",
-            initialMinutes = 15,
-            initialAutoRefresh = true,
-            onApply = { _, _, _, _ -> },
-            onTestPushNow = {},
-            onTestPushLater = {},
-            onBackClick = {},
+            state =
+                SettingsScreenState(
+                    languages = listOf("me", "en", "meCyr"),
+                    reminderOptions = listOf("Push", "Calendar", "Both", "None"),
+                    initialLanguage = "en",
+                    initialReminder = "push",
+                    initialMinutes = 15,
+                    initialAutoRefresh = true,
+                ),
+            actions =
+                SettingsScreenActions(
+                    onApply = { _, _, _, _ -> },
+                    onTestPushNow = {},
+                    onTestPushLater = {},
+                    onBackClick = {},
+                ),
         )
     }
 }

@@ -1,0 +1,3 @@
+Jasniji signali rute.
+TrainMe sada prikazuje presjedanja sa vremenom cekanja, jasnije oznacava stajalista bez putnickog zaustavljanja i ne prikazuje nepotrebnu international oznaku na lokalnim segmentima.
+Pretraga stanica stabilnije radi sa nazivima kao Belgrade Center, a dodati su ceski i slovacki jezik aplikacije.

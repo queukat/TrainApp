@@ -2,6 +2,7 @@ package com.queukat.train.ui
 
 import com.queukat.train.data.db.StopEntity
 import com.queukat.train.data.db.getNameForLanguage
+import com.queukat.train.data.db.isPassengerSearchStop
 import com.queukat.train.data.model.SavedRoutePreference
 
 internal fun stopMatchesText(
@@ -21,7 +22,10 @@ internal fun findStopByAnyName(
     val normalized = inputText.trim()
     if (normalized.isBlank()) return null
 
-    val matches = stops.filter { stopMatchesText(it, normalized) }
+    val matches =
+        stops.filter { stop ->
+            stop.isPassengerSearchStop() && stopMatchesText(stop, normalized)
+        }
     if (matches.isEmpty()) return null
     if (matches.size == 1) return matches.first()
 

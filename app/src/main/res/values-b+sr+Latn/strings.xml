@@ -4,8 +4,6 @@
 
     <string name="toast_route_saved">Ruta sačuvana</string>
     <string name="toast_select_stations_first">Molimo vas, najprije izaberite obje stanice</string>
-    <string name="toast_pick_date">Molimo vas, odaberite datum</string>
-    <string name="toast_no_routes_found">Nijedna ruta nije pronađena</string>
     <string name="toast_settings_applied">Postavke primijenjene</string>
     <plurals name="toast_test_push_scheduled">
         <item quantity="one">Test obavještenje zakazano za %1$d sekundu</item>
@@ -18,8 +16,6 @@
     <string name="toast_no_coords">Nema koordinata za %1$s</string>
     <string name="toast_no_departure_time">Nije pronađeno vrijeme polaska</string>
     <string name="toast_cant_parse_departure">Ne mogu da protumačim vrijeme polaska</string>
-    <string name="toast_no_reminder_set">Podsjetnik nije postavljen</string>
-    <string name="toast_reminder_set">Podsjetnik postavljen za voz %1$s (%2$d min prije)</string>
 
     <string name="dialog_reminder_title">Izaberite tip podsjetnika</string>
     <string name="dialog_reminder_ok">U redu</string>
@@ -31,15 +27,12 @@
     <string name="hint_reminder_minutes">Minuta prije polaska</string>
     <string name="checkbox_remember_choice">Zapamti moj izbor</string>
 
-    <string name="select_date_title">Odaberite datum</string>
 
     <string name="connected_routes_label">Povezane rute:</string>
 
     <string name="full_route_title">Cjelovita ruta voza %1$s</string>
 
     <string name="train_label">Voz %1$s (%2$s - %3$s)</string>
-    <string name="price_format">%.2f €</string>
-    <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
 
     <string name="reminder_notification_title">Podsjetnik za voz %1$s</string>
     <string name="reminder_notification_message">Vrijeme je da krenete do stanice: %1$s (za %2$d min).</string>
@@ -76,13 +69,8 @@
     <string name="hint_from_station">Polazna stanica</string>
     <string name="hint_to_station">Dolazna stanica</string>
 
-    <string name="cdesc_select_departure_station">Izaberi polaznu stanicu</string>
-    <string name="cdesc_select_arrival_station">Izaberi dolaznu stanicu</string>
-    <string name="cdesc_clear_date">Obriši datum</string>
-    <string name="cdesc_pick_date">Odaberi datum</string>
 
     <string name="label_date">Datum:</string>
-    <string name="cdesc_select_train">obavještenje</string>
 
     <string name="disclaimer_text">
         TrainMe je nezavisan proizvod i nije zvaničan niti odobren od bilo koje organizacije.
@@ -123,7 +111,6 @@
     <string name="error_routes_invalid_response">Servis reda vožnje vratio je signal koji TrainMe ne može rekonstruisati.</string>
     <string name="error_routes_timeout">Servis reda vožnje nije vratio signal na vrijeme.</string>
 
-    <string name="label_does_not_stop">Ne zaustavlja se</string>
     <string name="label_crossing_no_passengers">Nema putničkog stajališta</string>
     <string name="toast_no_map_app">Nema instalirane aplikacije za mape</string>
     <string name="label_support_dev_on_ko_fi">Podrži TrainMe na Ko-fi</string>

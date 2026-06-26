@@ -4,8 +4,6 @@
 
     <string name="toast_route_saved">Рута сачувана</string>
     <string name="toast_select_stations_first">Молимо вас, најприје изаберите обје станице</string>
-    <string name="toast_pick_date">Молимо вас, одаберите датум</string>
-    <string name="toast_no_routes_found">Ниједна рута није пронађена</string>
     <string name="toast_settings_applied">Поставке примијењене</string>
     <plurals name="toast_test_push_scheduled">
         <item quantity="one">Тест обавјештење заказано за %1$d секунду</item>
@@ -18,8 +16,6 @@
     <string name="toast_no_coords">Нема координата за %1$s</string>
     <string name="toast_no_departure_time">Није пронађено вријеме поласка</string>
     <string name="toast_cant_parse_departure">Не могу да протумачим вријеме поласка</string>
-    <string name="toast_no_reminder_set">Подсјетник није постављен</string>
-    <string name="toast_reminder_set">Подсјетник постављен за воз %1$s (%2$d мин прије)</string>
 
     <string name="dialog_reminder_title">Изаберите тип подсјетника</string>
     <string name="dialog_reminder_ok">У реду</string>
@@ -31,15 +27,12 @@
     <string name="hint_reminder_minutes">Минута прије поласка</string>
     <string name="checkbox_remember_choice">Запамти мој избор</string>
 
-    <string name="select_date_title">Одаберите датум</string>
 
     <string name="connected_routes_label">Повезане руте:</string>
 
     <string name="full_route_title">Цјеловита рута воза %1$s</string>
 
     <string name="train_label">Воз %1$s (%2$s - %3$s)</string>
-    <string name="price_format">%.2f €</string>
-    <string name="time_range_with_duration">%1$s - %2$s (%3$s)</string>
 
     <string name="reminder_notification_title">Подсјетник за воз %1$s</string>
     <string name="reminder_notification_message">Вријеме је да кренете до станице: %1$s (за %2$d мин).</string>
@@ -76,13 +69,8 @@
     <string name="hint_from_station">Полазна станица</string>
     <string name="hint_to_station">Долазна станица</string>
 
-    <string name="cdesc_select_departure_station">Изабери полазну станицу</string>
-    <string name="cdesc_select_arrival_station">Изабери долазну станицу</string>
-    <string name="cdesc_clear_date">Обриши датум</string>
-    <string name="cdesc_pick_date">Одабери датум</string>
 
     <string name="label_date">Датум:</string>
-    <string name="cdesc_select_train">обавјештење</string>
 
     <string name="disclaimer_text">
         TrainMe је независан производ и није званичан нити одобрен од било које организације.
@@ -123,7 +111,6 @@
     <string name="error_routes_invalid_response">Сервис реда вожње вратио је сигнал који TrainMe не може реконструисати.</string>
     <string name="error_routes_timeout">Сервис реда вожње није вратио сигнал на вријеме.</string>
 
-    <string name="label_does_not_stop">Не зауставља се</string>
     <string name="label_crossing_no_passengers">Нема путничког стајалишта</string>
     <string name="toast_no_map_app">Нема инсталиране апликације за мапе</string>
     <string name="label_support_dev_on_ko_fi">Подржи TrainMe на Ko-fi</string>

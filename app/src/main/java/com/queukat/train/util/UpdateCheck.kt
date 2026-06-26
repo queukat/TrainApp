@@ -40,6 +40,7 @@ object UpdateCheck {
             .build()
     }
 
+    @Suppress("kotlin:S6310")
     suspend fun checkForUpdates(context: Context): UpdateResult {
         val currentVersion = context.safeVersionName()
 
@@ -59,7 +60,10 @@ object UpdateCheck {
         }
 
         return try {
-            val latestJson = httpGet(LATEST_RELEASE_URL)
+            val latestJson =
+                withContext(Dispatchers.IO) {
+                    httpGet(LATEST_RELEASE_URL)
+                }
             val root = JSONObject(latestJson)
 
             val latestTag = root.optString("tag_name", "0.0.0")
@@ -123,21 +127,20 @@ object UpdateCheck {
     }
 
     @Throws(IOException::class)
-    private suspend fun httpGet(url: String): String =
-        withContext(Dispatchers.IO) {
-            val req =
-                Request
-                    .Builder()
-                    .url(url)
-                    .header(
-                        "User-Agent",
-                        "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)",
-                    ).header("Accept", "application/vnd.github+json")
-                    .build()
+    private fun httpGet(url: String): String {
+        val req =
+            Request
+                .Builder()
+                .url(url)
+                .header(
+                    "User-Agent",
+                    "TrainApp-UpdateChecker/1.0 (+https://github.com/queukat/TrainApp)",
+                ).header("Accept", "application/vnd.github+json")
+                .build()
 
-            httpClient.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")
-                resp.body?.string() ?: throw IOException("Empty body")
-            }
+        httpClient.newCall(req).execute().use { resp ->
+            if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")
+            return resp.body?.string() ?: throw IOException("Empty body")
         }
+    }
 }

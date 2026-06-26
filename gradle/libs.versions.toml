@@ -31,6 +31,7 @@ google_services = "4.4.4"
 uiautomator = "2.3.0"
 detekt = "1.23.8"
 ktlint-gradle = "14.2.0"
+sonarqube = "7.2.2.6593"
 
 
 [libraries]
@@ -91,3 +92,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 google-services = { id = "com.google.gms.google-services", version.ref = "google_services" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

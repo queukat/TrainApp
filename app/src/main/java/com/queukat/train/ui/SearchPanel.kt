@@ -44,44 +44,52 @@ import java.util.Calendar
 private const val CALENDAR_MONTH_OFFSET = 1
 private const val DATE_PART_COUNT = 3
 
+data class SearchPanelState(
+    val fromStation: String,
+    val toStation: String,
+    val selectedDate: String,
+    val stops: List<StopEntity>,
+    val language: String,
+)
+
+data class SearchPanelActions(
+    val onFromChanged: (String) -> Unit,
+    val onToChanged: (String) -> Unit,
+    val onFromStopSelected: (StopEntity, String) -> Unit,
+    val onToStopSelected: (StopEntity, String) -> Unit,
+    val onDatePicked: (String) -> Unit,
+    val onSearchClicked: () -> Unit,
+)
+
 @Composable
 fun SearchPanel(
-    fromStation: String,
-    toStation: String,
-    selectedDate: String,
-    stops: List<StopEntity>,
-    language: String,
-    onFromChanged: (String) -> Unit,
-    onToChanged: (String) -> Unit,
-    onFromStopSelected: (StopEntity, String) -> Unit,
-    onToStopSelected: (StopEntity, String) -> Unit,
-    onDatePicked: (String) -> Unit,
-    onSearchClicked: () -> Unit,
+    state: SearchPanelState,
+    actions: SearchPanelActions,
 ) {
     val context = LocalContext.current
 
-    var fromField by remember { mutableStateOf(TextFieldValue(fromStation)) }
-    var toField by remember { mutableStateOf(TextFieldValue(toStation)) }
+    var fromField by remember { mutableStateOf(TextFieldValue(state.fromStation)) }
+    var toField by remember { mutableStateOf(TextFieldValue(state.toStation)) }
 
-    LaunchedEffect(stops.size, language) {
-        Dbg.d(context, "SearchPanel", "stops.size=${stops.size} lang=$language")
+    LaunchedEffect(state.stops.size, state.language) {
+        Dbg.d(context, "SearchPanel", "stops.size=${state.stops.size} lang=${state.language}")
     }
 
-    LaunchedEffect(fromStation) {
-        if (fromStation != fromField.text) {
+    LaunchedEffect(state.fromStation) {
+        if (state.fromStation != fromField.text) {
             fromField =
                 TextFieldValue(
-                    text = fromStation,
-                    selection = TextRange(fromStation.length),
+                    text = state.fromStation,
+                    selection = TextRange(state.fromStation.length),
                 )
         }
     }
-    LaunchedEffect(toStation) {
-        if (toStation != toField.text) {
+    LaunchedEffect(state.toStation) {
+        if (state.toStation != toField.text) {
             toField =
                 TextFieldValue(
-                    text = toStation,
-                    selection = TextRange(toStation.length),
+                    text = state.toStation,
+                    selection = TextRange(state.toStation.length),
                 )
         }
     }
@@ -91,16 +99,19 @@ fun SearchPanel(
             value = fromField,
             onValueChange = { newValue ->
                 fromField = newValue
-                onFromChanged(newValue.text)
+                actions.onFromChanged(newValue.text)
             },
-            stops = stops,
+            stops = state.stops,
             onSuggestionSelected = { stop ->
-                onFromStopSelected(stop, stop.getNameForLanguage(language))
+                actions.onFromStopSelected(stop, stop.getNameForLanguage(state.language))
             },
-            label = stringResource(R.string.hint_from_station),
-            language = language,
             modifier = Modifier.fillMaxWidth(),
-            debugKey = "FROM",
+            options =
+                AutoCompleteTextFieldOptions(
+                    label = stringResource(R.string.hint_from_station),
+                    language = state.language,
+                    debugKey = "FROM",
+                ),
         )
 
         Spacer(Modifier.height(6.dp))
@@ -109,20 +120,23 @@ fun SearchPanel(
             value = toField,
             onValueChange = { newValue ->
                 toField = newValue
-                onToChanged(newValue.text)
+                actions.onToChanged(newValue.text)
             },
-            stops = stops,
+            stops = state.stops,
             onSuggestionSelected = { stop ->
-                onToStopSelected(stop, stop.getNameForLanguage(language))
+                actions.onToStopSelected(stop, stop.getNameForLanguage(state.language))
             },
-            label = stringResource(R.string.hint_to_station),
-            language = language,
             modifier = Modifier.fillMaxWidth(),
-            debugKey = "TO",
+            options =
+                AutoCompleteTextFieldOptions(
+                    label = stringResource(R.string.hint_to_station),
+                    language = state.language,
+                    debugKey = "TO",
+                ),
         )
 
         Spacer(Modifier.height(6.dp))
-        DatePickerField(selectedDate, onDatePicked)
+        DatePickerField(state.selectedDate, actions.onDatePicked)
         Spacer(Modifier.height(6.dp))
 
         Box(
@@ -132,7 +146,7 @@ fun SearchPanel(
             contentAlignment = Alignment.Center,
         ) {
             FilledIconButton(
-                onClick = onSearchClicked,
+                onClick = actions.onSearchClicked,
                 modifier = Modifier.size(48.dp),
                 colors =
                     IconButtonDefaults.filledIconButtonColors(
@@ -163,9 +177,9 @@ fun DatePickerField(
         String.format(
             locale,
             "%04d-%02d-%02d",
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH) + CALENDAR_MONTH_OFFSET,
-            calendar.get(Calendar.DAY_OF_MONTH),
+            calendar[Calendar.YEAR],
+            calendar[Calendar.MONTH] + CALENDAR_MONTH_OFFSET,
+            calendar[Calendar.DAY_OF_MONTH],
         )
     val displayedDate = dateString.ifBlank { defaultDateString }
 
@@ -203,12 +217,14 @@ fun DatePickerField(
         val initCal = Calendar.getInstance()
         val parts = dateString.split("-")
         if (parts.size == DATE_PART_COUNT) {
-            val y = parts[0].toIntOrNull() ?: initCal.get(Calendar.YEAR)
+            val y = parts[0].toIntOrNull() ?: initCal[Calendar.YEAR]
             val m =
-                (parts[1].toIntOrNull() ?: (initCal.get(Calendar.MONTH) + CALENDAR_MONTH_OFFSET)) -
+                (parts[1].toIntOrNull() ?: (initCal[Calendar.MONTH] + CALENDAR_MONTH_OFFSET)) -
                     CALENDAR_MONTH_OFFSET
-            val d = parts[2].toIntOrNull() ?: initCal.get(Calendar.DAY_OF_MONTH)
-            initCal.set(y, m, d)
+            val d = parts[2].toIntOrNull() ?: initCal[Calendar.DAY_OF_MONTH]
+            initCal[Calendar.YEAR] = y
+            initCal[Calendar.MONTH] = m
+            initCal[Calendar.DAY_OF_MONTH] = d
         }
 
         DatePickerDialog(
@@ -226,9 +242,9 @@ fun DatePickerField(
                 onDatePicked(newDateString)
                 showDatePicker = false
             },
-            initCal.get(Calendar.YEAR),
-            initCal.get(Calendar.MONTH),
-            initCal.get(Calendar.DAY_OF_MONTH),
+            initCal[Calendar.YEAR],
+            initCal[Calendar.MONTH],
+            initCal[Calendar.DAY_OF_MONTH],
         ).show()
     }
 }

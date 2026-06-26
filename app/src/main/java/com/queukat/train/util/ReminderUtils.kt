@@ -50,10 +50,11 @@ object ReminderUtils {
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                return PushReminderScheduleResult.ExactAlarmPermissionMissing
-            }
+        if (
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S &&
+            !alarmManager.canScheduleExactAlarms()
+        ) {
+            return PushReminderScheduleResult.ExactAlarmPermissionMissing
         }
 
         val triggerTime = departureTimeMs - minutesBefore * MILLIS_PER_MINUTE

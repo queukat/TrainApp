@@ -1,0 +1,3 @@
+Clearer route signals.
+TrainMe now reconstructs connected routes with transfer timing, marks non-passenger stops more clearly, and keeps local train segments free of noisy international badges.
+Station search is more reliable for names such as Belgrade Center, and Czech and Slovak app languages are now available.

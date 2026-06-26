@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.Test
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+import org.gradle.testing.jacoco.tasks.JacocoReport
 import java.util.Properties
 
 plugins {
@@ -7,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
+    jacoco
 //    alias(libs.plugins.google.services)
 }
 
@@ -90,6 +94,14 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+    lint {
+        disable +=
+            setOf(
+                "AndroidGradlePluginVersion",
+                "GradleDependency",
+                "OldTargetApi",
+            )
+    }
 }
 
 detekt {
@@ -101,6 +113,69 @@ detekt {
 
 ktlint {
     android.set(true)
+}
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+tasks.withType<Test>().configureEach {
+    extensions.configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+}
+
+val coverageClassExclusions =
+    listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "**/*ComposableSingletons*.*",
+        "**/*\$Companion.*",
+        "**/*\$DefaultImpls.*",
+        "**/*\$WhenMappings.*",
+        "**/*_Impl*.*",
+        "**/*_Factory*.*",
+        "**/*Database_Impl*.*",
+        "**/*Dao_Impl*.*",
+    )
+
+tasks.register<JacocoReport>("jacocoDebugUnitTestReport") {
+    group = "verification"
+    description = "Generates JaCoCo coverage reports for debug unit tests."
+
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    val debugClassDirectories =
+        listOf(
+            "tmp/kotlin-classes/debug",
+            "intermediates/javac/debug/classes",
+            "intermediates/javac/debug/compileDebugJavaWithJavac/classes",
+        ).map { relativePath ->
+            fileTree(layout.buildDirectory.dir(relativePath)) {
+                exclude(coverageClassExclusions)
+            }
+        }
+
+    classDirectories.setFrom(debugClassDirectories)
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(
+        fileTree(layout.buildDirectory) {
+            include(
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+            )
+        },
+    )
 }
 
 dependencies {

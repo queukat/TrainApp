@@ -2,6 +2,8 @@
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <locale android:name="en" />       <!-- English -->
     <locale android:name="ru" />       <!-- Russian -->
+    <locale android:name="cs" />       <!-- Czech -->
+    <locale android:name="sk" />       <!-- Slovak -->
     <!-- Montenegrin — primary app locale for Montenegro -->
     <locale android:name="cnr-Cyrl-ME" />  <!-- Montenegrin (Cyrillic) -->
     <locale android:name="cnr-Latn-ME" />  <!-- Montenegrin (Latin) -->

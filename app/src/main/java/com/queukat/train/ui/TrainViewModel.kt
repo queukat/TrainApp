@@ -9,7 +9,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.queukat.train.R
 import com.queukat.train.data.db.StopEntity
+import com.queukat.train.data.db.apiRouteName
 import com.queukat.train.data.db.getNameForLanguage
+import com.queukat.train.data.db.isPassengerSearchStop
 import com.queukat.train.data.model.DirectRoute
 import com.queukat.train.data.model.RecentSearchPreference
 import com.queukat.train.data.model.SavedRoutePreference
@@ -19,7 +21,6 @@ import com.queukat.train.data.repository.TrainRepository
 import com.queukat.train.util.DateTimeUtils
 import com.queukat.train.util.PushReminderScheduleResult
 import com.queukat.train.util.ReminderUtils
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -263,15 +264,7 @@ open class TrainViewModel(
             val toStop = resolveStopForUserInput(to, toStopIdState.value)
 
             if (fromStop == null || toStop == null) {
-                _routeSearchState.value =
-                    RouteSearchUiState.Error(
-                        kind = RouteErrorKind.StationSelection,
-                        notice =
-                            UiNotice(
-                                message = app.getString(R.string.toast_select_stations_first),
-                                tone = UiNoticeTone.Warning,
-                            ),
-                    )
+                _routeSearchState.value = stationSelectionError(app)
                 return@launch
             }
 
@@ -281,79 +274,17 @@ open class TrainViewModel(
             _routeSearchState.value = RouteSearchUiState.Loading
 
             try {
-                withTimeout(ROUTE_LOOKUP_TIMEOUT_MS) {
-                    when (
-                        val presentation =
-                            repo
-                                .getRoutes(fromStop.nameMe, toStop.nameMe, date)
-                                .toRouteLookupPresentation()
-                    ) {
-                        is RouteLookupPresentation.Results -> {
-                            recordRecentSearch(fromStop, toStop)
-                            _routeSearchState.value =
-                                RouteSearchUiState.Results(
-                                    presentation.response,
-                                )
-                        }
-
-                        RouteLookupPresentation.Empty -> {
-                            recordRecentSearch(fromStop, toStop)
-                            _routeSearchState.value = RouteSearchUiState.Empty
-                        }
-
-                        is RouteLookupPresentation.Error -> {
-                            val messageRes =
-                                when (presentation.kind) {
-                                    RouteErrorKind.Server -> R.string.error_routes_server
-                                    RouteErrorKind.Network -> R.string.error_routes_network
-                                    RouteErrorKind.InvalidResponse -> R.string.error_routes_invalid_response
-                                    RouteErrorKind.StationSelection -> R.string.toast_select_stations_first
-                                }
-
-                            val message =
-                                if (presentation.kind == RouteErrorKind.Server) {
-                                    app.getString(messageRes, presentation.httpCode ?: -1)
-                                } else {
-                                    app.getString(messageRes)
-                                }
-
-                            _routeSearchState.value =
-                                RouteSearchUiState.Error(
-                                    kind = presentation.kind,
-                                    notice =
-                                        UiNotice(
-                                            message = message,
-                                            tone = UiNoticeTone.Error,
-                                        ),
-                                )
-                        }
-                    }
-                }
+                val presentation = loadRoutePresentation(fromStop, toStop, date)
+                handleRoutePresentation(app, fromStop, toStop, presentation)
             } catch (e: TimeoutCancellationException) {
                 Log.w(TAG, "Timed out loading routes", e)
-                _routeSearchState.value =
-                    RouteSearchUiState.Error(
-                        kind = RouteErrorKind.Network,
-                        notice =
-                            UiNotice(
-                                message = app.getString(R.string.error_routes_timeout),
-                                tone = UiNoticeTone.Error,
-                            ),
-                    )
+                _routeSearchState.value = routeError(RouteErrorKind.Network, app.getString(R.string.error_routes_timeout))
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load routes: ${e.message}", e)
                 _routeSearchState.value =
-                    RouteSearchUiState.Error(
-                        kind = RouteErrorKind.InvalidResponse,
-                        notice =
-                            UiNotice(
-                                message =
-                                    app.getString(
-                                        R.string.toast_failed_load_routes,
-                                        e.localizedMessage ?: "",
-                                    ),
-                                tone = UiNoticeTone.Error,
-                            ),
+                    routeError(
+                        RouteErrorKind.InvalidResponse,
+                        app.getString(R.string.toast_failed_load_routes, e.localizedMessage ?: ""),
                     )
             } finally {
                 _loading.value = false
@@ -361,9 +292,73 @@ open class TrainViewModel(
         }
     }
 
-    fun loadFullRoute(routeId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _fullRoute.value = repo.getFullRouteFromCumulative(routeId)
+    private suspend fun loadRoutePresentation(
+        fromStop: StopEntity,
+        toStop: StopEntity,
+        date: String,
+    ): RouteLookupPresentation =
+        withTimeout(ROUTE_LOOKUP_TIMEOUT_MS) {
+            repo
+                .getRoutes(fromStop.apiRouteName(), toStop.apiRouteName(), date)
+                .toRouteLookupPresentation()
+        }
+
+    private fun handleRoutePresentation(
+        app: Application,
+        fromStop: StopEntity,
+        toStop: StopEntity,
+        presentation: RouteLookupPresentation,
+    ) {
+        when (presentation) {
+            is RouteLookupPresentation.Results -> {
+                recordRecentSearch(fromStop, toStop)
+                _routeSearchState.value = RouteSearchUiState.Results(presentation.response)
+            }
+
+            RouteLookupPresentation.Empty -> {
+                recordRecentSearch(fromStop, toStop)
+                _routeSearchState.value = RouteSearchUiState.Empty
+            }
+
+            is RouteLookupPresentation.Error -> {
+                _routeSearchState.value = routeError(presentation.kind, routeErrorMessage(app, presentation))
+            }
+        }
+    }
+
+    private fun stationSelectionError(app: Application): RouteSearchUiState.Error =
+        RouteSearchUiState.Error(
+            kind = RouteErrorKind.StationSelection,
+            notice =
+                UiNotice(
+                    message = app.getString(R.string.toast_select_stations_first),
+                    tone = UiNoticeTone.Warning,
+                ),
+        )
+
+    private fun routeError(
+        kind: RouteErrorKind,
+        message: String,
+    ): RouteSearchUiState.Error =
+        RouteSearchUiState.Error(
+            kind = kind,
+            notice = UiNotice(message = message, tone = UiNoticeTone.Error),
+        )
+
+    private fun routeErrorMessage(
+        app: Application,
+        presentation: RouteLookupPresentation.Error,
+    ): String =
+        when (presentation.kind) {
+            RouteErrorKind.Server -> app.getString(R.string.error_routes_server, presentation.httpCode ?: -1)
+            RouteErrorKind.Network -> app.getString(R.string.error_routes_network)
+            RouteErrorKind.InvalidResponse -> app.getString(R.string.error_routes_invalid_response)
+            RouteErrorKind.StationSelection -> app.getString(R.string.toast_select_stations_first)
+        }
+
+    fun loadFullRoute(timetableId: Int) {
+        viewModelScope.launch {
+            _fullRoute.value = repo.getFullRouteFromCumulative(timetableId)
         }
     }
 
@@ -403,7 +398,7 @@ open class TrainViewModel(
                 return@launch
             }
 
-            val depTime = route.timetable_items?.firstOrNull()?.DepartureTime ?: ""
+            val depTime = route.timetableItems?.firstOrNull()?.departureTime ?: ""
             if (depTime.isBlank()) {
                 _reminderUiState.value =
                     ReminderUiState.Failure(
@@ -429,10 +424,10 @@ open class TrainViewModel(
                 }
 
             val depMillis = depDateTime.time
-            val trainNum = route.TrainNumber ?: context.getString(R.string.unknown_label)
+            val trainNum = route.trainNumber ?: context.getString(R.string.unknown_label)
             val stationLanguage = stationLanguage()
             val stationName =
-                route.timetable_items
+                route.timetableItems
                     ?.firstOrNull()
                     ?.routestop
                     ?.stop
@@ -572,15 +567,9 @@ open class TrainViewModel(
                     ),
                 )
 
-            is PushReminderScheduleResult.Failed ->
-                ReminderUiState.Failure(
-                    UiNotice(
-                        message = context.getString(R.string.reminder_status_push_failed),
-                        tone = UiNoticeTone.Error,
-                    ),
-                )
-
-            null ->
+            is PushReminderScheduleResult.Failed,
+            null,
+            ->
                 ReminderUiState.Failure(
                     UiNotice(
                         message = context.getString(R.string.reminder_status_push_failed),
@@ -597,85 +586,49 @@ open class TrainViewModel(
         calendarOpened: Boolean,
     ): ReminderUiState =
         when (pushResult) {
-            PushReminderScheduleResult.Scheduled -> {
-                if (calendarOpened) {
-                    ReminderUiState.Success(
-                        UiNotice(
-                            message =
-                                context.getString(
-                                    R.string.reminder_status_push_and_calendar_created,
-                                    trainNumber,
-                                    minutesBefore,
-                                ),
-                            tone = UiNoticeTone.Success,
-                        ),
-                    )
-                } else {
-                    ReminderUiState.Failure(
-                        UiNotice(
-                            message =
-                                context.getString(
-                                    R.string.reminder_status_push_created_calendar_failed,
-                                    trainNumber,
-                                    minutesBefore,
-                                ),
-                            tone = UiNoticeTone.Warning,
-                        ),
-                    )
-                }
-            }
+            PushReminderScheduleResult.Scheduled ->
+                scheduledPushAndCalendarState(context, trainNumber, minutesBefore, calendarOpened)
 
             PushReminderScheduleResult.NotificationPermissionMissing ->
-                ReminderUiState.PermissionMissing(
+                permissionMissingState(
                     permission = ReminderPermissionKind.Notification,
                     notice =
-                        UiNotice(
-                            message =
-                                if (calendarOpened) {
-                                    context.getString(
-                                        R.string.reminder_status_calendar_opened_push_notification_missing,
-                                        trainNumber,
-                                    )
-                                } else {
-                                    context.getString(
-                                        R.string.reminder_status_notification_permission_missing,
-                                    )
-                                },
-                            tone = UiNoticeTone.Warning,
+                        warningNotice(
+                            calendarAwareMessage(
+                                context = context,
+                                calendarOpened = calendarOpened,
+                                calendarMessageRes = R.string.reminder_status_calendar_opened_push_notification_missing,
+                                fallbackMessageRes = R.string.reminder_status_notification_permission_missing,
+                                trainNumber = trainNumber,
+                            ),
                         ),
                 )
 
             PushReminderScheduleResult.ExactAlarmPermissionMissing ->
-                ReminderUiState.PermissionMissing(
+                permissionMissingState(
                     permission = ReminderPermissionKind.ExactAlarm,
                     notice =
-                        UiNotice(
-                            message =
-                                if (calendarOpened) {
-                                    context.getString(
-                                        R.string.reminder_status_calendar_opened_push_exact_alarm_missing,
-                                        trainNumber,
-                                    )
-                                } else {
-                                    context.getString(R.string.reminder_status_exact_alarm_missing)
-                                },
-                            tone = UiNoticeTone.Warning,
+                        warningNotice(
+                            calendarAwareMessage(
+                                context = context,
+                                calendarOpened = calendarOpened,
+                                calendarMessageRes = R.string.reminder_status_calendar_opened_push_exact_alarm_missing,
+                                fallbackMessageRes = R.string.reminder_status_exact_alarm_missing,
+                                trainNumber = trainNumber,
+                            ),
                         ),
                 )
 
             PushReminderScheduleResult.TriggerTimeTooSoon ->
                 ReminderUiState.Failure(
-                    UiNotice(
-                        message =
-                            if (calendarOpened) {
-                                context.getString(
-                                    R.string.reminder_status_calendar_opened_push_too_late,
-                                    trainNumber,
-                                )
-                            } else {
-                                context.getString(R.string.reminder_status_too_late)
-                            },
-                        tone = UiNoticeTone.Warning,
+                    warningNotice(
+                        calendarAwareMessage(
+                            context = context,
+                            calendarOpened = calendarOpened,
+                            calendarMessageRes = R.string.reminder_status_calendar_opened_push_too_late,
+                            fallbackMessageRes = R.string.reminder_status_too_late,
+                            trainNumber = trainNumber,
+                        ),
                     ),
                 )
 
@@ -683,20 +636,73 @@ open class TrainViewModel(
             null,
             ->
                 ReminderUiState.Failure(
-                    UiNotice(
-                        message =
-                            if (calendarOpened) {
-                                context.getString(
-                                    R.string.reminder_status_calendar_opened_push_failed,
-                                    trainNumber,
-                                )
-                            } else {
-                                context.getString(R.string.reminder_status_push_failed)
-                            },
-                        tone = UiNoticeTone.Error,
+                    errorNotice(
+                        calendarAwareMessage(
+                            context = context,
+                            calendarOpened = calendarOpened,
+                            calendarMessageRes = R.string.reminder_status_calendar_opened_push_failed,
+                            fallbackMessageRes = R.string.reminder_status_push_failed,
+                            trainNumber = trainNumber,
+                        ),
                     ),
                 )
         }
+
+    private fun scheduledPushAndCalendarState(
+        context: Context,
+        trainNumber: String,
+        minutesBefore: Int,
+        calendarOpened: Boolean,
+    ): ReminderUiState =
+        if (calendarOpened) {
+            ReminderUiState.Success(
+                UiNotice(
+                    message =
+                        context.getString(
+                            R.string.reminder_status_push_and_calendar_created,
+                            trainNumber,
+                            minutesBefore,
+                        ),
+                    tone = UiNoticeTone.Success,
+                ),
+            )
+        } else {
+            ReminderUiState.Failure(
+                warningNotice(
+                    context.getString(
+                        R.string.reminder_status_push_created_calendar_failed,
+                        trainNumber,
+                        minutesBefore,
+                    ),
+                ),
+            )
+        }
+
+    private fun permissionMissingState(
+        permission: ReminderPermissionKind,
+        notice: UiNotice,
+    ): ReminderUiState =
+        ReminderUiState.PermissionMissing(
+            permission = permission,
+            notice = notice,
+        )
+
+    private fun calendarAwareMessage(
+        context: Context,
+        calendarOpened: Boolean,
+        calendarMessageRes: Int,
+        fallbackMessageRes: Int,
+        trainNumber: String,
+    ): String =
+        if (calendarOpened) {
+            context.getString(calendarMessageRes, trainNumber)
+        } else {
+            context.getString(fallbackMessageRes)
+        }
+
+    private fun warningNotice(message: String): UiNotice = UiNotice(message = message, tone = UiNoticeTone.Warning)
+
+    private fun errorNotice(message: String): UiNotice = UiNotice(message = message, tone = UiNoticeTone.Error)
 
     private fun addEventToCalendar(
         context: Context,
@@ -704,10 +710,10 @@ open class TrainViewModel(
         departureTimeMs: Long,
     ): Boolean {
         val endTimeMs = departureTimeMs + 60L * 60_000
-        val trainNum = route.TrainNumber ?: context.getString(R.string.unknown_label)
+        val trainNum = route.trainNumber ?: context.getString(R.string.unknown_label)
         val stationLanguage = stationLanguage()
         val fromSt =
-            route.timetable_items
+            route.timetableItems
                 ?.firstOrNull()
                 ?.routestop
                 ?.stop
@@ -715,7 +721,7 @@ open class TrainViewModel(
                 ?: route.startStation
                 ?: "From"
         val toSt =
-            route.timetable_items
+            route.timetableItems
                 ?.lastOrNull()
                 ?.routestop
                 ?.stop
@@ -755,7 +761,9 @@ open class TrainViewModel(
     private fun resolveStopForUserInput(
         inputText: String,
         selectedStopId: Int?,
-    ): StopEntity? = findStopById(selectedStopId) ?: findStopByAnyName(_stops.value, inputText)
+    ): StopEntity? =
+        (findStopById(selectedStopId) ?: findStopByAnyName(_stops.value, inputText))
+            ?.takeIf { stop -> stop.isPassengerSearchStop() }
 
     private fun findStopById(stopId: Int?): StopEntity? = _stops.value.firstOrNull { it.stopId == stopId }
 

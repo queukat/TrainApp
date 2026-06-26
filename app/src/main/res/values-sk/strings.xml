@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TrainMe</string>
+
+    <string name="toast_route_saved">Trasa uložená</string>
+    <string name="toast_select_stations_first">Najprv vyberte obe stanice</string>
+    <string name="toast_settings_applied">Nastavenia použité</string>
+    <plurals name="toast_test_push_scheduled">
+        <item quantity="one">Testovacie upozornenie naplánované o %1$d sekundu</item>
+        <item quantity="few">Testovacie upozornenie naplánované o %1$d sekundy</item>
+        <item quantity="other">Testovacie upozornenie naplánované o %1$d sekúnd</item>
+    </plurals>
+    <string name="toast_enable_notifications_settings">Povoľte upozornenia pre TrainMe v systémových nastaveniach</string>
+    <string name="toast_enable_exact_alarms_settings">Presné budíky nie sú povolené. Povoľte ich v systémových nastaveniach.</string>
+    <string name="toast_cannot_schedule_exact_alarm">Nedá sa naplánovať presný budík: %1$s</string>
+    <string name="toast_no_coords">Pre %1$s nie sú dostupné súradnice</string>
+    <string name="toast_no_departure_time">Čas odchodu nebol nájdený</string>
+    <string name="toast_cant_parse_departure">Čas odchodu sa nedá spracovať</string>
+
+    <string name="toast_failed_load_stops">Údaje staníc sa nepodarilo obnoviť: %1$s</string>
+    <string name="toast_failed_load_routes">Rekonštrukciu trasy sa nepodarilo dokončiť: %1$s</string>
+    <string name="toast_no_results">Nenašli sa žiadne trasy</string>
+    <string name="stops_refresh_using_cache">Údaje staníc používajú uloženú kópiu. Obnovenie teraz nie je dostupné.</string>
+    <string name="error_routes_server">Služba cestovných poriadkov vrátila chybu (%1$d).</string>
+    <string name="error_routes_network">Nedá sa pripojiť k službe cestovných poriadkov. Skontrolujte pripojenie a skúste to znova.</string>
+    <string name="error_routes_invalid_response">Služba cestovných poriadkov vrátila odpoveď, ktorú TrainMe nedokázal spracovať.</string>
+    <string name="error_routes_timeout">Služba cestovných poriadkov neodpovedala včas.</string>
+
+    <string name="dialog_reminder_title">Vyberte typ pripomienky</string>
+    <string name="dialog_reminder_ok">OK</string>
+    <string name="dialog_reminder_cancel">Zrušiť</string>
+    <string name="radio_push">Iba push upozornenie</string>
+    <string name="radio_calendar">Iba kalendár</string>
+    <string name="radio_both">Push + kalendár</string>
+    <string name="radio_none">Bez pripomienky</string>
+    <string name="hint_reminder_minutes">Minúty pred odchodom</string>
+    <string name="checkbox_remember_choice">Zapamätať voľbu</string>
+
+    <string name="connected_routes_label">Nadväzujúce trasy:</string>
+    <string name="label_transfer_at">Prestup v %1$s</string>
+    <string name="connected_leg_format">Vlak %1$s: %2$s - %3$s (%4$s)</string>
+    <string name="label_transfer_wait">Čakanie na prestup: %1$s</string>
+    <string name="label_transfer_tight">Tesný prestup: %1$s</string>
+    <string name="label_transfer_too_short">Veľmi tesný prestup: %1$s</string>
+
+    <string name="full_route_title">Celá trasa vlaku %1$s</string>
+    <string name="full_route_stop_format">%1$s | Prích.: %2$s, Odch.: %3$s</string>
+
+    <string name="train_label">Vlak %1$s (%2$s - %3$s)</string>
+    <string name="label_international_train">Medzinárodný</string>
+    <string name="label_schedule_valid_until">Cestovný poriadok platí do %1$s</string>
+
+    <string name="reminder_notification_title">Pripomienka vlaku %1$s</string>
+    <string name="reminder_notification_message">Je čas vyraziť, aby ste stihli dôjsť na stanicu: %1$s (o %2$d min).</string>
+    <string name="reminder_status_notification_permission_missing">Na vytvorenie push pripomienky je potrebné povolenie upozornení.</string>
+    <string name="reminder_status_exact_alarm_missing">Na tejto verzii Androidu je na vytvorenie push pripomienky potrebné povolenie presných budíkov.</string>
+    <string name="reminder_status_too_late">Pripomienka nebola vytvorená, pretože odchod je príliš blízko.</string>
+    <string name="reminder_status_push_failed">Push pripomienku sa nepodarilo naplánovať.</string>
+    <string name="reminder_status_calendar_opened">Udalosť v kalendári pre vlak %1$s bola otvorená.</string>
+    <string name="reminder_status_calendar_failed">Kalendár pre vlak %1$s sa nepodarilo otvoriť.</string>
+    <string name="reminder_status_push_created">Pripomienka pre vlak %1$s bola vytvorená (%2$d min vopred).</string>
+    <string name="reminder_status_push_and_calendar_created">Pripomienka bola vytvorená a kalendár pre vlak %1$s otvorený (%2$d min vopred).</string>
+    <string name="reminder_status_push_created_calendar_failed">Pripomienka pre vlak %1$s bola vytvorená (%2$d min vopred), ale kalendár sa nepodarilo otvoriť.</string>
+    <string name="reminder_status_calendar_opened_push_notification_missing">Kalendár pre vlak %1$s bol otvorený, ale push pripomienka nebola vytvorená, pretože upozornenia nie sú povolené.</string>
+    <string name="reminder_status_calendar_opened_push_exact_alarm_missing">Kalendár pre vlak %1$s bol otvorený, ale push pripomienka nebola vytvorená, pretože presné budíky nie sú povolené.</string>
+    <string name="reminder_status_calendar_opened_push_too_late">Kalendár pre vlak %1$s bol otvorený, ale push pripomienka nebola vytvorená, pretože odchod je príliš blízko.</string>
+    <string name="reminder_status_calendar_opened_push_failed">Kalendár pre vlak %1$s bol otvorený, ale push pripomienku sa nepodarilo naplánovať.</string>
+
+    <string name="label_default_reminder">Predvolená akcia pripomienky:</string>
+    <string name="label_minutes_before">Minúty pred odchodom (predvolené):</string>
+    <string name="label_auto_refresh">Automaticky obnovovať čas do odchodu</string>
+    <string name="btn_test_push_now">Otestovať push teraz</string>
+    <string name="btn_test_push_later">Otestovať push o 1 minútu</string>
+    <string name="btn_apply">Použiť</string>
+
+    <string name="btn_settings">Nastavenia</string>
+    <string name="btn_search">Hľadať</string>
+    <string name="btn_save_route">Uložiť trasu</string>
+    <string name="label_repeat_routes">Opakované trasy</string>
+    <string name="label_favorite_routes">Obľúbené</string>
+    <string name="label_recent_searches">Nedávne hľadania</string>
+    <string name="label_favorite_route_shortcut">Uložená trasa</string>
+    <string name="label_recent_search_last_used">Naposledy hľadané %1$s</string>
+
+    <string name="hint_from_station">Východisková stanica</string>
+    <string name="hint_to_station">Cieľová stanica</string>
+
+    <string name="label_date">Dátum:</string>
+
+    <string name="disclaimer_text">
+        TrainMe je nezávislý produkt a nie je oficiálny ani schválený žiadnou organizáciou.
+        Na oficiálne cestovné poriadky, lístky a prevádzkové oznámenia používajte oficiálne zdroje.
+    </string>
+
+    <string name="label_select_language_for_stations">Vyberte jazyk staníc</string>
+    <string name="hint_language_for_stations">Určuje jazyk názvov staníc používaný vo vyhľadávaní</string>
+    <string name="station_language_english">Angličtina</string>
+    <string name="station_language_montenegrin_latin">Čiernohorčina (latinka)</string>
+    <string name="station_language_montenegrin_cyrillic">Čiernohorčina (cyrilika)</string>
+    <string name="btn_back">späť</string>
+    <string name="direct_routes_label">Priame trasy:</string>
+    <string name="unknown_label">Neznáme</string>
+    <string name="train_departed">Vlak už odišiel</string>
+    <string name="label_travel_time">Čas cesty: %1$s</string>
+
+    <!-- FIX: odstránené úvodné medzery -->
+    <string name="time_in_h_and_m">%1$d h %2$d min</string>
+    <string name="time_in_m">%1$d min</string>
+
+    <!-- NEW -->
+    <string name="time_in_d_and_h">%1$d d %2$d h</string>
+    <string name="time_until_prefix">O %1$s</string>
+
+    <string name="label_reminder">Pripomienka</string>
+    <string name="label_fare_unavailable">Cena nie je dostupná</string>
+    <string name="two_class_prices_format">1. trieda: %1$s / 2. trieda: %2$s</string>
+    <string name="one_class_price_format">Cena: %1$s</string>
+    <string name="two_class_only_price_format">2. trieda: %1$s</string>
+    <string name="stop_arr_dep_with_dwell">Prích.: %1$s, pobyt %2$d min, odch.: %3$s</string>
+    <string name="stop_arr_dep">Prích.: %1$s, odch.: %2$s</string>
+    <string name="unknown_station">Neznáma stanica</string>
+    <string name="open_in_maps">Otvoriť v Mapách</string>
+
+    <string name="label_crossing_no_passengers">Bez nástupu a výstupu cestujúcich</string>
+    <string name="label_stop_type_station">Stanica</string>
+    <string name="label_stop_type_stop">Zastávka</string>
+    <string name="label_stop_type_main_station">Hlavná stanica</string>
+    <string name="toast_no_map_app">Nie je nainštalovaná žiadna mapová aplikácia</string>
+    <string name="label_support_dev_on_ko_fi">Podporiť TrainMe na Ko-fi</string>
+
+    <string name="train_reminder_channel_name">Pripomienky vlakov</string>
+    <string name="train_reminder_channel_description">Pripomienky nadchádzajúcich odchodov vlakov</string>
+
+    <string name="update_channel_name">Aktualizácie</string>
+    <string name="update_channel_description">Nové verzie TrainMe</string>
+
+    <string name="update_notification_title">Dostupná aktualizácia: v%1$s</string>
+    <string name="update_notification_message">Ťuknutím stiahnete novú verziu</string>
+    <string name="update_notification_bigtext">%1$s</string>
+</resources>

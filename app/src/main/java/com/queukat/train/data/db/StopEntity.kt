@@ -2,6 +2,7 @@ package com.queukat.train.data.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.queukat.train.data.model.STOP_TYPE_CROSSING_NO_PASSENGERS
 
 @Entity(tableName = "stops")
 data class StopEntity(
@@ -23,3 +24,10 @@ fun StopEntity.getNameForLanguage(lang: String): String =
         "ru", "meCyr" -> this.nameMeCyr ?: this.nameMe
         else -> if (this.nameMe.isNotEmpty()) this.nameMe else this.nameEn
     }
+
+fun StopEntity.apiRouteName(): String =
+    nameMe.ifBlank {
+        nameMeCyr?.takeIf { it.isNotBlank() } ?: nameEn
+    }
+
+fun StopEntity.isPassengerSearchStop(): Boolean = stopTypeId != STOP_TYPE_CROSSING_NO_PASSENGERS

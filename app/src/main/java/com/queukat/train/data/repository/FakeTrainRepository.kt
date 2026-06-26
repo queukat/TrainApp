@@ -51,11 +51,11 @@ class FakeTrainRepository(
             RoutesResponse(
                 price = null,
                 direct = emptyList(),
-                connected = emptyList(),
+                connected = emptyMap(),
             ),
         )
 
-    override suspend fun getFullRouteFromCumulative(routeId: Int): DirectRoute? = null
+    override suspend fun getFullRouteFromCumulative(timetableId: Int): DirectRoute? = null
 
     //        .
 }

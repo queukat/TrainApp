@@ -64,6 +64,28 @@ class SavedRouteSupportTest {
     }
 
     @Test
+    fun legacySavedRoutes_ignoreCrossingStops() {
+        val migrated =
+            migrateLegacySavedRoutes(
+                legacyRoutes = setOf("Zeta - Podgorica"),
+                stops =
+                    stops +
+                        StopEntity(
+                            stopId = 5,
+                            nameEn = "Zeta",
+                            nameMe = "Zeta",
+                            nameMeCyr = "Зета",
+                            stopTypeId = 3,
+                            latitude = null,
+                            longitude = null,
+                            local = 1,
+                        ),
+            )
+
+        assertTrue(migrated.isEmpty())
+    }
+
+    @Test
     fun savedRouteLabel_prefersStopIdAndRequestedLanguage() {
         val label =
             resolveSavedRouteLabel(

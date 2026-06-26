@@ -18,6 +18,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.edit
 import com.queukat.train.ui.SettingsScreen
+import com.queukat.train.ui.SettingsScreenActions
+import com.queukat.train.ui.SettingsScreenState
 import com.queukat.train.ui.theme.TrainAppTheme
 import com.queukat.train.util.ReminderReceiver
 import com.queukat.train.util.applyForcedAppLocale
@@ -64,40 +66,46 @@ class SettingsActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     SettingsScreen(
-                        languages = languages,
-                        reminderOptions = reminderOptions,
-                        initialLanguage = currentLang,
-                        initialReminder = currentRem,
-                        initialMinutes = defMins,
-                        initialAutoRefresh = autoRefresh,
-                        onApply = { chosenLang, chosenReminder, minutes, autoRf ->
-                            //
-                            prefs.edit(commit = true) {
-                                putString("appLanguage", chosenLang)
-                                putString("defaultReminderAction", chosenReminder)
-                                putInt("defaultMinutesBefore", minutes)
-                                putBoolean("autoRefreshTime", autoRf)
-                            }
-                            Toast
-                                .makeText(
-                                    this@SettingsActivity,
-                                    getString(R.string.toast_settings_applied),
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            setResult(RESULT_OK)
-                            finish()
-                        },
-                        onTestPushNow = {
-                            scheduleTestPush(delayMs = 5000)
-                        },
-                        onTestPushLater = {
-                            scheduleTestPush(delayMs = 60000)
-                        },
-                        onBackClick = {
-                            //   " "  topbar
-                            setResult(RESULT_CANCELED)
-                            finish()
-                        },
+                        state =
+                            SettingsScreenState(
+                                languages = languages,
+                                reminderOptions = reminderOptions,
+                                initialLanguage = currentLang,
+                                initialReminder = currentRem,
+                                initialMinutes = defMins,
+                                initialAutoRefresh = autoRefresh,
+                            ),
+                        actions =
+                            SettingsScreenActions(
+                                onApply = { chosenLang, chosenReminder, minutes, autoRf ->
+                                    //
+                                    prefs.edit(commit = true) {
+                                        putString("appLanguage", chosenLang)
+                                        putString("defaultReminderAction", chosenReminder)
+                                        putInt("defaultMinutesBefore", minutes)
+                                        putBoolean("autoRefreshTime", autoRf)
+                                    }
+                                    Toast
+                                        .makeText(
+                                            this@SettingsActivity,
+                                            getString(R.string.toast_settings_applied),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    setResult(RESULT_OK)
+                                    finish()
+                                },
+                                onTestPushNow = {
+                                    scheduleTestPush(delayMs = 5000)
+                                },
+                                onTestPushLater = {
+                                    scheduleTestPush(delayMs = 60000)
+                                },
+                                onBackClick = {
+                                    //   " "  topbar
+                                    setResult(RESULT_CANCELED)
+                                    finish()
+                                },
+                            ),
                     )
                 }
             }
@@ -127,17 +135,15 @@ class SettingsActivity : ComponentActivity() {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         // 2) Android S+ exact alarms: вместо молча “return” лучше открыть системный экран разрешения
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                Toast
-                    .makeText(
-                        this,
-                        getString(R.string.toast_enable_exact_alarms_settings),
-                        Toast.LENGTH_LONG,
-                    ).show()
-                startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
-                return
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            Toast
+                .makeText(
+                    this,
+                    getString(R.string.toast_enable_exact_alarms_settings),
+                    Toast.LENGTH_LONG,
+                ).show()
+            startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+            return
         }
 
         val intent =

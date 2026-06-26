@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.queukat.train.data.db.AppDatabase
+import com.queukat.train.data.db.StopEntity
 import com.queukat.train.data.db.getNameForLanguage
 import com.queukat.train.data.repository.TrainRepository
 import com.queukat.train.ui.MainScreen
@@ -21,6 +22,7 @@ import com.queukat.train.ui.theme.TrainAppTheme
 import com.queukat.train.util.DateTimeUtils
 import com.queukat.train.util.NotificationHelper
 import com.queukat.train.util.UpdateCheck
+import com.queukat.train.util.UpdateResult
 import com.queukat.train.util.applyForcedAppLocale
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -35,97 +37,140 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val skipUpdateCheck = intent?.getBooleanExtra(EXTRA_SKIP_UPDATE_CHECK, false) == true
-        val initialDate = intent?.getStringExtra(EXTRA_INITIAL_DATE).orEmpty()
-        val initialFrom = intent?.getStringExtra(EXTRA_INITIAL_FROM).orEmpty()
-        val initialTo = intent?.getStringExtra(EXTRA_INITIAL_TO).orEmpty()
-        val initialLanguage = intent?.getStringExtra(EXTRA_INITIAL_LANGUAGE).orEmpty()
-        val autoSearch = intent?.getBooleanExtra(EXTRA_AUTO_SEARCH, false) == true
-        val forcedUiLocale = intent?.getStringExtra(EXTRA_FORCE_UI_LOCALE).orEmpty()
-
-        applyForcedAppLocale(this, forcedUiLocale)
-
-        // 0) Notification channels
+        val launchArgs = readLaunchArgs()
+        applyForcedAppLocale(this, launchArgs.forcedUiLocale)
         NotificationHelper.createNotificationChannel(this)
 
         val prefs = getSharedPreferences("train_prefs", MODE_PRIVATE)
-        val normalizedLanguage = initialLanguage.takeIf { it in setOf("en", "me", "meCyr") }
+        applyInitialLanguage(launchArgs.initialLanguage, prefs)
+        startUpdateCheckIfNeeded(launchArgs.skipUpdateCheck)
+
+        val mainVM = createMainViewModel()
+        applyInitialDate(mainVM, launchArgs.initialDate)
+        mainVM.loadStops()
+        launchInitialRouteRequestIfNeeded(mainVM, prefs, launchArgs)
+        showMainScreen(mainVM)
+    }
+
+    private fun readLaunchArgs(): LaunchArgs =
+        LaunchArgs(
+            skipUpdateCheck = intent?.getBooleanExtra(EXTRA_SKIP_UPDATE_CHECK, false) == true,
+            initialDate = intent?.getStringExtra(EXTRA_INITIAL_DATE).orEmpty(),
+            initialFrom = intent?.getStringExtra(EXTRA_INITIAL_FROM).orEmpty(),
+            initialTo = intent?.getStringExtra(EXTRA_INITIAL_TO).orEmpty(),
+            initialLanguage = intent?.getStringExtra(EXTRA_INITIAL_LANGUAGE).orEmpty(),
+            autoSearch = intent?.getBooleanExtra(EXTRA_AUTO_SEARCH, false) == true,
+            forcedUiLocale = intent?.getStringExtra(EXTRA_FORCE_UI_LOCALE).orEmpty(),
+        )
+
+    private fun applyInitialLanguage(
+        initialLanguage: String,
+        prefs: android.content.SharedPreferences,
+    ) {
+        val normalizedLanguage = initialLanguage.takeIf { it in SUPPORTED_STATION_LANGUAGES }
         if (normalizedLanguage != null) {
             prefs.edit { putString("appLanguage", normalizedLanguage) }
             intent.removeExtra(EXTRA_INITIAL_LANGUAGE)
         }
+    }
 
-        // 1) Update check (throttled inside UpdateCheck) + notify once per version.
-        // Do not request notification permission here; that prompt belongs to the reminder flow.
-        if (!skipUpdateCheck) {
-            lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    val result = UpdateCheck.checkForUpdates(this@MainActivity)
-                    if (result.isUpdateAvailable && shouldNotifyUpdate(result.latestVersion)) {
-                        if (NotificationHelper.canPostNotifications(this@MainActivity)) {
-                            @Suppress("MissingPermission")
-                            NotificationHelper.showUpdateNotification(
-                                this@MainActivity,
-                                result.latestVersion,
-                                result.releaseNotes,
-                            )
-                            markUpdateNotified(result.latestVersion)
-                        }
-                    }
-                }
+    private fun startUpdateCheckIfNeeded(skipUpdateCheck: Boolean) {
+        if (skipUpdateCheck) return
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                maybeShowUpdateNotification(UpdateCheck.checkForUpdates(this@MainActivity))
             }
         }
+    }
 
-        // 2) ViewModel + UI
+    private fun maybeShowUpdateNotification(result: UpdateResult) {
+        if (
+            result.isUpdateAvailable &&
+            shouldNotifyUpdate(result.latestVersion) &&
+            NotificationHelper.canPostNotifications(this)
+        ) {
+            @Suppress("MissingPermission")
+            NotificationHelper.showUpdateNotification(
+                this,
+                result.latestVersion,
+                result.releaseNotes,
+            )
+            markUpdateNotified(result.latestVersion)
+        }
+    }
+
+    private fun createMainViewModel(): TrainViewModel {
         val db = AppDatabase.getInstance(applicationContext)
         val repo = TrainRepository(db, applicationContext)
         val factory = TrainViewModelFactory(application, repo)
-        val mainVM: TrainViewModel =
-            ViewModelProvider(this, factory)[TrainViewModel::class.java]
+        return ViewModelProvider(this, factory)[TrainViewModel::class.java]
+    }
 
+    private fun applyInitialDate(
+        mainVM: TrainViewModel,
+        initialDate: String,
+    ) {
         if (initialDate.isNotBlank()) {
             mainVM.setSelectedDate(initialDate)
         }
-        mainVM.loadStops()
+    }
 
-        if (initialFrom.isNotBlank() || initialTo.isNotBlank() || autoSearch) {
-            lifecycleScope.launch {
-                val resolvedStops =
-                    mainVM.stops
-                        .filter { it.isNotEmpty() }
-                        .first()
-                val stationLanguage =
-                    prefs
-                        .getString("appLanguage", "en")
-                        ?.takeIf { it in setOf("en", "me", "meCyr") }
-                        ?: "en"
+    private fun launchInitialRouteRequestIfNeeded(
+        mainVM: TrainViewModel,
+        prefs: android.content.SharedPreferences,
+        launchArgs: LaunchArgs,
+    ) {
+        if (!launchArgs.hasRouteRequest) return
 
-                val fromStop = findStopByAnyName(resolvedStops, initialFrom)
-                if (fromStop != null) {
-                    mainVM.selectFromStop(fromStop, fromStop.getNameForLanguage(stationLanguage))
-                } else if (initialFrom.isNotBlank()) {
-                    mainVM.setFromStation(initialFrom)
-                }
-
-                val toStop = findStopByAnyName(resolvedStops, initialTo)
-                if (toStop != null) {
-                    mainVM.selectToStop(toStop, toStop.getNameForLanguage(stationLanguage))
-                } else if (initialTo.isNotBlank()) {
-                    mainVM.setToStation(initialTo)
-                }
-
-                if (autoSearch && fromStop != null && toStop != null) {
-                    val searchDate = initialDate.ifBlank { DateTimeUtils.todayTrainDateString() }
-                    mainVM.setSelectedDate(searchDate)
-                    mainVM.loadRoutes(
-                        from = mainVM.fromStation.value,
-                        to = mainVM.toStation.value,
-                        date = searchDate,
-                    )
-                }
-            }
+        lifecycleScope.launch {
+            val resolvedStops = mainVM.stops.filter { it.isNotEmpty() }.first()
+            val stationLanguage = stationLanguage(prefs)
+            val fromStop = applyInitialStation(resolvedStops, launchArgs.initialFrom, stationLanguage, mainVM::selectFromStop, mainVM::setFromStation)
+            val toStop = applyInitialStation(resolvedStops, launchArgs.initialTo, stationLanguage, mainVM::selectToStop, mainVM::setToStation)
+            maybeRunInitialSearch(mainVM, launchArgs, fromStop, toStop)
         }
+    }
 
+    private fun stationLanguage(prefs: android.content.SharedPreferences): String =
+        prefs
+            .getString("appLanguage", "en")
+            ?.takeIf { it in SUPPORTED_STATION_LANGUAGES }
+            ?: "en"
+
+    private fun applyInitialStation(
+        resolvedStops: List<StopEntity>,
+        initialName: String,
+        stationLanguage: String,
+        selectStop: (StopEntity, String) -> Unit,
+        setFallback: (String) -> Unit,
+    ): StopEntity? {
+        val stop = findStopByAnyName(resolvedStops, initialName)
+        when {
+            stop != null -> selectStop(stop, stop.getNameForLanguage(stationLanguage))
+            initialName.isNotBlank() -> setFallback(initialName)
+        }
+        return stop
+    }
+
+    private fun maybeRunInitialSearch(
+        mainVM: TrainViewModel,
+        launchArgs: LaunchArgs,
+        fromStop: StopEntity?,
+        toStop: StopEntity?,
+    ) {
+        if (launchArgs.autoSearch && fromStop != null && toStop != null) {
+            val searchDate = launchArgs.initialDate.ifBlank { DateTimeUtils.todayTrainDateString() }
+            mainVM.setSelectedDate(searchDate)
+            mainVM.loadRoutes(
+                from = mainVM.fromStation.value,
+                to = mainVM.toStation.value,
+                date = searchDate,
+            )
+        }
+    }
+
+    private fun showMainScreen(mainVM: TrainViewModel) {
         setContent {
             TrainAppTheme {
                 MainScreen(
@@ -151,6 +196,8 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
+        private val SUPPORTED_STATION_LANGUAGES = setOf("en", "me", "meCyr")
+
         const val EXTRA_SKIP_UPDATE_CHECK = "com.queukat.train.extra.SKIP_UPDATE_CHECK"
         const val EXTRA_INITIAL_DATE = "com.queukat.train.extra.INITIAL_DATE"
         const val EXTRA_INITIAL_FROM = "com.queukat.train.extra.INITIAL_FROM"
@@ -159,4 +206,17 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_AUTO_SEARCH = "com.queukat.train.extra.AUTO_SEARCH"
         const val EXTRA_FORCE_UI_LOCALE = "com.queukat.train.extra.FORCE_UI_LOCALE"
     }
+}
+
+private data class LaunchArgs(
+    val skipUpdateCheck: Boolean,
+    val initialDate: String,
+    val initialFrom: String,
+    val initialTo: String,
+    val initialLanguage: String,
+    val autoSearch: Boolean,
+    val forcedUiLocale: String,
+) {
+    val hasRouteRequest: Boolean
+        get() = initialFrom.isNotBlank() || initialTo.isNotBlank() || autoSearch
 }
