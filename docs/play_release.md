@@ -68,6 +68,8 @@ en-GB
 en-US
 ru-RU
 sr
+cs-CZ
+sk
 ```
 
 Example for `versionCode = 124`:
@@ -94,7 +96,7 @@ The private release rail should support these modes:
 - default behavior should be validation-only
 - production release should require explicit completed-upload intent
 - changelogs should come from `app/fastlane/metadata/android`
-- default changelog locales are `en-GB`, `en-US`, `ru-RU`, and `sr`
+- default changelog locales are `en-GB`, `en-US`, `ru-RU`, `sr`, `cs-CZ`, and `sk`
 - "What's new" text is a release artifact, not optional polish
 - fastlane must be available where the private release rail runs
 - fastlane update checks should be suppressed to avoid Windows permission noise during controlled release runs

@@ -1,0 +1,26 @@
+TrainMe je cestovné riadiace centrum pre železničné cesty po Čiernej Hore. Mení neistotu cestovných poriadkov na kontrolovaný priestor pre rozhodovanie: stanice, rekonštrukciu trás, prehľad odchodov a organizáciu pripomienok v jednej aplikácii pre Android.
+
+Systém schopností:
+
+Signal Acquisition Layer
+Stabilizuje signály staníc a cestovných poriadkov skôr, než sa z nich stane rozhodnutie cestujúceho.
+
+Localized Station Intelligence
+Podporuje názvy staníc v angličtine, čiernohorskej latinke a čiernohorskej cyrilike, aby vyhľadávanie zodpovedalo kontextu cestujúceho.
+
+Route Reconstruction Core
+Mení priame aj nadväzné výsledky cestovného poriadku na prehľadné karty trás s časom jazdy, cenovými signálmi, oknami odchodu a viditeľnosťou celej trasy.
+
+Departure Awareness Engine
+Udržiava vybranú cestu pod kontrolou vďaka stavu času do odchodu a voliteľnému automatickému obnovovaniu.
+
+Reminder Orchestration Layer
+Riadi push pripomienky, odovzdanie do kalendára, kombinované cesty pripomienok a viditeľné výsledky oprávnení.
+
+Continuity Vault
+Uchováva obľúbené trasy, opakované trasy a posledné vyhľadávania, aby bežné cesty zostali poruke.
+
+Operational Telemetry Surface
+Zobrazuje stav cache staníc, chyby trás, dostupnosť aktualizácií a výsledky pripomienok, namiesto toho, aby cestujúci musel hádať.
+
+TrainMe je nezávislá aplikácia a nie je oficiálnym cestovným poriadkom, produktom na nákup lístkov ani servisným kanálom ZPCG AD Podgorica. Oficiálne cestovné poriadky, lístky, prevádzkové oznámenia a informácie o spoločnosti nájdete na oficiálnom webe ZPCG.

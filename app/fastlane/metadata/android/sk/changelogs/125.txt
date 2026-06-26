@@ -1,0 +1,3 @@
+Jasnejšie signály trás.
+TrainMe teraz rekonštruuje nadväzné trasy s časom na prestup, zreteľnejšie označuje zastávky bez nástupu a udržiava miestne úseky bez rušivých medzinárodných štítkov.
+Vyhľadávanie staníc je spoľahlivejšie pri názvoch ako Belgrade Center a aplikácia je teraz dostupná v češtine a slovenčine.
