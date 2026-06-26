@@ -4,10 +4,7 @@
     <locale android:name="ru" />       <!-- Russian -->
     <locale android:name="cs" />       <!-- Czech -->
     <locale android:name="sk" />       <!-- Slovak -->
-    <!-- Montenegrin — primary app locale for Montenegro -->
-    <locale android:name="cnr-Cyrl-ME" />  <!-- Montenegrin (Cyrillic) -->
-    <locale android:name="cnr-Latn-ME" />  <!-- Montenegrin (Latin) -->
-    <!-- Serbian aliases kept for compatibility with older captures/devices -->
+    <!-- Serbian Latin/Cyrillic carry the Montenegro-facing South Slavic copy. -->
     <locale android:name="sr-Cyrl" />      <!-- Serbian (Cyrillic) -->
     <locale android:name="sr-Latn" />      <!-- Serbian (Latin) -->
 </locale-config>
