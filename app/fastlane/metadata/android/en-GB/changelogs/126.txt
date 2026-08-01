@@ -1,0 +1,2 @@
+Current Android compatibility.
+TrainMe now meets the latest Android platform requirements, keeping route planning, saved journeys and departure reminders ready for newer devices while retaining support for Android 7 and later.

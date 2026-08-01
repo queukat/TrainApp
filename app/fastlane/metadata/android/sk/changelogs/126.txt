@@ -1,0 +1,2 @@
+Kompatibilita s aktuálnymi verziami Androidu.
+TrainMe teraz spĺňa nové požiadavky platformy: plánovanie trás, uložené cesty a pripomienky sú pripravené pre novšie zariadenia, pričom podpora Androidu 7 a novších verzií zostáva zachovaná.

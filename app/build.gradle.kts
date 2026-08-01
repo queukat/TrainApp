@@ -47,9 +47,9 @@ android {
     defaultConfig {
         applicationId = "com.queukat.train"
         minSdk = 24
-        targetSdk = 35
-        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 2
-        versionName = System.getenv("VERSION_NAME") ?: "1.0.1"
+        targetSdk = 36
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 126
+        versionName = System.getenv("VERSION_NAME") ?: "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
