@@ -8,10 +8,12 @@ Supported release paths:
 
 - debug build for local development
 - unsigned release build for local verification when signing material is absent
-- signed release build from local non-tracked config or CI secrets
+- signed release build from local non-tracked config or an external controlled runner
 - Play delivery through the governed release rail
 
-For production Play delivery, use the private release rail or CI path that builds the bundle, verifies that the final `.aab` is signed, and only then uploads to Google Play. Keep this signing gate in the delivery path.
+For production Play delivery, use the maintainer-controlled local rail or another controlled runner that builds the bundle, verifies that the final `.aab` is signed, and only then uploads to Google Play. The conventional local runner path is `tools/play-release.ps1`; `tools/` is ignored and is not present in a public clone. Keep the signing and validation gates in any replacement runner.
+
+GitHub Releases and tracked GitHub Actions workflows are not supported Android distribution paths for TrainMe.
 
 Before production upload, fill the Play "What's new" changelog for the release version code under `app/fastlane/metadata/android/<locale>/changelogs/`. The changelog is the public value surface for the update.
 
@@ -20,13 +22,13 @@ Before production upload, fill the Play "What's new" changelog for the release v
 Use:
 
 ```powershell
-./gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:assembleDebug --console=plain
 ```
 
 Run the app on a device or emulator with:
 
 ```powershell
-./gradlew.bat :app:installDebug
+.\gradlew.bat :app:installDebug --console=plain
 ```
 
 ## Unsigned Release Build
@@ -34,7 +36,7 @@ Run the app on a device or emulator with:
 If no signing secrets are configured, release assembly still works and produces an unsigned artifact:
 
 ```powershell
-./gradlew.bat :app:assembleRelease
+.\gradlew.bat :app:assembleRelease --console=plain
 ```
 
 Expected behavior:
@@ -80,9 +82,9 @@ Copy-Item keystore.properties.example keystore.properties
 
 Then fill in real local values and keep `keystore.properties` untracked.
 
-## CI Secret Hygiene
+## Runner Secret Hygiene
 
-CI should inject signing values through secret-backed environment variables.
+Any external controlled runner should inject signing values through secret-backed environment variables. The local rail should use ignored configuration or environment scopes.
 
 Do not restore any of the old tracked patterns:
 

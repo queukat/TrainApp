@@ -95,7 +95,7 @@ flowchart LR
 | **Route Reconstruction Core** | Raw timetable responses do not naturally read as decisions. | Direct and connected journeys are shaped into route cards, travel time, price signals, and full-route views. | The passenger sees review-ready travel options instead of raw schedule fragments. |
 | **Transfer Clarity Surface** | Intermediate stops and transfer segments can hide the real journey shape. | Full-route expansion and stop-state labels expose the path. | Passengers understand what happens between origin and destination. |
 | **Departure Awareness Engine** | A chosen departure becomes less useful as time passes. | Time-to-departure calculation and optional auto-refresh keep the route state current. | The journey card remains operational after the first search. |
-| **Reminder Orchestration Layer** | Calendar flow, push notifications, exact alarms, and Android permissions can conflict. | A governed reminder path supports push, calendar, both, or no reminder. | The passenger receives a clear reminder outcome and visible failure reasons. |
+| **Reminder Orchestration Layer** | Calendar flow, notification reminders, exact alarms, and Android permissions can conflict. | A governed reminder path supports an on-device notification, calendar handoff, both, or no reminder. | The passenger receives a clear reminder outcome and visible failure reasons. |
 | **Continuity Vault** | Repeated journeys and recent searches disappear unless the system remembers them. | Favorites, repeat routes, and recent searches preserve intent across sessions. | Commuter patterns become one-tap starting points. |
 | **Operational Telemetry Surface** | Network errors, cached data, and permission failures can feel invisible. | Status banners and notification outcomes expose operational state. | The passenger sees what the system knows and what needs attention. |
 | **Release Governance Rail** | Store delivery can drift through unsigned bundles, missing changelogs, or accidental package targeting. | Play release commands enforce signing checks, package targeting, changelog staging, and validation before upload. | Public releases ship through a controlled delivery path. |
@@ -106,15 +106,16 @@ flowchart LR
 | --- | --- |
 | **Jetpack Compose Command Center** | Main passenger surface for station selection, date control, route review, reminders, and settings. |
 | **ViewModel Orchestration Layer** | Coordinates user intent, loading state, cached signals, route results, and reminder outcomes. |
-| **Repository Signal Pipeline** | Shields the UI from remote service details and converts acquisition results into domain decisions. |
-| **Room Continuity Store** | Persists station intelligence, favorites, recent searches, and route continuity data. |
+| **Repository Signal Pipeline** | Shields the UI from remote service details, manages cache refresh, and enriches timetable responses with local station data. |
+| **Room Station Store** | Persists the station catalogue and defines a currently inactive route-metadata table. |
+| **Preference Continuity Store** | Persists settings, saved routes, recent searches, and legacy saved-route migration. |
 | **Android Reminder Rail** | Uses AlarmManager, BroadcastReceiver, notification channels, and calendar intents where the device allows it. |
 | **Release Governance Rail** | Builds, verifies, signs, validates, and publishes Android artifacts through the documented Play path. |
 
 ```text
 app/src/main/java/com/queukat/train/
 |- data/api/          Signal Acquisition Gateway
-|- data/db/           Room Continuity Store
+|- data/db/           Room Station and Route Metadata Store
 |- data/model/        Timetable Signal Contracts
 |- data/repository/   Route Reconstruction Pipeline
 |- ui/                Passenger Command Center
@@ -148,6 +149,18 @@ app/src/main/java/com/queukat/train/
 - Auto-refresh policy
 - Notification verification path
 
+## Documentation
+
+| Guide | Use it for |
+| --- | --- |
+| [Documentation index](docs/README.md) | Complete map and source-of-truth rules. |
+| [Architecture](docs/architecture.md) | Components, data flows, storage, caches, external contracts, and limitations. |
+| [Product guide](docs/product-guide.md) | Journey flows, direct/connected routes, reminders, settings, and operational states. |
+| [Development](docs/development.md) | Setup, build facts, project layout, locales, and common commands. |
+| [Testing](docs/testing.md) | Test map, quality tools, live-service constraints, and coverage gaps. |
+| [Security and data handling](docs/security-privacy.md) | Permissions, local data, external handoffs, and trust boundaries. |
+| [Developer checklist](docs/dev_checklist.md) | Verification, localization, release, and handoff checklist. |
+
 ## Developer Entry Points
 
 Clone and open the Android workspace:
@@ -179,20 +192,20 @@ Run focused unit tests:
 
 - Android package: `com.queukat.train`
 - Min SDK: 24
-- Target SDK: 35
+- Target SDK: 36
 - Compile SDK: 36
 - Java: 17
 - Kotlin: 2.1.10
 - Android Gradle Plugin: 8.9.3
 - UI: Jetpack Compose with Material 3
-- Persistence: Room
+- Persistence: Room + SharedPreferences
 - Network: Retrofit and OkHttp
 
-For signing and Play delivery, use [docs/release_setup.md](docs/release_setup.md) and [docs/play_release.md](docs/play_release.md).
+For signing and Play delivery, use [docs/release_setup.md](docs/release_setup.md) and [docs/play_release.md](docs/play_release.md). Listing screenshots and graphics follow the separate [Play assets guide](docs/play_assets.md).
 
 ## Release Governance
 
-The Play delivery path is intentionally governed. Production releases should pass through the private release rail or CI path that implements the checks documented in [docs/release_setup.md](docs/release_setup.md) and [docs/play_release.md](docs/play_release.md).
+The Play delivery path is intentionally governed. Production releases pass through a maintainer-controlled local rail or another controlled runner that implements the checks documented in [docs/release_setup.md](docs/release_setup.md) and [docs/play_release.md](docs/play_release.md). GitHub Releases are not a distribution channel for TrainMe.
 
 That path should build or accept the artifact, verify signing, target the expected package, stage localized changelogs, validate against Play, and upload only when publishing is explicitly requested.
 

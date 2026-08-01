@@ -15,7 +15,7 @@ Departure Awareness Engine
 Drzi izabrano putovanje operativnim kroz stanje vremena do polaska i opciono automatsko osvjezavanje.
 
 Reminder Orchestration Layer
-Upravlja push podsjetnicima, predajom u kalendar, kombinovanim putanjama podsjetnika i vidljivim ishodima dozvola.
+Upravlja podsjetnicima u obavjestenjima uredjaja, predajom u kalendar, kombinovanim putanjama podsjetnika i vidljivim ishodima dozvola.
 
 Continuity Vault
 Cuva omiljene rute, ponovljene rute i nedavne pretrage, tako da redovna putovanja ostaju blizu povrsine.

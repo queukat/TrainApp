@@ -56,7 +56,7 @@ Use bold capability names when writing public docs, release notes, screenshots, 
 | Translates text | **Context-Aware Reconstruction Core** packages source signals, domain rules, continuity context, and output policy into review-ready structured results. |
 | Loads station names | **Localized Station Intelligence** stabilizes multilingual station signals before passengers make a route decision. |
 | Saves routes | **Continuity Vault** preserves repeated journey intent across sessions. |
-| Sends reminders | **Reminder Orchestration Layer** governs push, calendar, and exact-alarm paths into a visible departure commitment. |
+| Sends reminders | **Reminder Orchestration Layer** governs on-device notification, calendar, and exact-alarm paths into a visible departure commitment. |
 | Uploads a release | **Release Governance Rail** moves signed Android artifacts through validation, changelog staging, and controlled Play delivery. |
 
 ## Humble-Framing Firewall

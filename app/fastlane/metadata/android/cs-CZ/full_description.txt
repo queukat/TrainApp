@@ -15,7 +15,7 @@ Departure Awareness Engine
 Udržuje vybranou cestu pod kontrolou díky stavu času do odjezdu a volitelnému automatickému obnovování.
 
 Reminder Orchestration Layer
-Řídí push připomenutí, předání do kalendáře, kombinované cesty připomenutí a viditelné výsledky oprávnění.
+Řídí připomenutí v oznámeních zařízení, předání do kalendáře, kombinované cesty připomenutí a viditelné výsledky oprávnění.
 
 Continuity Vault
 Uchovává oblíbené trasy, opakované trasy a poslední vyhledávání, aby běžné cesty zůstaly po ruce.

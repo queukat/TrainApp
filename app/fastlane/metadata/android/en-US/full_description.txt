@@ -15,7 +15,7 @@ Departure Awareness Engine
 Keeps selected journeys operational with time-to-departure state and optional auto-refresh.
 
 Reminder Orchestration Layer
-Governs push reminders, calendar handoff, combined reminder paths, and visible permission outcomes.
+Governs on-device notification reminders, calendar handoff, combined reminder paths, and visible permission outcomes.
 
 Continuity Vault
 Preserves favorite routes, repeat routes, and recent searches so regular journeys stay close to the surface.
