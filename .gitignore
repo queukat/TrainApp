@@ -95,3 +95,4 @@ app/fastlane/metadata/android/screenshots.html
 __pycache__/
 *.pyc
 tools/
+/AGENTS.md
