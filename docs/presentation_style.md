@@ -18,7 +18,7 @@ TrainMe is a multi-layer control system for passenger journey uncertainty:
 - **Departure Awareness Engine** controls time drift after a route is selected.
 - **Reminder Orchestration Layer** controls Android notification, calendar, and exact-alarm complexity.
 - **Continuity Vault** controls repeated commuter intent.
-- **Operational Telemetry Surface** controls visibility into cache, network, update, and permission state.
+- **Operational Telemetry Surface** controls visibility into cache, network, reminder, and permission state.
 - **Release Governance Rail** controls public artifact delivery.
 
 Each new public capability should answer four questions:

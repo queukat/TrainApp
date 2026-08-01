@@ -131,10 +131,4 @@
     <string name="train_reminder_channel_name">Напоминания о поездах</string>
     <string name="train_reminder_channel_description">Напоминания о предстоящих рейсах поезда</string>
 
-    <string name="update_channel_name">Обновления</string>
-    <string name="update_channel_description">Новые версии TrainMe</string>
-
-    <string name="update_notification_title">Доступно обновление: v%1$s</string>
-    <string name="update_notification_message">Нажмите, чтобы скачать новую версию</string>
-    <string name="update_notification_bigtext">%1$s</string>
 </resources>

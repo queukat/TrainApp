@@ -92,7 +92,6 @@ changes.patch
 app/fastlane/report.xml
 app/fastlane/README.md
 app/fastlane/metadata/android/screenshots.html
-tools/train_ping_kv/
 __pycache__/
 *.pyc
 tools/

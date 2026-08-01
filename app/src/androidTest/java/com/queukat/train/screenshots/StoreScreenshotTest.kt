@@ -189,7 +189,6 @@ class StoreScreenshotTest {
                 .getLaunchIntentForPackage(PACKAGE_NAME)
                 ?.apply {
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra(MainActivity.EXTRA_SKIP_UPDATE_CHECK, true)
                     if (!initialDate.isNullOrBlank()) {
                         putExtra(MainActivity.EXTRA_INITIAL_DATE, initialDate)
                     }

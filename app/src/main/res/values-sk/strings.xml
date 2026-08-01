@@ -131,10 +131,4 @@
     <string name="train_reminder_channel_name">Pripomienky vlakov</string>
     <string name="train_reminder_channel_description">Pripomienky nadchádzajúcich odchodov vlakov</string>
 
-    <string name="update_channel_name">Aktualizácie</string>
-    <string name="update_channel_description">Nové verzie TrainMe</string>
-
-    <string name="update_notification_title">Dostupná aktualizácia: v%1$s</string>
-    <string name="update_notification_message">Ťuknutím stiahnete novú verziu</string>
-    <string name="update_notification_bigtext">%1$s</string>
 </resources>

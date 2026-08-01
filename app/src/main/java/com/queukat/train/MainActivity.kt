@@ -6,10 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.edit
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.queukat.train.data.db.AppDatabase
 import com.queukat.train.data.db.StopEntity
 import com.queukat.train.data.db.getNameForLanguage
@@ -21,8 +19,6 @@ import com.queukat.train.ui.findStopByAnyName
 import com.queukat.train.ui.theme.TrainAppTheme
 import com.queukat.train.util.DateTimeUtils
 import com.queukat.train.util.NotificationHelper
-import com.queukat.train.util.UpdateCheck
-import com.queukat.train.util.UpdateResult
 import com.queukat.train.util.applyForcedAppLocale
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -43,7 +39,6 @@ class MainActivity : ComponentActivity() {
 
         val prefs = getSharedPreferences("train_prefs", MODE_PRIVATE)
         applyInitialLanguage(launchArgs.initialLanguage, prefs)
-        startUpdateCheckIfNeeded(launchArgs.skipUpdateCheck)
 
         val mainVM = createMainViewModel()
         applyInitialDate(mainVM, launchArgs.initialDate)
@@ -54,7 +49,6 @@ class MainActivity : ComponentActivity() {
 
     private fun readLaunchArgs(): LaunchArgs =
         LaunchArgs(
-            skipUpdateCheck = intent?.getBooleanExtra(EXTRA_SKIP_UPDATE_CHECK, false) == true,
             initialDate = intent?.getStringExtra(EXTRA_INITIAL_DATE).orEmpty(),
             initialFrom = intent?.getStringExtra(EXTRA_INITIAL_FROM).orEmpty(),
             initialTo = intent?.getStringExtra(EXTRA_INITIAL_TO).orEmpty(),
@@ -71,32 +65,6 @@ class MainActivity : ComponentActivity() {
         if (normalizedLanguage != null) {
             prefs.edit { putString("appLanguage", normalizedLanguage) }
             intent.removeExtra(EXTRA_INITIAL_LANGUAGE)
-        }
-    }
-
-    private fun startUpdateCheckIfNeeded(skipUpdateCheck: Boolean) {
-        if (skipUpdateCheck) return
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                maybeShowUpdateNotification(UpdateCheck.checkForUpdates(this@MainActivity))
-            }
-        }
-    }
-
-    private fun maybeShowUpdateNotification(result: UpdateResult) {
-        if (
-            result.isUpdateAvailable &&
-            shouldNotifyUpdate(result.latestVersion) &&
-            NotificationHelper.canPostNotifications(this)
-        ) {
-            @Suppress("MissingPermission")
-            NotificationHelper.showUpdateNotification(
-                this,
-                result.latestVersion,
-                result.releaseNotes,
-            )
-            markUpdateNotified(result.latestVersion)
         }
     }
 
@@ -184,21 +152,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun shouldNotifyUpdate(latestVersion: String): Boolean {
-        val prefs = getSharedPreferences("train_prefs", MODE_PRIVATE)
-        val lastNotified = prefs.getString("last_notified_update_version", null)
-        return lastNotified != latestVersion
-    }
-
-    private fun markUpdateNotified(latestVersion: String) {
-        val prefs = getSharedPreferences("train_prefs", MODE_PRIVATE)
-        prefs.edit { putString("last_notified_update_version", latestVersion) }
-    }
-
     companion object {
         private val SUPPORTED_STATION_LANGUAGES = setOf("en", "me", "meCyr")
 
-        const val EXTRA_SKIP_UPDATE_CHECK = "com.queukat.train.extra.SKIP_UPDATE_CHECK"
         const val EXTRA_INITIAL_DATE = "com.queukat.train.extra.INITIAL_DATE"
         const val EXTRA_INITIAL_FROM = "com.queukat.train.extra.INITIAL_FROM"
         const val EXTRA_INITIAL_TO = "com.queukat.train.extra.INITIAL_TO"
@@ -209,7 +165,6 @@ class MainActivity : ComponentActivity() {
 }
 
 private data class LaunchArgs(
-    val skipUpdateCheck: Boolean,
     val initialDate: String,
     val initialFrom: String,
     val initialTo: String,

@@ -21,6 +21,6 @@ Continuity Vault
 Preserves favorite routes, repeat routes, and recent searches so regular journeys stay close to the surface.
 
 Operational Telemetry Surface
-Exposes cached station state, route errors, update availability, and reminder outcomes instead of leaving the passenger guessing.
+Exposes cached station state, route errors, permission limits, and reminder outcomes instead of leaving the passenger guessing.
 
 TrainMe is independent and is not the official timetable, ticketing product, or service channel of ZPCG AD Podgorica. For official schedules, tickets, service notices, and company information, use the official ZPCG website.

@@ -21,6 +21,6 @@ Continuity Vault
 Cuva omiljene rute, ponovljene rute i nedavne pretrage, tako da redovna putovanja ostaju blizu povrsine.
 
 Operational Telemetry Surface
-Prikazuje stanje kesiranih stanica, greske ruta, dostupnost azuriranja i ishode podsjetnika, bez pogadjanja za putnika.
+Prikazuje stanje kesiranih stanica, greske ruta, ogranicenja dozvola i ishode podsjetnika, bez pogadjanja za putnika.
 
 TrainMe je nezavisan i nije zvanicni red voznje, proizvod za karte ili servisni kanal ZPCG AD Podgorica. Za zvanicne rasporede, karte, servisna obavjestenja i informacije kompanije koristite zvanicni ZPCG sajt.

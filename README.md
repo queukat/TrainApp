@@ -1,16 +1,13 @@
 # TrainMe
 
 <!-- public-repo-status -->
-> Status: Active Android app. Public installation is through Google Play; GitHub Releases are not used as an Android download channel.
+> Status: Active Android app. Google Play is the sole public installation and update channel.
 
 **Passenger Operations Command Center for Montenegro rail journeys.**
 
 TrainMe turns timetable uncertainty into an operational surface: localized station intelligence, route reconstruction, departure awareness, reminder orchestration, and release-governed Android delivery.
 
 [![Get it on Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.queukat.train)
-
-![Active users](badges/mau.svg?raw=1)
-![Total users](badges/total.svg?raw=1)
 
 <p align="center">
   <img src="app/fastlane/metadata/android/en-US/images/featureGraphic.png" alt="TrainMe command center preview" width="100%">
@@ -100,7 +97,7 @@ flowchart LR
 | **Departure Awareness Engine** | A chosen departure becomes less useful as time passes. | Time-to-departure calculation and optional auto-refresh keep the route state current. | The journey card remains operational after the first search. |
 | **Reminder Orchestration Layer** | Calendar flow, push notifications, exact alarms, and Android permissions can conflict. | A governed reminder path supports push, calendar, both, or no reminder. | The passenger receives a clear reminder outcome and visible failure reasons. |
 | **Continuity Vault** | Repeated journeys and recent searches disappear unless the system remembers them. | Favorites, repeat routes, and recent searches preserve intent across sessions. | Commuter patterns become one-tap starting points. |
-| **Operational Telemetry Surface** | Network errors, cached data, update state, and permission failures can feel invisible. | Status banners, notification channels, and update messaging expose operational state. | The passenger sees what the system knows and what needs attention. |
+| **Operational Telemetry Surface** | Network errors, cached data, and permission failures can feel invisible. | Status banners and notification outcomes expose operational state. | The passenger sees what the system knows and what needs attention. |
 | **Release Governance Rail** | Store delivery can drift through unsigned bundles, missing changelogs, or accidental package targeting. | Play release commands enforce signing checks, package targeting, changelog staging, and validation before upload. | Public releases ship through a controlled delivery path. |
 
 ## Architecture
@@ -121,7 +118,7 @@ app/src/main/java/com/queukat/train/
 |- data/model/        Timetable Signal Contracts
 |- data/repository/   Route Reconstruction Pipeline
 |- ui/                Passenger Command Center
-|- util/              Reminder, Locale, Time, and Update Rails
+|- util/              Reminder, Locale, and Time Rails
 ```
 
 ## Operational Surfaces

@@ -45,7 +45,6 @@ sonar {
                 "app/src/main/java/com/queukat/train/util/NotificationHelper.kt",
                 "app/src/main/java/com/queukat/train/util/ReminderReceiver.kt",
                 "app/src/main/java/com/queukat/train/util/ReminderUtils.kt",
-                "app/src/main/java/com/queukat/train/util/UpdateCheck.kt",
             ).joinToString(","),
         )
     }

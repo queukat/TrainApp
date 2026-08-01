@@ -48,8 +48,8 @@ android {
         applicationId = "com.queukat.train"
         minSdk = 24
         targetSdk = 36
-        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 126
-        versionName = System.getenv("VERSION_NAME") ?: "1.0.6"
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 127
+        versionName = System.getenv("VERSION_NAME") ?: "1.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

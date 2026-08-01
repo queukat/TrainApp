@@ -13,14 +13,12 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import com.queukat.train.MainActivity
 import com.queukat.train.R
 
 object NotificationHelper {
     private const val REMINDER_CHANNEL_ID = "TRAIN_REMINDER_CHANNEL"
-    private const val UPDATE_CHANNEL_ID = "UPDATE_CHANNEL"
-    private const val UPDATE_NOTIFICATION_ID = 1003
+    private const val LEGACY_UPDATE_CHANNEL_ID = "UPDATE_CHANNEL"
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -35,17 +33,8 @@ object NotificationHelper {
                     NotificationManager.IMPORTANCE_DEFAULT,
                 ).apply { description = reminderDesc }
 
-            val updateName = context.getString(R.string.update_channel_name)
-            val updateDesc = context.getString(R.string.update_channel_description)
-            val updateChannel =
-                NotificationChannel(
-                    UPDATE_CHANNEL_ID,
-                    updateName,
-                    NotificationManager.IMPORTANCE_HIGH,
-                ).apply { description = updateDesc }
-
             nm.createNotificationChannel(reminderChannel)
-            nm.createNotificationChannel(updateChannel)
+            nm.deleteNotificationChannel(LEGACY_UPDATE_CHANNEL_ID)
         }
     }
 
@@ -99,40 +88,4 @@ object NotificationHelper {
             true
         }
 
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    fun showUpdateNotification(
-        context: Context,
-        latestVersion: String,
-        releaseNotes: String?,
-    ) {
-        if (!canPostNotifications(context)) return
-
-        val pendingIntent =
-            PendingIntent.getActivity(
-                context,
-                0,
-                Intent(
-                    Intent.ACTION_VIEW,
-                    "https://github.com/queukat/TrainApp/releases/latest".toUri(),
-                ),
-                PendingIntent.FLAG_IMMUTABLE,
-            )
-
-        val title = context.getString(R.string.update_notification_title, latestVersion)
-        val text = context.getString(R.string.update_notification_message)
-        val bigText = releaseNotes ?: context.getString(R.string.update_notification_bigtext, "")
-
-        val builder =
-            NotificationCompat
-                .Builder(context, UPDATE_CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_my_new_icon)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-
-        NotificationManagerCompat.from(context).notify(UPDATE_NOTIFICATION_ID, builder.build())
-    }
 }

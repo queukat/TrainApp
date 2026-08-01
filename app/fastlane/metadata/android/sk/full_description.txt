@@ -21,6 +21,6 @@ Continuity Vault
 Uchováva obľúbené trasy, opakované trasy a posledné vyhľadávania, aby bežné cesty zostali poruke.
 
 Operational Telemetry Surface
-Zobrazuje stav cache staníc, chyby trás, dostupnosť aktualizácií a výsledky pripomienok, namiesto toho, aby cestujúci musel hádať.
+Zobrazuje stav cache staníc, chyby trás, obmedzenia povolení a výsledky pripomienok, namiesto toho, aby cestujúci musel hádať.
 
 TrainMe je nezávislá aplikácia a nie je oficiálnym cestovným poriadkom, produktom na nákup lístkov ani servisným kanálom ZPCG AD Podgorica. Oficiálne cestovné poriadky, lístky, prevádzkové oznámenia a informácie o spoločnosti nájdete na oficiálnom webe ZPCG.
