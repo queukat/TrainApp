@@ -1,6 +1,7 @@
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import java.net.URI
 import java.util.Properties
 
 plugins {
@@ -44,12 +45,28 @@ android {
             releaseKeyPassword,
         ).all { !it.isNullOrBlank() }
 
+    val configuredFeedbackFormBaseUrl =
+        providers
+            .gradleProperty("feedbackFormBaseUrl")
+            .orElse(providers.environmentVariable("FEEDBACK_FORM_BASE_URL"))
+            .orNull
+    val feedbackFormBaseUrl =
+        configuredFeedbackFormBaseUrl
+            ?: "https://trainme-feedback.queukat.workers.dev"
+    require(
+        feedbackFormBaseUrl.startsWith("https://") &&
+            URI(feedbackFormBaseUrl).host != null,
+    ) {
+        "feedbackFormBaseUrl / FEEDBACK_FORM_BASE_URL must be an absolute HTTPS URL."
+    }
     defaultConfig {
         applicationId = "com.queukat.train"
         minSdk = 24
         targetSdk = 36
-        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 127
-        versionName = System.getenv("VERSION_NAME") ?: "1.0.8"
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 128
+        versionName = System.getenv("VERSION_NAME") ?: "1.0.9"
+
+        buildConfigField("String", "FEEDBACK_FORM_BASE_URL", "\"$feedbackFormBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

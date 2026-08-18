@@ -1,6 +1,6 @@
 # TrainMe Architecture
 
-_Last reviewed: 2026-08-01_
+_Last reviewed: 2026-08-19_
 
 TrainMe is a single-module Android application for planning passenger rail journeys in Montenegro. It is independent from ZPCG AD Podgorica and does not implement ticket sales, accounts, payments, live train tracking, or an official service channel.
 
@@ -15,7 +15,10 @@ flowchart LR
     repo --> room["Room database"]
     vm --> prefs["SharedPreferences"]
     vm --> android["AlarmManager / notifications / calendar / maps"]
+    ui --> feedback["Browser feedback handoff"]
     api --> remote["api.zpcg.me"]
+    feedback --> worker["Cloudflare Worker + Turnstile"]
+    worker --> d1["Private D1 feedback store"]
 ```
 
 `MainActivity` manually composes `AppDatabase`, `TrainRepository`, and `TrainViewModel`. There is no dependency-injection container or separate use-case/domain module. The ViewModel owns passenger intent and UI state; the repository owns remote acquisition, cache refresh, and response enrichment.
@@ -83,6 +86,12 @@ The passenger may choose an on-device notification reminder, calendar handoff, b
 
 When `autoRefreshTime` is enabled, the main Compose surface refreshes time-to-departure values approximately once per minute. Train times are interpreted in `Europe/Podgorica`, with `Europe/Belgrade` as fallback.
 
+### Feedback handoff
+
+Settings builds an HTTPS feedback URL from the current Android interface locale, app version, and Android version, then opens it through a browser intent. Station-display language, saved routes, and recent searches are not included.
+
+The same-origin Worker serves the six-locale static form and accepts only validated JSON submissions. Turnstile is loaded after local form validation; the Worker verifies its result against the exact production hostname and `feedback` action before a prepared D1 insert. Text and optional contact are available only through a bounded maintainer query. The public Shields route exposes only the aggregate number of rows awaiting review, cached for five minutes. A scheduled handler deletes rows around 180 days after creation.
+
 ## External contracts
 
 | Contract | Shape |
@@ -92,6 +101,7 @@ When `autoRefreshTime` is enabled, the main Compose surface refreshes time-to-de
 | Cumulative routes | `GET api/routes/cumulative` |
 | Timetable datetime | Strict `yyyy-MM-dd HH:mm:ss` in the Montenegro timezone |
 | Connected response | Map keyed by interchange; an empty array is tolerated as an empty map |
+| Feedback form | `https://trainme-feedback.queukat.workers.dev` with `lang`, `app_version`, and `android_version` query metadata |
 
 The application depends on the remote timetable service for fresh catalogue and journey data. Repository code cannot establish the service operator’s uptime, logging, retention, or accuracy guarantees.
 

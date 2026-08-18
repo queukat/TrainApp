@@ -114,6 +114,9 @@
     <string name="label_crossing_no_passengers">Nema putničkog stajališta</string>
     <string name="toast_no_map_app">Nema instalirane aplikacije za mape</string>
     <string name="label_support_dev_on_ko_fi">Podrži TrainMe na Ko-fi</string>
+    <string name="feedback_prompt">Prijavite problem ili predložite ideju — bez registracije</string>
+    <string name="label_send_feedback">Pošalji povratnu informaciju</string>
+    <string name="toast_no_browser_for_feedback">Nema preglednika za otvaranje obrasca.</string>
 
     <string name="train_reminder_channel_name">Podsjetnici za vozove</string>
     <string name="train_reminder_channel_description">Podsjetnici za predstojeće polaske vozova</string>

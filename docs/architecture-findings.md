@@ -12,6 +12,7 @@ This ledger records source-backed architectural constraints that affect dependen
 | AF-004 | Saved routes and recents are JSON-backed SharedPreferences records, not Room entities. | Storage ownership and migration behavior differ from the station database. | Documentation corrected; future persistence work must preserve legacy preference migration. |
 | AF-005 | Scheduled reminder alarms are not restored after reboot. | A reminder selected before a reboot may not fire afterward. | Documented as a product/runtime limitation; boot rescheduling is separate work. |
 | AF-006 | Repository, real Room migration/DAO, and ViewModel orchestration have limited direct automated coverage. | Cache, migration, and orchestration regressions rely heavily on compile/manual/live-device evidence. | Documented in `docs/testing.md`; test implementation is separate work. |
+| AF-007 | Feedback crosses from the Android app into a public browser/Cloudflare boundary while message and optional contact remain private operational data. | The surface needs an exact-host Turnstile check, same-origin submissions, bounded fields, aggregate-only public status, and finite retention. | Implemented with a six-locale Worker form, fail-closed Turnstile verification, D1 prepared statements, 10/minute burst limiting, a count-only badge, and around-180-day scheduled deletion. Images and a public admin surface remain out of scope. |
 
 ## Closure rule
 

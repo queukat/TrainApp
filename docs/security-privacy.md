@@ -1,6 +1,6 @@
 # Security and Data Handling
 
-_Last reviewed: 2026-08-01_
+_Last reviewed: 2026-08-19_
 
 This document describes behavior visible in the tracked Android source and build configuration. It is not a claim about server-side logging, retention, hosting, legal compliance, or third-party application policy.
 
@@ -15,6 +15,7 @@ TrainMe is an independent passenger application. It is not an official ZPCG tick
 | Timely reminder | `SCHEDULE_EXACT_ALARM` | Optional special access on Android versions/devices that require it. |
 | Calendar handoff | `ACTION_INSERT` intent | Opens a draft event in another calendar application; TrainMe does not request calendar read/write permission. |
 | Map handoff | `geo:` intent | Opens a compatible maps application with a selected station label and coordinates. |
+| Feedback handoff | HTTPS browser intent | Opens the TrainMe feedback form with app version, Android version, and interface locale. |
 
 TrainMe does not request location, contacts, calendar, storage, camera, microphone, or phone permissions.
 
@@ -33,6 +34,10 @@ Room stores the station catalogue and defines the currently inactive `route_info
 ## Data leaving the app
 
 During route search, the selected origin, destination, and travel date are sent to `https://api.zpcg.me/` as timetable request parameters. The app processes the returned stations and routes locally.
+
+When the passenger explicitly opens and submits the feedback form, the message, optional reply contact, feedback type, TrainMe version, Android version, and interface locale are sent to `https://trainme-feedback.queukat.workers.dev/`. Saved routes and recent-search history are not attached. The first release is text-only and does not accept images, tickets, documents, or payment data.
+
+Cloudflare processes the form request, Turnstile performs an abuse check, and the message is stored in a private D1 database for maintainer review. There is no public endpoint for message or contact content. Rows are automatically removed around 180 days after creation by a daily scheduled job. The Worker does not store the request IP address or Turnstile token in D1, but this is not a promise of complete anonymity because Cloudflare account-level request handling remains outside the Android application.
 
 Optional user actions disclose limited context to Android or another selected application:
 
@@ -63,7 +68,7 @@ Do not document “no server logs”, a retention period, a hosting jurisdiction
 
 The active Android build does not wire an analytics or crash-reporting SDK. Firebase entries in the version catalogue are not active app dependencies. This is build-configuration evidence, not a guarantee about the behavior of the remote timetable service or other applications.
 
-TrainMe does not implement account registration, ticket purchase, payments, continuous location tracking, or direct calendar-provider writes.
+TrainMe does not implement account registration, ticket purchase, payments, continuous location tracking, or direct calendar-provider writes. Submitting feedback does not require an account; a reply contact is optional.
 
 ## Release security
 

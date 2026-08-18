@@ -1,6 +1,6 @@
 # TrainMe Product Guide
 
-_Last reviewed: 2026-08-01_
+_Last reviewed: 2026-08-19_
 
 TrainMe is an independent passenger application for planning rail journeys in Montenegro. It is not the official timetable, ticketing product, payment service, or support channel of ZPCG AD Podgorica.
 
@@ -73,9 +73,12 @@ The settings surface controls:
 - default reminder lead time;
 - automatic time-to-departure refresh;
 - test notification actions;
+- an account-free feedback form for problems and ideas;
 - independence/disclaimer and support links.
 
 Station-name language is separate from the Android interface locale. The app resources support English, Russian, Czech, Slovak, Serbian Cyrillic, and Serbian Latin interfaces.
+
+The feedback action opens a lightweight web form in the current interface language and attaches only the TrainMe version, Android version, and interface locale. A reply contact is optional. The form does not attach saved routes or recent-search history, and it does not accept images in this release.
 
 ## Operational states
 

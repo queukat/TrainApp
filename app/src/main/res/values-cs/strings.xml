@@ -127,6 +127,9 @@
     <string name="label_stop_type_main_station">Hlavní stanice</string>
     <string name="toast_no_map_app">Není nainstalována žádná mapová aplikace</string>
     <string name="label_support_dev_on_ko_fi">Podpořit TrainMe na Ko-fi</string>
+    <string name="feedback_prompt">Napište o problému nebo se podělte o nápad — bez registrace</string>
+    <string name="label_send_feedback">Sdílet zpětnou vazbu</string>
+    <string name="toast_no_browser_for_feedback">Není k dispozici prohlížeč pro otevření formuláře.</string>
 
     <string name="train_reminder_channel_name">Připomenutí vlaků</string>
     <string name="train_reminder_channel_description">Připomenutí nadcházejících odjezdů vlaků</string>

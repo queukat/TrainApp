@@ -127,6 +127,9 @@
     <string name="label_stop_type_main_station">Главная станция</string>
     <string name="toast_no_map_app">Приложение для карт не установлено</string>
     <string name="label_support_dev_on_ko_fi">Поддержать TrainMe на Ko-fi</string>
+    <string name="feedback_prompt">Расскажите о проблеме или предложите идею — без регистрации</string>
+    <string name="label_send_feedback">Поделиться отзывом</string>
+    <string name="toast_no_browser_for_feedback">Не удалось найти браузер для открытия формы.</string>
 
     <string name="train_reminder_channel_name">Напоминания о поездах</string>
     <string name="train_reminder_channel_description">Напоминания о предстоящих рейсах поезда</string>

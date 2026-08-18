@@ -128,6 +128,9 @@
     <string name="label_stop_type_main_station">Main station</string>
     <string name="toast_no_map_app">No maps application installed</string>
     <string name="label_support_dev_on_ko_fi">Support TrainMe on Ko-fi</string>
+    <string name="feedback_prompt">Share a problem or suggest an idea — no account required</string>
+    <string name="label_send_feedback">Share feedback</string>
+    <string name="toast_no_browser_for_feedback">No browser is available to open feedback.</string>
 
     <string name="train_reminder_channel_name">Train Reminders</string>
     <string name="train_reminder_channel_description">Reminders for upcoming train departures</string>

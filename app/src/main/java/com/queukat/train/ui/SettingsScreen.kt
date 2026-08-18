@@ -1,6 +1,9 @@
 package com.queukat.train.ui
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -41,8 +45,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.queukat.train.BuildConfig
 import com.queukat.train.R
 import com.queukat.train.ui.theme.TrainAppTheme
+import com.queukat.train.util.FeedbackFormUrl
 
 data class SettingsScreenState(
     val languages: List<String>,
@@ -73,6 +79,8 @@ fun SettingsScreen(
 
     var langMenuExpanded by remember { mutableStateOf(false) }
     var reminderMenuExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val uiLocale = LocalConfiguration.current.locales[0]
 
     Scaffold(
         topBar = {
@@ -239,8 +247,46 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            //     .
-            val context = LocalContext.current
+            Text(
+                text = stringResource(R.string.feedback_prompt),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    val feedbackUri =
+                        FeedbackFormUrl
+                            .build(
+                                baseUrl = BuildConfig.FEEDBACK_FORM_BASE_URL,
+                                uiLocale = uiLocale,
+                                appVersion = BuildConfig.VERSION_NAME,
+                                androidVersion = Build.VERSION.RELEASE,
+                            ).toUri()
+                    val feedbackIntent = Intent(Intent.ACTION_VIEW, feedbackUri)
+                    val opened =
+                        try {
+                            if (feedbackIntent.resolveActivity(context.packageManager) == null) {
+                                false
+                            } else {
+                                context.startActivity(feedbackIntent)
+                                true
+                            }
+                        } catch (_: ActivityNotFoundException) {
+                            false
+                        }
+                    if (!opened) {
+                        Toast
+                            .makeText(context, R.string.toast_no_browser_for_feedback, Toast.LENGTH_LONG)
+                            .show()
+                    }
+                },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            ) {
+                Text(text = stringResource(R.string.label_send_feedback))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
                     val uri = "https://ko-fi.com/queukat".toUri()

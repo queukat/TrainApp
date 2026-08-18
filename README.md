@@ -9,6 +9,8 @@ TrainMe turns timetable uncertainty into an operational surface: localized stati
 
 [![Get it on Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.queukat.train)
 
+[![Feedback awaiting review](https://img.shields.io/endpoint?url=https%3A%2F%2Ftrainme-feedback.queukat.workers.dev%2Fbadge.json)](https://trainme-feedback.queukat.workers.dev)
+
 <p align="center">
   <img src="app/fastlane/metadata/android/en-US/images/featureGraphic.png" alt="TrainMe command center preview" width="100%">
 </p>
